@@ -39,10 +39,6 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
-      - name: Stop Old Container MYSQL
-        run: docker stop mysql-container
-      - name: Stop Old Container Backend
-        run: docker stop go-backend-container
       - name: Delete Old Container MYSQL
         run: docker rm -f mysql-container
       - name: Delete Old Container
