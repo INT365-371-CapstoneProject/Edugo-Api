@@ -1,4 +1,4 @@
-name: Deploy to Backend
+name: Build and Deploy 
 
 on:
   push:
@@ -31,10 +31,18 @@ jobs:
         run: |
           cd Backend_Edugo
           docker build -t tkneng/go-backend .
-      - name: Push Docker Image
+      - name: Push Docker Image Backend
         run: |
           cd Backend_Edugo
           docker push tkneng/go-backend:latest
+      - name: Build Docker Image Reverse Proxy
+        run: |
+          cd Reverse_Proxy
+          docker build -t tkneng/reverse-proxy-edugo .
+      - name: Push Docker Image Reverse Proxy
+        run: |
+          cd Reverse_Proxy
+          docker push tkneng/reverse-proxy-edugo:latest
   deploy:
     needs: build
     runs-on: self-hosted
@@ -47,5 +55,7 @@ jobs:
         run: docker run -d --network edugo-network -p 3306:3306 --name mysql-container tkneng/edugo-mysql:latest
       - name: Pull Docker Image Backend
         run: docker pull tkneng/go-backend:latest
-      - name: Run Docker Container
+      - name: Run Docker Container Backend
         run: docker run -d  -p 8080:8080 --network edugo-network --name go-backend-container tkneng/go-backend:latest
+      - name: Run Docker Container Reverse Proxy
+        run: docker run -d -p 80:80 --network edugo-network --name reverse-proxy-container tkneng/reverse-proxy-edugo:latest
