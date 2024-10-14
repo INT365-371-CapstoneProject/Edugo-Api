@@ -16,11 +16,17 @@ jobs:
       - name: Create .env file
         run: echo "PORT=${{ secrets.PORT }}" > .env
       - name: Login to Docker Hub
-        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          cd Backend_Edugo
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
       - name: Build Docker Image
-        run: docker build -t tkneng/go-backend .
+        run: |
+          cd Backend_Edugo
+          docker build -t tkneng/go-backend .
       - name: Push Docker Image
-        run: docker push tkneng/go-backend:latest
+        run: |
+          cd Backend_Edugo
+          docker push tkneng/go-backend:latest
   deploy:
     needs: build
     runs-on: self-hosted
