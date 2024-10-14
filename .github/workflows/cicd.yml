@@ -48,4 +48,4 @@ jobs:
       - name: Pull Docker Image Backend
         run: docker pull tkneng/go-backend:latest
       - name: Run Docker Container
-        run: docker run -d --network edugo-network -p 8080:8080 --name go-backend-container tkneng/go-backend:latest
+        run: docker run -d  -p 8080:8080 --network edugo-network --name go-backend-container tkneng/go-backend:latest
