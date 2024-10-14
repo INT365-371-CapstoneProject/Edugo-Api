@@ -13,17 +13,19 @@ jobs:
         uses: actions/checkout@v4
       - name: Create .env file
         run: echo "PORT=${{ secrets.PORT }}" > .env
+      - name: Change Directory
+        run: cd ScirptData
       - name: Login to Docker Hub
         run: |
           cd Backend_Edugo
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
       - name: Build Docker Image MYSQL
         run: |
-          cd scriptdb
+          cd ScirptData
           docker build -t tkneng/edugo-mysql .
       - name: Push Docker Image MYSQL
         run: |
-          cd scriptdb
+          cd ScirptData
           docker push tkneng/edugo-mysql:latest
       - name: Build Docker Image Backend
         run: |
