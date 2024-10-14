@@ -39,13 +39,15 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
+      - name: Create network
+        run: docker network create edugo-network
       - name: Delete Old Container MYSQL
         run: docker rm -f mysql-container
       - name: Delete Old Container
         run: docker rm -f go-backend-container
       - name: Run Docker Container MYSQL
-        run: docker run -d -p 3306:3306 --name mysql-container tkneng/edugo-mysql:latest
+        run: docker run -d --network edugo-network -p 3306:3306 --name mysql-container tkneng/edugo-mysql:latest
       - name: Pull Docker Image Backend
         run: docker pull tkneng/go-backend:latest
       - name: Run Docker Container
-        run: docker run -d -p 8080:8080 --name go-backend-container tkneng/go-backend:latest
+        run: docker run -d --network edugo-network -p 8080:8080 --name go-backend-container tkneng/go-backend:latest
