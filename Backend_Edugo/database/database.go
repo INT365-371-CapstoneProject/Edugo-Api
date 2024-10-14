@@ -1,21 +1,24 @@
 package database
 
 import (
-	"fmt"
+	"os"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"github.com/joho/godotenv"
 )
 
 var DB *gorm.DB
 
 func DatabaseInit() {
 	var err error
-	const MYSQL = "edugo:mysql@edugo@tcp(127.0.0.1:3306)/edugo_v3?charset=utf8mb4&parseTime=True&loc=Local"
-	dsn := MYSQL
+	err = godotenv.Load()
+	if err != nil {
+		panic("Error loading .env file")
+	}
+	dsn := os.Getenv("DATABASE_URL")
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("Failed to connect to database!")
 	}
-	fmt.Println("Database connected!")
 }

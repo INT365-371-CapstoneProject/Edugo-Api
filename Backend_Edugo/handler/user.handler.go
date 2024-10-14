@@ -27,7 +27,7 @@ func CreateUser(ctx fiber.Ctx) error {
 	newUser := entity.User{
 		Firstname: user.Firstname,
 		Lastname:  user.Lastname,
-		AccountAccountID: user.AccountAccountID,
+		AccountID: user.AccountID,
 	}
 
 	errCreateUser := database.DB.Create(&newUser).Error

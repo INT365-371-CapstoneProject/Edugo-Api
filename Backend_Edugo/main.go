@@ -1,7 +1,10 @@
 package main
 
 import (
+	"os"
+
 	"github.com/gofiber/fiber/v3"
+	"github.com/joho/godotenv"
 	"github.com/tk-neng/demo-go-fiber/database"
 	"github.com/tk-neng/demo-go-fiber/route"
 )
@@ -15,5 +18,11 @@ func main() {
 	// Initial route
 	route.RouteInit(app)
 
-	app.Listen(":8080")
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		panic("Error loading .env file")
+	}
+	port := os.Getenv("PORT")
+	app.Listen(":" + port)
 }
