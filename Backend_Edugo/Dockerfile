@@ -1,4 +1,4 @@
-FROM golang:1.22.2-alpine
+FROM golang:1.23.0-alpine
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod tidy
