@@ -38,7 +38,9 @@ jobs:
       - name: Delete Old Container
         run: docker rm -f go-backend-container
       - name: Run Docker Container MYSQL
-        run: docker run -d -p 3306:3306 --name mysql-container -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} -e MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }} -e LANG=en_US.UTF-8 -v ./scirptdb/db.sql:/docker-entrypoint-initdb.d/db.sql -v ./scirptdb/insert.sql:/docker-entrypoint-initdb.d/insert.sql -v ./scirptdb/user.sql:/docker-entrypoint-initdb.d/user.sql mysql:8.0.33
+        run: |
+          cd scriptdb
+          docker run -d -p 3306:3306 --name mysql-container -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} -e MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }} -e LANG=en_US.UTF-8 -v ./db.sql:/docker-entrypoint-initdb.d/db.sql -v ./insert.sql:/docker-entrypoint-initdb.d/insert.sql -v ./user.sql:/docker-entrypoint-initdb.d/user.sql mysql:8.0.33
       - name: Pull Docker Image Backend
         run: docker pull tkneng/go-backend:latest
       - name: Run Docker Container
