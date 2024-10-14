@@ -29,13 +29,17 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
+      - name: Stop Old Container MYSQL
+        run: docker stop mysql-container
+      - name: Stop Old Container Backend
+        run: docker stop go-backend-container
       - name: Delete Old Container MYSQL
         run: docker rm -f mysql-container
-      - name: Run Docker Container MYSQL
-        run: docker run -d -p 3306:3306 --name mysql-container -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} -e MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }} -e LANG=en_US.UTF-8 -v ./ScirptDB/db.sql:/docker-entrypoint-initdb.d/db.sql -v ./ScirptDB/scirptdb/insert.sql:/docker-entrypoint-initdb.d/insert.sql -v ./ScirptDB/scirptdb/user.sql:/docker-entrypoint-initdb.d/user.sql mysql:8.0.33
-      - name: Pull Docker Image Backend
-        run: docker pull tkneng/go-backend:latest
       - name: Delete Old Container
         run: docker rm -f go-backend-container
+      - name: Run Docker Container MYSQL
+        run: docker run -d -p 3306:3306 --name mysql-container -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} -e MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }} -e LANG=en_US.UTF-8 -v ./scirptdb/db.sql:/docker-entrypoint-initdb.d/db.sql -v ./scirptdb/insert.sql:/docker-entrypoint-initdb.d/insert.sql -v ./scirptdb/user.sql:/docker-entrypoint-initdb.d/user.sql mysql:8.0.33
+      - name: Pull Docker Image Backend
+        run: docker pull tkneng/go-backend:latest
       - name: Run Docker Container
         run: docker run -d -p 8080:8080 --name go-backend-container tkneng/go-backend:latest
