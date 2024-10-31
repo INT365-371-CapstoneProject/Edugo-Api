@@ -8,6 +8,5 @@ import (
 func RouteInit(r *fiber.App) {
 	r.Get("/users", handler.GetAllUser)
 	r.Get("/api/posts", handler.GetAllPost)
-	r.Get("/api/subjects", handler.GetAllSubject)
 	r.Post("/users", handler.CreateUser)
 }
