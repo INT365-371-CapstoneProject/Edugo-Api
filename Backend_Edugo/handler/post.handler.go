@@ -1,8 +1,7 @@
 package handler
 
 import (
-	"log"
-
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
 	"github.com/tk-neng/demo-go-fiber/model/entity"
@@ -13,7 +12,6 @@ func GetAllPost(ctx fiber.Ctx) error {
 	var posts []entity.Post
 	result := database.DB.Find(&posts)
 	if result.Error != nil {
-		log.Println(result.Error)
 		// return status 404
 		return ctx.Status(404).JSON(fiber.Map{
 			"error message": result.Error.Error(),
@@ -24,9 +22,15 @@ func GetAllPost(ctx fiber.Ctx) error {
 
 func CreatePost(ctx fiber.Ctx) error {
 	post := new(request.PostCreateRequest)
-
 	if err := ctx.Bind().Body(post); err != nil {
 		return err
+	}
+	validate := validator.New()
+	errValidate := validate.Struct(post)
+	if errValidate != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error message": errValidate.Error(),
+		})
 	}
 	newPost := entity.Post{
 		Title: post.Title,
@@ -41,10 +45,22 @@ func CreatePost(ctx fiber.Ctx) error {
 	}
 	errCreatePost := database.DB.Create(&newPost).Error
 	if errCreatePost != nil {
-		return ctx.Status(400).JSON(fiber.Map{
+		return ctx.Status(404).JSON(fiber.Map{
 			"error message": errCreatePost.Error(),
 		})
 	}
 
 	return ctx.JSON(newPost)
+}
+
+func GetPostByID(ctx fiber.Ctx) error {
+	postId := ctx.Params("id")
+	var post entity.Post
+	err := database.DB.First(&post,"posts_id = ?", postId).Error
+	if err != nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"error message": err.Error(),
+		})
+	}
+	return ctx.JSON(post)
 }
