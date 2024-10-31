@@ -64,3 +64,25 @@ func GetPostByID(ctx fiber.Ctx) error {
 	}
 	return ctx.JSON(post)
 }
+
+func DeletePost(ctx fiber.Ctx) error {
+	postId := ctx.Params("id")
+	var post entity.Post
+	// Check Available Post
+	err := database.DB.Debug().First(&post, "posts_id = ?", postId).Error
+	if err != nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"message": "post not found",
+		})
+	}
+
+	errDeletePost := database.DB.Debug().Delete(&post, "posts_id = ?", postId ).Error
+	if errDeletePost != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error message": errDeletePost.Error(),
+		})
+	}
+	return ctx.JSON(fiber.Map{
+		"message": "post deleted",
+	})
+}
