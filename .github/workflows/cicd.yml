@@ -37,7 +37,7 @@ jobs:
               echo "COPY ./user.sql /docker-entrypoint-initdb.d/" >> Dockerfile
               echo "EXPOSE ${{ secrets.PORT_DATABASE}}" >> Dockerfile
               echo "ENTRYPOINT ["docker-entrypoint.sh"]" >> Dockerfile
-              CMD ["mysqld"]
+              echo "CMD ["mysqld"]" >> Dockerfile
       - name: Build Docker Image MYSQL
         run: |
           cd ScirptData
