@@ -1,6 +1,6 @@
 FROM mysql:8.0.33
 ENV MYSQL_ROOT_PASSWORD=mysql@root
-ENV MYSQL_DATABASE=edugo_v3
+ENV MYSQL_DATABASE=edugo
 ENV LANG en_US.UTF-8
 COPY ./db.sql /docker-entrypoint-initdb.d/
 COPY ./insert.sql /docker-entrypoint-initdb.d/
