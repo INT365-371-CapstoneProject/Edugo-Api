@@ -13,19 +13,31 @@ jobs:
         uses: actions/checkout@v4
       - name: Create .env file
         run: |
+          cd Backend_Edugo
           echo "PORT=${{ secrets.PORT }}" > .env
           echo "DB_USER=${{ secrets.DB_USER }}" >> .env
           echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
           echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
-          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-          echo "DB_OPTION=${{ secrets.DB_OPTION }}" >> .env
-      - name: Change Directory
-        run: cd ScirptData
+          echo "DB_PORT=${{ secrets.PORT_DATABASE }}" >> .env
+          echo "DB_NAME=edugo" >> .env
+          echo "DB_OPTION=charset=utf8mb4&parseTime=True&loc=Local" >> .env
       - name: Login to Docker Hub
         run: |
           cd Backend_Edugo
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Crate DockerFile in ScirptData
+        run: |
+              cd ScirptData
+              echo "FROM mysql:8.0.33" > Dockerfile
+              echo "ENV MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD}}" >> Dockerfile
+              echo "ENV MYSQL_DATABASE=edugo" >> Dockerfile
+              echo "ENV LANG en_US.UTF-8" >> Dockerfile
+              echo "COPY ./db.sql /docker-entrypoint-initdb.d/" >> Dockerfile
+              echo "COPY ./insert.sql /docker-entrypoint-initdb.d/" >> Dockerfile
+              echo "COPY ./user.sql /docker-entrypoint-initdb.d/" >> Dockerfile
+              echo "EXPOSE ${{ secrets.PORT_DATABASE}}" >> Dockerfile
+              echo "ENTRYPOINT ["docker-entrypoint.sh"]" >> Dockerfile
+              CMD ["mysqld"]
       - name: Build Docker Image MYSQL
         run: |
           cd ScirptData

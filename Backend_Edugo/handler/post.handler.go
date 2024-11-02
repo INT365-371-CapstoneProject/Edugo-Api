@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
@@ -26,11 +28,30 @@ func CreatePost(ctx fiber.Ctx) error {
 		return err
 	}
 	validate := validator.New()
-	errValidate := validate.Struct(post)
-	if errValidate != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"error message": errValidate.Error(),
-		})
+	if errValidate := validate.Struct(post); errValidate != nil {
+		for _, err := range errValidate.(validator.ValidationErrors) {
+			switch err.Tag() {
+			case "required":
+				return ctx.Status(400).JSON(fiber.Map{
+					"error": "The post type field is required.",
+				})
+			case "oneof":
+				return ctx.Status(400).JSON(fiber.Map{
+					"error": "The post type must be either 'Announce' or 'Subject'.",
+				})
+			}
+		}
+	}
+	if post.Publish_Date == nil {
+		now := time.Now().UTC()
+		post.Publish_Date = &now
+	}else{
+		utcTime := post.Publish_Date.UTC()
+		post.Publish_Date = &utcTime
+	}
+	if post.Close_Date != nil {
+		utcTime := post.Close_Date.UTC()
+		post.Close_Date = &utcTime
 	}
 	newPost := entity.Post{
 		Title: post.Title,
