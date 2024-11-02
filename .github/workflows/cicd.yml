@@ -62,10 +62,14 @@ jobs:
         run: docker network create edugo-network || true
       - name: Delete Old Container MYSQL
         run: docker rm -f mysql-container || true
-      - name: Delete Old Container
+      - name: Delete Old Container Backend
         run: docker rm -f go-backend-container || true
       - name: Delete Old Container Reverse Proxy
         run: docker rm -f reverse-proxy-container || true
+      - name: Clear All Docker Images
+        run: docker system prune -f
+      - name: Pull Docker Image MYSQL
+        run: docker pull tkneng/edugo-mysql:latest
       - name: Run Docker Container MYSQL
         run: docker run -d --network edugo-network -p 3306:3306 --restart unless-stopped --name mysql-container tkneng/edugo-mysql:latest
       - name: Pull Docker Image Backend
