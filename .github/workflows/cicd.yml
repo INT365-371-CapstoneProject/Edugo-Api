@@ -58,16 +58,16 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
-      - name: Create Docker Network
-        run: docker network create edugo-network || true
       - name: Delete Old Container MYSQL
         run: docker rm -f mysql-container || true
       - name: Delete Old Container Backend
         run: docker rm -f go-backend-container || true
       - name: Delete Old Container Reverse Proxy
         run: docker rm -f reverse-proxy-container || true
-      - name: Clear All Docker Images
+      - name: Clear All Docker System
         run: docker system prune -f
+      - name: Create Docker Network
+        run: docker network create edugo-network || true
       - name: Pull Docker Image MYSQL
         run: docker pull tkneng/edugo-mysql:latest
       - name: Run Docker Container MYSQL
