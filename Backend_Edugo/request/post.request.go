@@ -13,3 +13,12 @@ type PostCreateRequest struct {
 	Provider_ID  *uint        `json:"provider_id"`
 	User_ID      *uint        `json:"user_id"`
 }
+
+
+type PostUpdateRequest struct {
+	Title        string     `json:"title"`
+	Description  string     `json:"description"`
+	URL          *string     `json:"url"`
+	Attach_File  *[]byte     `json:"attach_file"`
+	Close_Date   *time.Time `json:"closed_date"`
+}
