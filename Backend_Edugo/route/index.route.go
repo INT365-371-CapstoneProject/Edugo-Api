@@ -9,5 +9,6 @@ func RouteInit(r *fiber.App) {
 	r.Get("/api/posts", handler.GetAllPost)
 	r.Get("/api/posts/:id", handler.GetPostByID)
 	r.Post("/api/posts/create", handler.CreatePost)
+	r.Put("/api/post/update/:id", handler.UpdatePost)
 	r.Delete("/api/post/delete/:id", handler.DeletePost)
 }

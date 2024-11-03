@@ -27,6 +27,7 @@ func CreatePost(ctx fiber.Ctx) error {
 	if err := ctx.Bind().Body(post); err != nil {
 		return err
 	}
+	// Validate Request
 	validate := validator.New()
 	if errValidate := validate.Struct(post); errValidate != nil {
 		for _, err := range errValidate.(validator.ValidationErrors) {
@@ -83,6 +84,45 @@ func GetPostByID(ctx fiber.Ctx) error {
 			"error message": err.Error(),
 		})
 	}
+	return ctx.JSON(post)
+}
+
+
+func UpdatePost(ctx fiber.Ctx) error {
+	postRequest := new(request.PostUpdateRequest)
+	if err := ctx.Bind().Body(postRequest); err != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error message": "Bad Request",
+		})
+	}
+	var post entity.Post
+	postId := ctx.Params("id")
+	// Check Available Post
+	err := database.DB.First(&post,"posts_id = ?", postId).Error
+	if err != nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"error message": "Post not found",
+		})
+	}
+
+	// Update Post
+	if postRequest.Title != "" {
+		post.Title = postRequest.Title	
+	}
+	if postRequest.Description != "" {
+		post.Description = postRequest.Description
+	}
+	post.URL = postRequest.URL
+	post.Attach_File = postRequest.Attach_File
+	post.Close_Date = postRequest.Close_Date
+
+	errUpdate := database.DB.Save(&post).Error
+	if errUpdate != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error message": errUpdate.Error(),
+		})
+	}
+
 	return ctx.JSON(post)
 }
 

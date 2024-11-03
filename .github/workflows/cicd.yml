@@ -28,6 +28,7 @@ jobs:
       - name: Crate DockerFile in ScirptData
         run: |
               cd ScirptData
+              rm -rf Dockerfile || true
               echo "FROM mysql:8.0.33" > Dockerfile
               echo "ENV MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD}}" >> Dockerfile
               echo "ENV MYSQL_DATABASE=edugo" >> Dockerfile
