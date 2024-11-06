@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/joho/godotenv"
 	"github.com/tk-neng/demo-go-fiber/database"
 	"github.com/tk-neng/demo-go-fiber/route"
@@ -15,14 +16,22 @@ func main() {
 
 	app := fiber.New()
 
-	// Initial route
-	route.RouteInit(app)
 
 	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
 		panic("Error loading .env file")
 	}
+
+	// Middleware
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Accept"},
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
+	}))
+
+	// Initial route
+	route.RouteInit(app)
 	port := os.Getenv("PORT")
 	app.Listen(":" + port)
 }
