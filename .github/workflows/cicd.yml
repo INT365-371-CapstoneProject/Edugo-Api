@@ -41,7 +41,7 @@ jobs:
               echo 'CMD ["mysqld"]' >> Dockerfile
       - name: Create DockerFile in Proxy
         run: |
-              cd ReverseProxy
+              cd Proxy
               rm -rf Dockerfile || true
               echo "FROM nginx:alpine" > Dockerfile
               echo "COPY ./default.conf /etc/nginx/conf.d/" >> Dockerfile
@@ -52,7 +52,7 @@ jobs:
           docker build -t tkneng/reverse-proxy .
       - name: Push Docker Image Reverse Proxy
         run: |
-          cd ReverseProxy
+          cd Proxy
           docker push tkneng/reverse-proxy-edugo:latest
       - name: Build Docker Image MYSQL
         run: |
