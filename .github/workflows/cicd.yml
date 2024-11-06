@@ -25,7 +25,7 @@ jobs:
         run: |
           cd Backend_Edugo
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-      - name: Crate DockerFile in ScirptData
+      - name: Create DockerFile in ScirptData
         run: |
               cd ScirptData
               rm -rf Dockerfile || true
@@ -39,6 +39,21 @@ jobs:
               echo "EXPOSE ${{ secrets.PORT_DATABASE}}" >> Dockerfile
               echo 'ENTRYPOINT ["docker-entrypoint.sh"]' >> Dockerfile
               echo 'CMD ["mysqld"]' >> Dockerfile
+      - name: Create DockerFile in Proxy
+        run: |
+              cd ReverseProxy
+              rm -rf Dockerfile || true
+              echo "FROM nginx:alpine" > Dockerfile
+              echo "COPY ./default.conf /etc/nginx/conf.d/" >> Dockerfile
+              echo "EXPOSE 80" >> Dockerfile
+      - name: Build Docker Image Reverse Proxy
+        run: |
+          cd ReverseProxy
+          docker build -t tkneng/reverse-proxy .
+      - name: Push Docker Image Reverse Proxy
+        run: |
+          cd ReverseProxy
+          docker push tkneng/reverse-proxy-edugo:latest
       - name: Build Docker Image MYSQL
         run: |
           cd ScirptData
@@ -77,3 +92,7 @@ jobs:
         run: docker pull tkneng/go-backend:latest
       - name: Run Docker Container Backend
         run: docker run -d --network edugo-network -p 8080:8080 --restart unless-stopped --name go-backend-container tkneng/go-backend:latest
+      - name: Pull Docker Image Reverse Proxy
+        run: docker pull tkneng/reverse-proxy-edugo:latest
+      - name: Run Docker Container Reverse Proxy
+        run: docker run -d --network edugo-network -p 80:80 --restart unless-stopped --name reverse-proxy-container tkneng/reverse-proxy-edugo:latest
