@@ -48,7 +48,7 @@ jobs:
               echo "EXPOSE 80" >> Dockerfile
       - name: Build Docker Image Reverse Proxy
         run: |
-          cd ReverseProxy
+          cd Proxy
           docker build -t tkneng/reverse-proxy .
       - name: Push Docker Image Reverse Proxy
         run: |
