@@ -44,7 +44,7 @@ jobs:
               cd Proxy
               rm -rf Dockerfile || true
               echo "FROM nginx:alpine" > Dockerfile
-              echo "COPY ./default.conf /etc/nginx/conf.d/" >> Dockerfile
+              echo "COPY ./nginx.conf /etc/nginx/conf.d/default.conf" >> Dockerfile
               echo "EXPOSE 80" >> Dockerfile
       - name: Build Docker Image Reverse Proxy
         run: |
