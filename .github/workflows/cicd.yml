@@ -49,7 +49,7 @@ jobs:
       - name: Build Docker Image Reverse Proxy
         run: |
           cd Proxy
-          docker build -t tkneng/reverse-proxy .
+          docker build -t tkneng/reverse-proxy-edugo .
       - name: Push Docker Image Reverse Proxy
         run: |
           cd Proxy
