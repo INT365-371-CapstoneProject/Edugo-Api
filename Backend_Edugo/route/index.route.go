@@ -8,7 +8,7 @@ import (
 )
 
 func RouteInit(r *fiber.App) {
-	r.Get("/public/*", static.New(config.ProjectRootPath+"/public"))
+	r.Get("/api/public/*", static.New(config.ProjectRootPath+"/public"))
 	r.Get("/api/posts", handler.GetAllPost)
 	r.Get("/api/posts/:id", handler.GetPostByID)
 	r.Post("/api/posts/create", handler.CreatePost)
