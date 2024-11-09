@@ -102,7 +102,6 @@ func UpdatePost(ctx fiber.Ctx) error {
 		})
 	} else {
 		// Update File Image
-		// 1.Handle File Image
 		_, errFile := ctx.FormFile("image")
 		if errFile != nil {
 			log.Println("Error File = ", errFile)
@@ -120,7 +119,6 @@ func UpdatePost(ctx fiber.Ctx) error {
 		}
 
 		// Update File Attach
-		// 2.Handle File Attach
 		_, errFileAttach := ctx.FormFile("attach_file")
 		if errFileAttach != nil {
 			log.Println("Error File Attach = ", errFileAttach)
