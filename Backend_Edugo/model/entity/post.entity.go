@@ -7,7 +7,8 @@ type Post struct {
 	Title          string `json:"title"`
 	Description    string `json:"description"`
 	URL            *string `json:"url"`
-	Attach_File    *[]byte `json:"attach_file"`
+	Attach_File    *string `json:"attach_file"`
+	Image 		*string `json:"image"`
 	Posts_Type      string `json:"post_type"`
 	Publish_Date *time.Time `json:"published_date"`
 	Close_Date    *time.Time `json:"closed_date"`
