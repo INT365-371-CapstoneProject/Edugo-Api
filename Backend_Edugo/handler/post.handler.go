@@ -1,20 +1,15 @@
 package handler
 
 import (
-	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
 	"github.com/tk-neng/demo-go-fiber/model/entity"
 	"github.com/tk-neng/demo-go-fiber/request"
+	"github.com/tk-neng/demo-go-fiber/utils"
 )
-
-var im int = 1
-var pdf int = 1
 
 func GetAllPost(ctx fiber.Ctx) error {
 	var posts []entity.Post
@@ -52,51 +47,9 @@ func CreatePost(ctx fiber.Ctx) error {
 	}
 
 	// Handle File Image
-	file, errFile := ctx.FormFile("image")
-	if errFile != nil {
-		log.Println("Error File = ", errFile)
-	}
-
-	var filename *string
-	if file != nil {
-		filename = &file.Filename
-		extenstionFile := filepath.Ext(*filename)
-		newFilename := fmt.Sprintf("%d%s", im, extenstionFile)
-		errSaveFile := ctx.SaveFile(file, fmt.Sprintf("./public/images/%s", newFilename))
-		if errSaveFile != nil {
-			log.Println("Fail to store file into public/images directory.")
-		} else {
-			im++
-			filename = &newFilename
-		}
-	} else {
-		log.Println("No file uploaded")
-		filename = nil
-	}
-
+	filename := ctx.Locals("filenameImage").(*string)
 	// Handle File Attach
-	fileAttach, errFileAttach := ctx.FormFile("attach_file")
-	if errFileAttach != nil {
-		log.Println("Error File Attach = ", errFileAttach)
-	}
-
-	var filenameAttach *string
-	if fileAttach != nil {
-		filenameAttach = &fileAttach.Filename
-		extenstionFileAttach := filepath.Ext(*filenameAttach)
-		newFilenameAttach := fmt.Sprintf("%d%s", pdf, extenstionFileAttach)
-		errSaveFileAttach := ctx.SaveFile(fileAttach, fmt.Sprintf("./public/pdfs/%s", newFilenameAttach))
-		if errSaveFileAttach != nil {
-			log.Println("Fail to store file into public/attach directory.")
-		} else {
-			pdf++
-			filenameAttach = &newFilenameAttach
-		}
-	} else {
-		log.Println("No file uploaded")
-		filenameAttach = nil
-	}
-
+	filenameAttach := ctx.Locals("filenameAttach").(*string)
 	// Create New Post
 	newPost := entity.Post{
 		Title:        post.Title,
@@ -147,87 +100,60 @@ func UpdatePost(ctx fiber.Ctx) error {
 		return ctx.Status(404).JSON(fiber.Map{
 			"error message": "Post not found",
 		})
-	}
-
-	// Update File Image
-	// 1.Handle File Image
-	file, errFile := ctx.FormFile("image")
-	if errFile != nil {
-		log.Println("Error File = ", errFile)
 	} else {
-		// Remove Old File Image
-		errDeleteImage := os.Remove(fmt.Sprintf("./public/images/%s", *post.Image))
-		if errDeleteImage != nil {
-			log.Println("Failed to remove image file")
-		}
-		// Add New File Image
-		var filename *string
-		if file != nil {
-			filename = &file.Filename
-			extenstionFile := filepath.Ext(*filename)
-			newFilename := fmt.Sprintf("%d%s", im, extenstionFile)
-			errSaveFile := ctx.SaveFile(file, fmt.Sprintf("./public/images/%s", newFilename))
-			if errSaveFile != nil {
-				log.Println("Fail to store file into public/images directory.")
-			} else {
-				im++
-				filename = &newFilename
-			}
+		// Update File Image
+		// 1.Handle File Image
+		_, errFile := ctx.FormFile("image")
+		if errFile != nil {
+			log.Println("Error File = ", errFile)
 		} else {
-			log.Println("No file uploaded")
-			filename = nil
-		}
-		post.Image = filename
-	}
-
-	// Update File Attach
-	// 2.Handle File Attach
-	fileAttach, errFileAttach := ctx.FormFile("attach_file")
-	if errFileAttach != nil {
-		log.Println("Error File Attach = ", errFileAttach)
-	} else {
-		// Remove Old File Attach
-		errDeleteAttach := os.Remove(fmt.Sprintf("./public/pdfs/%s", *post.Attach_File))
-		if errDeleteAttach != nil {
-			log.Println("Failed to remove attach file")
-		}
-		// Add New File Attach
-		var filenameAttach *string
-		if fileAttach != nil {
-			filenameAttach = &fileAttach.Filename
-			extenstionFileAttach := filepath.Ext(*filenameAttach)
-			newFilenameAttach := fmt.Sprintf("%d%s", pdf, extenstionFileAttach)
-			errSaveFileAttach := ctx.SaveFile(fileAttach, fmt.Sprintf("./public/pdfs/%s", newFilenameAttach))
-			if errSaveFileAttach != nil {
-				log.Println("Fail to store file into public/attach directory.")
-			} else {
-				pdf++
-				filenameAttach = &newFilenameAttach
+			// Remove Old File Image
+			if post.Image != nil {
+				errDeleteImage := utils.HandleRemoveFileImage(*post.Image)
+				if errDeleteImage != nil {
+					log.Println("Failed to remove image file:", errDeleteImage)
+				}
 			}
-		} else {
-			log.Println("No file uploaded")
-			filenameAttach = nil
+			// Add New File Image
+			filename := ctx.Locals("filenameImage").(*string)
+			post.Image = filename
 		}
-		post.Attach_File = filenameAttach
-	}
-	// Update Post
-	if postRequest.Title != "" {
-		post.Title = postRequest.Title
-	}
-	if postRequest.Description != "" {
-		post.Description = postRequest.Description
-	}
-	post.URL = postRequest.URL
-	post.Close_Date = postRequest.Close_Date
 
-	errUpdate := database.DB.Save(&post).Error
-	if errUpdate != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"error message": errUpdate.Error(),
-		})
-	}
+		// Update File Attach
+		// 2.Handle File Attach
+		_, errFileAttach := ctx.FormFile("attach_file")
+		if errFileAttach != nil {
+			log.Println("Error File Attach = ", errFileAttach)
+		} else {
+			// Remove Old File Attach
+			if post.Attach_File != nil {
+				errDeleteAttach := utils.HandleRemoveFileAttach(*post.Attach_File)
+				if errDeleteAttach != nil {
+					log.Println("Failed to remove attach file:", errDeleteAttach)
+				}
+			}
+			// Add New File Attach
+			filenameAttach := ctx.Locals("filenameAttach").(*string)
+			post.Attach_File = filenameAttach
+		}
+		// Update Post
+		if postRequest.Title != "" {
+			post.Title = postRequest.Title
+		}
+		if postRequest.Description != "" {
+			post.Description = postRequest.Description
+		}
+		post.URL = postRequest.URL
+		post.Close_Date = postRequest.Close_Date
 
-	return ctx.JSON(post)
+		errUpdate := database.DB.Save(&post).Error
+		if errUpdate != nil {
+			return ctx.Status(400).JSON(fiber.Map{
+				"error message": errUpdate.Error(),
+			})
+		}
+	}
+	return ctx.Status(200).JSON(post)
 }
 
 func DeletePost(ctx fiber.Ctx) error {
@@ -239,27 +165,31 @@ func DeletePost(ctx fiber.Ctx) error {
 		return ctx.Status(404).JSON(fiber.Map{
 			"message": "post not found",
 		})
-	}
+	} else {
+		// Handle File Remove Image
+		if post.Image != nil {
+			errDeleteImage := utils.HandleRemoveFileImage(*post.Image)
+			if errDeleteImage != nil {
+				log.Println("Failed to remove image file:", errDeleteImage)
+			}
+		}
 
-	// Remove File Image
-	errDeleteImage := os.Remove(fmt.Sprintf("./public/images/%s", *post.Image))
-	if errDeleteImage != nil {
-		log.Println("Failed to remove image file")
-	}
+		// Handle File Remove Attach
+		if post.Attach_File != nil {
+			errDeleteAttach := utils.HandleRemoveFileAttach(*post.Attach_File)
+			if errDeleteAttach != nil {
+				log.Println("Failed to remove attach file:", errDeleteAttach)
+			}
+		}
 
-	// Remove File Attach
-	errDeleteAttach := os.Remove(fmt.Sprintf("./public/pdfs/%s", *post.Attach_File))
-	if errDeleteAttach != nil {
-		log.Println("Failed to remove attach file")
-	}
-
-	errDeletePost := database.DB.Debug().Delete(&post, "posts_id = ?", postId).Error
-	if errDeletePost != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"error message": errDeletePost.Error(),
+		errDeletePost := database.DB.Debug().Delete(&post, "posts_id = ?", postId).Error
+		if errDeletePost != nil {
+			return ctx.Status(400).JSON(fiber.Map{
+				"error message": errDeletePost.Error(),
+			})
+		}
+		return ctx.JSON(fiber.Map{
+			"message": "post deleted",
 		})
 	}
-	return ctx.JSON(fiber.Map{
-		"message": "post deleted",
-	})
 }
