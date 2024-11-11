@@ -6,7 +6,6 @@ import (
 	"log"
 	"mime/multipart"
 	"os"
-	"path/filepath"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -34,8 +33,7 @@ func HandleFileImage(ctx fiber.Ctx) error {
 		}
 
 		filenameImage = &fileImage.Filename
-		extenstionFileImage := filepath.Ext(*filenameImage)
-		newFilenameImage := fmt.Sprintf("%d%s", im, extenstionFileImage)
+		newFilenameImage := fmt.Sprintf("%d", im)
 		errSaveFileImage := ctx.SaveFile(fileImage, fmt.Sprintf("./public/images/%s", newFilenameImage))
 		if errSaveFileImage != nil {
 			log.Println("Fail to store file into public/images directory.")
@@ -69,8 +67,7 @@ func HandleFileAttach(ctx fiber.Ctx) error {
 		}
 
 		filenameAttach = &fileAttach.Filename
-		extenstionFileAttach := filepath.Ext(*filenameAttach)
-		newFilenameAttach := fmt.Sprintf("%d%s", pdf, extenstionFileAttach)
+		newFilenameAttach := fmt.Sprintf("%d", pdf)
 		errSaveFileAttach := ctx.SaveFile(fileAttach, fmt.Sprintf("./public/pdfs/%s", newFilenameAttach))
 		if errSaveFileAttach != nil {
 			log.Println("Fail to store file into public/attach directory.")
