@@ -52,6 +52,10 @@ func GetAllAnnoucePost(ctx fiber.Ctx) error {
 func CreatePost(ctx fiber.Ctx) error {
 	post := new(request.AnnouncePostCreateRequest)
 	if err := ctx.Bind().Body(post); err != nil {
+		// clear temp file
+		utils.ClearTempFiles()
+		// create temp folder
+		utils.CreateTempFolder()
 		return err
 	}
 	// Validate Request
@@ -60,10 +64,14 @@ func CreatePost(ctx fiber.Ctx) error {
 		for _, err := range errValidate.(validator.ValidationErrors) {
 			switch err.Tag() {
 			case "required":
+				utils.ClearTempFiles()
+				utils.CreateTempFolder()
 				return ctx.Status(400).JSON(fiber.Map{
 					"error": "The post type field is required.",
 				})
-			case "enum":
+			case "oneof":
+				utils.ClearTempFiles()
+				utils.CreateTempFolder()
 				return ctx.Status(400).JSON(fiber.Map{
 					"error": "The post type must be either 'Announce' or 'Subject'.",
 				})
@@ -149,6 +157,8 @@ func CreatePost(ctx fiber.Ctx) error {
 			Category_ID:    newAnnouncePost.Category_ID,
 			Country_ID:     newPost.Country_ID,
 		}
+		// ย้ายไฟล์จาก temp ไปยัง public
+		utils.RemoveTempToPublic()
 		// ส่งข้อมูลกลับไปในรูปแบบ JSON
 		return ctx.Status(201).JSON(postResponse)
 
