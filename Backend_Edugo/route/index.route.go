@@ -16,5 +16,5 @@ func RouteInit(r *fiber.App) {
 	r.Get("/api/annouce/:id", handler.GetAnnouncePostByID)
 	r.Post("/api/annouce/create", handler.CreateAnnouncePost,utils.HandleFileImage,utils.HandleFileAttach)
 	r.Put("/api/annouce/update/:id", handler.UpdateAnnouncePost, utils.HandleFileImage, utils.HandleFileAttach)
-	r.Delete("/api/post/delete/:id", handler.DeleteAnnouncePost)
+	r.Delete("/api/annouce/delete/:id", handler.DeleteAnnouncePost)
 }
