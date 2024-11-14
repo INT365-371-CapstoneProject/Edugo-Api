@@ -85,8 +85,16 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 		filenameAttach := ctx.Locals("filenameAttach").(*string)
 
 		if post.Publish_Date == nil {
-			now := time.Now()
+			now := time.Now().UTC()
 			post.Publish_Date = &now
+		}else{
+			utcTime := post.Publish_Date.UTC()
+			post.Publish_Date = &utcTime
+		}
+
+		if post.Close_Date != nil {
+			utcTime := post.Close_Date.UTC()
+			post.Close_Date = &utcTime
 		}
 
 		// เริ่มต้น Transaction
@@ -241,6 +249,7 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 		})
 	}
 
+
 	// Update fields in Post table based on request data
 	if postRequest.Title != "" {
 		announcePost.Post.Title = postRequest.Title
@@ -249,7 +258,12 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 		announcePost.Post.Description = postRequest.Description
 	}
 	if postRequest.Publish_Date != nil {
-		announcePost.Post.Publish_Date = postRequest.Publish_Date
+		utcTime := postRequest.Publish_Date.UTC()
+		announcePost.Post.Publish_Date = &utcTime
+	}
+	if postRequest.Close_Date != nil {
+		utcTime := postRequest.Close_Date.UTC()
+		announcePost.Close_Date = &utcTime
 	}
 	if postRequest.Country_ID != 0 {
 		announcePost.Post.Country_ID = postRequest.Country_ID
