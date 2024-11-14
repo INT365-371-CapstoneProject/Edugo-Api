@@ -2,25 +2,27 @@ package request
 
 import "time"
 
-type PostCreateRequest struct {
+type AnnouncePostCreateRequest struct {
 	Title        string     `json:"title" validate:"required"`
 	Description  string     `json:"description" validate:"required"`
-	URL          *string     `json:"url"`
-	Attach_File  *string     `json:"attach_file"`
-	Image        *string     `json:"image"`
-	Posts_Type   string     `json:"post_type" validate:"required" enum:"Annouce,Subject"`
+	URL          *string    `json:"url"`
+	Attach_File  *string    `json:"attach_file"`
+	Image        *string    `json:"image"`
+	Posts_Type   string     `json:"posts_type" validate:"required,oneof=Announce Subject"`
 	Publish_Date *time.Time `json:"published_date"`
 	Close_Date   *time.Time `json:"closed_date"`
-	Provider_ID  *uint        `json:"provider_id"`
-	User_ID      *uint        `json:"user_id"`
+	Category_ID  uint       `json:"category_id" validate:"required"`
+	Country_ID   uint       `json:"country_id" validate:"required"`
 }
 
-
-type PostUpdateRequest struct {
+type AnnouncePostUpdateRequest struct {
 	Title        string     `json:"title" validate:"required"`
 	Description  string     `json:"description" validate:"required"`
-	URL          *string     `json:"url"`
+	URL          *string    `json:"url"`
 	Attach_File  *string    `json:"attach_file"`
-	Image		*string     `json:"image"`
+	Image        *string    `json:"image"`
+	Publish_Date *time.Time `json:"published_date"`
 	Close_Date   *time.Time `json:"closed_date"`
+	Category_ID  uint       `json:"category_id" validate:"required"`
+	Country_ID   uint       `json:"country_id" validate:"required"`
 }
