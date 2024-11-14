@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`announce_posts` (
   CONSTRAINT `fk_announce_posts_posts1`
     FOREIGN KEY (`posts_id`)
     REFERENCES `edugo`.`posts` (`posts_id`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_announce_posts_categories1`
     FOREIGN KEY (`category_id`)
