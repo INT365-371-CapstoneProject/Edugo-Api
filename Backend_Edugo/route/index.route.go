@@ -10,11 +10,11 @@ import (
 
 func RouteInit(r *fiber.App) {
 	r.Get("/api/public/*", static.New(config.ProjectRootPath+"/public"))
-	r.Get("/api/annouce", handler.GetAllAnnouncePost)
+	r.Get("/api/announce", handler.GetAllAnnouncePost)
 	r.Get("/api/country", handler.GatAllCountry)
 	r.Get("/api/category", handler.GetAllCategory)
-	r.Get("/api/annouce/:id", handler.GetAnnouncePostByID)
-	r.Post("/api/annouce/create", handler.CreateAnnouncePost,utils.HandleFileImage,utils.HandleFileAttach)
-	r.Put("/api/annouce/update/:id", handler.UpdateAnnouncePost, utils.HandleFileImage, utils.HandleFileAttach)
-	r.Delete("/api/annouce/delete/:id", handler.DeleteAnnouncePost)
+	r.Get("/api/announce/:id", handler.GetAnnouncePostByID)
+	r.Post("/api/announce/add", handler.CreateAnnouncePost,utils.HandleFileImage,utils.HandleFileAttach)
+	r.Put("/api/announce/update/:id", handler.UpdateAnnouncePost, utils.HandleFileImage, utils.HandleFileAttach)
+	r.Delete("/api/announce/delete/:id", handler.DeleteAnnouncePost)
 }
