@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`announce_posts` (
   `announce_id` INT NOT NULL AUTO_INCREMENT,
   `url` VARCHAR(50) NULL,
   `attach_file` LONGTEXT NULL,
-  `close_date` DATETIME NULL,
+  `close_date` DATETIME NOT NULL,
   `posts_id` INT NOT NULL,
   `category_id` INT NOT NULL,
   PRIMARY KEY (`announce_id`),

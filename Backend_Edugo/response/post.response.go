@@ -26,7 +26,7 @@ type AnnouncePostResponseAdd struct {
 	URL            *string `json:"url"`
 	Attach_File    *string `json:"attach_file"`
 	Image          *string `json:"image"`
-	Post_Type      string  `json:"post_type"`
+	Posts_Type      string  `json:"posts_type"`
 	Published_Date *time.Time `json:"published_date"`
 	Close_Date    *time.Time  `json:"close_date"`
 	Category_ID    uint    `json:"category_id"`

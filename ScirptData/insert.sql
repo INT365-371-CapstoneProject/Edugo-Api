@@ -27,5 +27,5 @@ INSERT INTO `edugo`.`categories` (`category_id`, `name`) VALUES
 
 -- Insert into announce_posts
 INSERT INTO `edugo`.`announce_posts` (`announce_id`, `url`, `attach_file`, `close_date`, `posts_id`, `category_id`) VALUES
-(1, 'https://example.com/announcement1', NULL, NULL, 1, 1),
-(2, 'https://example.com/announcement2', NULL, NULL, 2, 2);
+(1, 'https://example.com/announcement1', NULL, "2024-12-20 12:29:29", 1, 1),
+(2, 'https://example.com/announcement2', NULL, "2024-11-10 12:29:29", 2, 2);
