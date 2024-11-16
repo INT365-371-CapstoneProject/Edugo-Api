@@ -100,6 +100,8 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 		// เริ่มต้น Transaction
 		tx := database.DB.Begin()
 		if tx.Error != nil {
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
 			return ctx.Status(404).JSON(fiber.Map{
 				"error": "Failed to begin transaction",
 			})
@@ -116,13 +118,18 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 		}
 		if err := tx.Create(&newPost).Error; err != nil {
 			tx.Rollback()
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
 			return ctx.Status(404).JSON(fiber.Map{
 				"error": "Failed to create post",
 			})
+			
 		}
 		// ตรวจสอบว่าได้ Posts_ID หลังจากการสร้าง post
 		if newPost.Posts_ID == 0 {
 			tx.Rollback()
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
 			return ctx.Status(404).JSON(fiber.Map{
 				"error": "Failed to create post",
 			})
@@ -138,6 +145,8 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 		}
 		if err := tx.Create(&newAnnouncePost).Error; err != nil {
 			tx.Rollback()
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
 			return ctx.Status(404).JSON(fiber.Map{
 				"error": "Failed to create announce post",
 			})
@@ -146,6 +155,8 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 		// ยืนยันการทำงานของ Transaction
 		if err := tx.Commit().Error; err != nil {
 			tx.Rollback()
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
 			return ctx.Status(404).JSON(fiber.Map{
 				"error": "Failed to commit transaction",
 			})
@@ -244,6 +255,8 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 	// Begin a transaction
 	tx := database.DB.Begin()
 	if tx.Error != nil {
+		utils.ClearTempFiles()
+		utils.CreateTempFolder()
 		return ctx.Status(404).JSON(fiber.Map{
 			"error": "Failed to begin transaction",
 		})
@@ -301,6 +314,8 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 	// Save updated Post record
 	if err := tx.Save(&announcePost.Post).Error; err != nil {
 		tx.Rollback()
+		utils.ClearTempFiles()
+		utils.CreateTempFolder()
 		return ctx.Status(404).JSON(fiber.Map{
 			"error message": "Failed to update post details",
 		})
@@ -309,6 +324,8 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 	// Save updated Announce_Post record
 	if err := tx.Save(&announcePost).Error; err != nil {
 		tx.Rollback()
+		utils.ClearTempFiles()
+		utils.CreateTempFolder()
 		return ctx.Status(404).JSON(fiber.Map{
 			"error message": "Failed to update announce post details",
 		})
@@ -317,6 +334,8 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 	// Commit the transaction
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
+		utils.ClearTempFiles()
+		utils.CreateTempFolder()
 		return ctx.Status(404).JSON(fiber.Map{
 			"error message": "Failed to commit transaction",
 		})

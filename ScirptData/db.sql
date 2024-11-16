@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`posts` (
   `posts_type` ENUM('Announce', 'Subject') NOT NULL,
   `country_id` INT NOT NULL,
   PRIMARY KEY (`posts_id`),
+  UNIQUE KEY `unique_image` (`image`(255)), -- กำหนด key length 255 ตัวอักษร
   INDEX `fk_posts_countries1_idx` (`country_id` ASC) VISIBLE,
   CONSTRAINT `fk_posts_countries1`
     FOREIGN KEY (`country_id`)
@@ -47,17 +48,20 @@ CREATE TABLE IF NOT EXISTS `edugo`.`posts` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+
+
 -- -----------------------------------------------------
 -- Table `edugo`.`comments`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `edugo`.`comments` (
   `comments_id` INT NOT NULL AUTO_INCREMENT,
   `comments_text` VARCHAR(500) NOT NULL,
-  `comments_image` LONGTEXT NULL DEFAULT NULL,
+  `comments_image` LONGTEXT NULL,
   `comments_type` ENUM('Announce', 'Subject') NOT NULL,
   `publish_date` DATETIME NULL DEFAULT NULL,
   `posts_id` INT NOT NULL,
   PRIMARY KEY (`comments_id`),
+  UNIQUE KEY `unique_comments_image` (`comments_image`(255)), -- กำหนด key length 255 ตัวอักษร
   INDEX `fk_comments_posts1_idx` (`posts_id` ASC) VISIBLE,
   CONSTRAINT `fk_comments_posts1`
     FOREIGN KEY (`posts_id`)
@@ -87,6 +91,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`announce_posts` (
   `posts_id` INT NOT NULL,
   `category_id` INT NOT NULL,
   PRIMARY KEY (`announce_id`),
+  UNIQUE KEY `unique_attach_file` (`attach_file`(255)), -- กำหนด key length 255 ตัวอักษร
   INDEX `fk_announce_posts_posts1_idx` (`posts_id` ASC) VISIBLE,
   INDEX `fk_announce_posts_categories1_idx` (`category_id` ASC) VISIBLE,
   CONSTRAINT `fk_announce_posts_posts1`
@@ -100,6 +105,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`announce_posts` (
     ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
+
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
