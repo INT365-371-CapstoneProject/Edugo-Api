@@ -63,20 +63,11 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 	validate := validator.New()
 	if errValidate := validate.Struct(post); errValidate != nil {
 		for _, err := range errValidate.(validator.ValidationErrors) {
-			switch err.Tag() {
-			case "required":
-				utils.ClearTempFiles()
-				utils.CreateTempFolder()
-				return ctx.Status(400).JSON(fiber.Map{
-					"error": "The post type field is required.",
-				})
-			case "oneof":
-				utils.ClearTempFiles()
-				utils.CreateTempFolder()
-				return ctx.Status(400).JSON(fiber.Map{
-					"error": "The post type must be either 'Announce' or 'Subject'.",
-				})
-			}
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
+			return ctx.Status(400).JSON(fiber.Map{
+				"error": err.Error(),
+			})
 		}
 	} else {
 		// Handle File Image
@@ -250,6 +241,18 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 		return ctx.Status(404).JSON(fiber.Map{
 			"error message": "Post not found",
 		})
+	}
+
+	// Validate Request
+	validate := validator.New()
+	if errValidate := validate.Struct(postRequest); errValidate != nil {
+		for _, err := range errValidate.(validator.ValidationErrors) {
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
+			return ctx.Status(400).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
 	}
 
 	// Begin a transaction
