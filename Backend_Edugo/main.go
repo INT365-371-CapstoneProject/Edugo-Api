@@ -14,7 +14,9 @@ func main() {
 	// Iinitial database
 	database.DatabaseInit()
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		BodyLimit: 20 * 1024 * 1024, // 20MB
+	})
 
 
 	// Load .env file
