@@ -85,7 +85,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `edugo`.`announce_posts` (
   `announce_id` INT NOT NULL AUTO_INCREMENT,
-  `url` VARCHAR(50) NULL,
+  `url` VARCHAR(255) NULL,
   `attach_file` LONGTEXT NULL,
   `close_date` DATETIME NOT NULL,
   `posts_id` INT NOT NULL,

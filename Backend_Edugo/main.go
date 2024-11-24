@@ -15,7 +15,8 @@ func main() {
 	database.DatabaseInit()
 
 	app := fiber.New(fiber.Config{
-		BodyLimit: 20 * 1024 * 1024, // 20MB
+		// 50MB
+		BodyLimit: 50 * 1024 * 1024,
 	})
 
 

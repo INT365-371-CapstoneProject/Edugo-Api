@@ -14,6 +14,7 @@ import (
 
 const DefaultPathImage = "./public/images/%s"
 const DefaultPathAttach = "./public/pdfs/%s"
+const MaxFileSize = 5 * 1024 * 1024 // 5MB
 
 func HandleFileImage(ctx fiber.Ctx) error {
 	// Handle File Image
@@ -24,6 +25,12 @@ func HandleFileImage(ctx fiber.Ctx) error {
 
 	var filenameImage *string
 	if fileImage != nil {
+		if fileImage.Size > MaxFileSize {
+			return ctx.Status(fiber.StatusRequestEntityTooLarge).JSON(fiber.Map{
+				"error message": "File size exceeds 5MB",
+			})
+		}
+
 		errCheckContentType := checkContentTypeImage(fileImage, "image/jpeg", "image/png", "image/jpg")
 		if errCheckContentType != nil {
 			return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
@@ -55,7 +62,6 @@ func HandleFileImage(ctx fiber.Ctx) error {
 	return ctx.Next()
 }
 
-
 func HandleFileAttach(ctx fiber.Ctx) error {
 	// Handle File Attach
 	fileAttach, errFileAttach := ctx.FormFile("attach_file")
@@ -65,6 +71,12 @@ func HandleFileAttach(ctx fiber.Ctx) error {
 
 	var filenameAttach *string
 	if fileAttach != nil {
+		if fileAttach.Size > MaxFileSize {
+			return ctx.Status(fiber.StatusRequestEntityTooLarge).JSON(fiber.Map{
+				"error message": "File size exceeds 5MB",
+			})
+		}
+
 		// ตรวจสอบประเภทไฟล์
 		errCheckContentType := checkContentTypeImage(fileAttach, "application/pdf")
 		if errCheckContentType != nil {
@@ -97,7 +109,6 @@ func HandleFileAttach(ctx fiber.Ctx) error {
 	ctx.Locals("filenameAttach", filenameAttach)
 	return ctx.Next()
 }
-
 
 func HandleRemoveFileImage(filename string) error {
 	err := os.Remove(fmt.Sprintf(DefaultPathImage, filename))

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -57,7 +58,9 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 		utils.ClearTempFiles()
 		// create temp folder
 		utils.CreateTempFolder()
-		return err
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid request data",
+		})
 	}
 	// Validate Request
 	validate := validator.New()
@@ -78,13 +81,28 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 		if post.Publish_Date == nil {
 			now := time.Now().UTC()
 			post.Publish_Date = &now
-		}else{
+		} else {
 			utcTime := post.Publish_Date.UTC()
+			if utcTime.Before(time.Now().UTC()) {
+				utils.ClearTempFiles()
+				utils.CreateTempFolder()
+				return ctx.Status(400).JSON(fiber.Map{
+					"error": "Publish date cannot be in the past",
+				})
+			}
 			post.Publish_Date = &utcTime
 		}
 
 		if post.Close_Date != nil {
 			utcTime := post.Close_Date.UTC()
+			if utcTime.Before(time.Now().UTC()) || utcTime.Before(*post.Publish_Date) {
+				utils.ClearTempFiles()
+				utils.CreateTempFolder()
+				fmt.Println("Close Date: ", post.Close_Date)
+				return ctx.Status(400).JSON(fiber.Map{
+					"error": "Close date cannot be in the past or before publish date",
+				})
+			}
 			post.Close_Date = &utcTime
 		}
 
@@ -93,7 +111,7 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 		if tx.Error != nil {
 			utils.ClearTempFiles()
 			utils.CreateTempFolder()
-			return ctx.Status(404).JSON(fiber.Map{
+			return ctx.Status(400).JSON(fiber.Map{
 				"error": "Failed to begin transaction",
 			})
 		}
@@ -111,7 +129,7 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 			tx.Rollback()
 			utils.ClearTempFiles()
 			utils.CreateTempFolder()
-			return ctx.Status(404).JSON(fiber.Map{
+			return ctx.Status(400).JSON(fiber.Map{
 				"error": "Failed to create post",
 			})
 			
@@ -121,7 +139,7 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 			tx.Rollback()
 			utils.ClearTempFiles()
 			utils.CreateTempFolder()
-			return ctx.Status(404).JSON(fiber.Map{
+			return ctx.Status(400).JSON(fiber.Map{
 				"error": "Failed to create post",
 			})
 		}
@@ -138,7 +156,7 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 			tx.Rollback()
 			utils.ClearTempFiles()
 			utils.CreateTempFolder()
-			return ctx.Status(404).JSON(fiber.Map{
+			return ctx.Status(400).JSON(fiber.Map{
 				"error": "Failed to create announce post",
 			})
 		}
@@ -148,7 +166,7 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 			tx.Rollback()
 			utils.ClearTempFiles()
 			utils.CreateTempFolder()
-			return ctx.Status(404).JSON(fiber.Map{
+			return ctx.Status(400).JSON(fiber.Map{
 				"error": "Failed to commit transaction",
 			})
 		}
@@ -260,11 +278,10 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 	if tx.Error != nil {
 		utils.ClearTempFiles()
 		utils.CreateTempFolder()
-		return ctx.Status(404).JSON(fiber.Map{
+		return ctx.Status(400).JSON(fiber.Map{
 			"error": "Failed to begin transaction",
 		})
 	}
-
 
 	// Update fields in Post table based on request data
 	if postRequest.Title != "" {
@@ -275,10 +292,24 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 	}
 	if postRequest.Publish_Date != nil {
 		utcTime := postRequest.Publish_Date.UTC()
+		if utcTime.Before(time.Now().UTC()) {
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
+			return ctx.Status(400).JSON(fiber.Map{
+				"error": "Publish date cannot be in the past",
+			})
+		}
 		announcePost.Post.Publish_Date = &utcTime
 	}
 	if postRequest.Close_Date != nil {
 		utcTime := postRequest.Close_Date.UTC()
+		if utcTime.Before(time.Now().UTC()) && utcTime.Before(*announcePost.Post.Publish_Date) {
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
+			return ctx.Status(400).JSON(fiber.Map{
+				"error": "Close date cannot be in the past or before publish date",
+			})
+		}
 		announcePost.Close_Date = &utcTime
 	}
 	if postRequest.Country_ID != 0 {
@@ -319,7 +350,7 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 		tx.Rollback()
 		utils.ClearTempFiles()
 		utils.CreateTempFolder()
-		return ctx.Status(404).JSON(fiber.Map{
+		return ctx.Status(400).JSON(fiber.Map{
 			"error message": "Failed to update post details",
 		})
 	}
@@ -329,7 +360,7 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 		tx.Rollback()
 		utils.ClearTempFiles()
 		utils.CreateTempFolder()
-		return ctx.Status(404).JSON(fiber.Map{
+		return ctx.Status(400).JSON(fiber.Map{
 			"error message": "Failed to update announce post details",
 		})
 	}
@@ -339,7 +370,7 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 		tx.Rollback()
 		utils.ClearTempFiles()
 		utils.CreateTempFolder()
-		return ctx.Status(404).JSON(fiber.Map{
+		return ctx.Status(400).JSON(fiber.Map{
 			"error message": "Failed to commit transaction",
 		})
 	}
@@ -431,7 +462,7 @@ func DeleteAnnouncePost(ctx fiber.Ctx) error {
 	}
 
 	// ส่งข้อความตอบกลับ
-	return ctx.JSON(fiber.Map{
+	return ctx.Status(200).JSON(fiber.Map{
 		"message": "post and announce post deleted",
 	})
 }
