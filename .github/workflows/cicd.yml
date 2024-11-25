@@ -44,7 +44,6 @@ jobs:
               rm -rf Dockerfile || true
               echo "FROM nginx:alpine" > Dockerfile
               echo "COPY ./nginx.conf /etc/nginx/conf.d/default.conf" >> Dockerfile
-              echo "COPY /home/sysadmin/certificateFiles/ /ssl/" >> Dockerfile
               echo "EXPOSE 80" >> Dockerfile
               echo "EXPOSE 443" >> Dockerfile
       - name: Build Docker Image Reverse Proxy
@@ -96,4 +95,4 @@ jobs:
       - name: Pull Docker Image Reverse Proxy
         run: docker pull tkneng/reverse-proxy-edugo:latest
       - name: Run Docker Container Reverse Proxy
-        run: docker run -d --network edugo-network -p 80:80 --restart unless-stopped --name reverse-proxy-container tkneng/reverse-proxy-edugo:latest
+        run: docker run -d --network edugo-network -p 80:80 -p 443:443 -v /home/sysadmin/certificateFiles/:/ssl/ --restart unless-stopped --name reverse-proxy-container tkneng/reverse-proxy-edugo:latest
