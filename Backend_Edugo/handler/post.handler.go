@@ -290,6 +290,9 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 	if postRequest.Description != "" {
 		announcePost.Post.Description = postRequest.Description
 	}
+	if postRequest.URL != nil || *postRequest.URL != "" {
+		announcePost.Url = postRequest.URL
+	}
 	if postRequest.Publish_Date != nil {
 		utcTime := postRequest.Publish_Date.UTC()
 		if utcTime.Before(time.Now().UTC()) {
