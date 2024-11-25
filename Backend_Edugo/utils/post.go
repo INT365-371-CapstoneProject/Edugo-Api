@@ -29,3 +29,10 @@ func GetCountryName(post *entity.Post) error {
 	post.Country = country
 	return nil
 }
+
+func GetCountryNamePost(post *entity.Post) error {
+	var country entity.Country
+	database.DB.First(&country, "country_id = ?", post.Country_ID)
+	post.Country = country
+	return nil
+}

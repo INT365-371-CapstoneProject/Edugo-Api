@@ -5,7 +5,10 @@ import (
 	"log"
 	"time"
 
+	"github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
+	enTranslations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
 	"github.com/tk-neng/demo-go-fiber/model/entity"
@@ -13,6 +16,296 @@ import (
 	"github.com/tk-neng/demo-go-fiber/response"
 	"github.com/tk-neng/demo-go-fiber/utils"
 )
+
+var (
+	uni      *ut.UniversalTranslator
+	validate *validator.Validate
+	trans    ut.Translator
+)
+
+func init() {
+	enLocale := en.New()
+	uni = ut.New(enLocale, enLocale)
+	trans, _ = uni.GetTranslator("en")
+	validate = validator.New()
+	enTranslations.RegisterDefaultTranslations(validate, trans)
+}
+
+func GetAllPost(ctx fiber.Ctx) error {
+	var posts []entity.Post
+	result := database.DB.Where("posts_type = ?", "Subject").Find(&posts)
+	if result.Error != nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"error message": result.Error.Error(),
+		})
+	} else {
+		for i := range posts {
+			utils.GetCountryNamePost(&posts[i])
+		}
+		var postsResponse []response.PostResponse
+		for _, post := range posts {
+			postsResponse = append(postsResponse, response.PostResponse{
+				Post_ID:      post.Posts_ID,
+				Title:        post.Title,
+				Description:  post.Description,
+				Image:        post.Image,
+				Publish_Date: post.Publish_Date,
+				Posts_Type:   post.Posts_Type,
+				Country:      post.Country.Name,
+			})
+		}
+		return ctx.Status(200).JSON(postsResponse)
+	}
+}
+
+func GetPostByID(ctx fiber.Ctx) error {
+	postId := ctx.Params("id")
+	var post entity.Post
+	result := database.DB.Where("posts_id = ? AND posts_type = ?", postId, "Subject").First(&post)
+	if result.Error != nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"error message": result.Error.Error(),
+		})
+	} else {
+		utils.GetCountryNamePost(&post)
+		postResponse := response.PostResponse{
+			Post_ID:      post.Posts_ID,
+			Title:        post.Title,
+			Description:  post.Description,
+			Image:        post.Image,
+			Publish_Date: post.Publish_Date,
+			Posts_Type:   post.Posts_Type,
+			Country:      post.Country.Name,
+		}
+		return ctx.Status(200).JSON(postResponse)
+	}
+}
+
+func CreatePost(ctx fiber.Ctx) error {
+	post := new(request.PostCreateRequest)
+	if err := ctx.Bind().Body(post); err != nil {
+		utils.ClearTempFiles()
+		utils.CreateTempFolder()
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid request data",
+		})
+	}
+	// Validate Request
+	if errValidate := validate.Struct(post); errValidate != nil {
+		for _, err := range errValidate.(validator.ValidationErrors) {
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
+			return ctx.Status(400).JSON(fiber.Map{
+				"error": err.Translate(trans), // Use a translator for custom messages
+			})
+		}
+	} else {
+		// Handle File Image
+		filename := ctx.Locals("filenameImage").(*string)
+		if post.Publish_Date == nil {
+			now := time.Now().UTC()
+			post.Publish_Date = &now
+		} else {
+			utcTime := post.Publish_Date.UTC()
+			post.Publish_Date = &utcTime
+		}
+		// เริ่มต้น Transaction
+		tx := database.DB.Begin()
+		if tx.Error != nil {
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
+			return ctx.Status(400).JSON(fiber.Map{
+				"error": "Failed to begin transaction",
+			})
+		}
+		// Create New Post
+		newPost := entity.Post{
+			Title:        post.Title,
+			Description:  post.Description,
+			Image:        filename,
+			Posts_Type:   post.Posts_Type,
+			Publish_Date: post.Publish_Date,
+			Country_ID:   post.Country_ID,
+		}
+		if err := tx.Create(&newPost).Error; err != nil {
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
+			tx.Rollback()
+			return ctx.Status(400).JSON(fiber.Map{
+				"error": "Failed to create post",
+			})
+		}
+
+		// ยืนยันการทำงานของ Transaction
+		if err := tx.Commit().Error; err != nil {
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
+			tx.Rollback()
+			return ctx.Status(400).JSON(fiber.Map{
+				"error": "Failed to commit transaction",
+			})
+		}
+
+		// สร้างตัวแปรแบบ PostResponse
+		// และกำหนดค่าให้กับตัวแปรนี้
+		postResponse := response.PostResponseAdd{
+			Post_ID:      newPost.Posts_ID,
+			Title:        newPost.Title,
+			Description:  newPost.Description,
+			Image:        newPost.Image,
+			Publish_Date: newPost.Publish_Date,
+			Posts_Type:   newPost.Posts_Type,
+			Country_ID:   newPost.Country_ID,
+		}
+		// ย้ายไฟล์จาก temp ไปยัง public
+		utils.RemoveTempToPublic()
+		// ส่งข้อมูลกลับไปในรูปแบบ JSON
+		return ctx.Status(201).JSON(postResponse)
+	}
+	return ctx.Status(400).JSON(fiber.Map{
+		"error": "Bad Request",
+	})
+}
+
+func UpdatePost(ctx fiber.Ctx) error {
+	postRequest := new(request.PostUpdateRequest)
+	if err := ctx.Bind().Body(postRequest); err != nil {
+		// clear temp file
+		utils.ClearTempFiles()
+		// create temp folder
+		utils.CreateTempFolder()
+		return ctx.Status(400).JSON(fiber.Map{
+			"error message": "Invalid request data",
+		})
+	}
+	postId := ctx.Params("id")
+
+	var post entity.Post
+	err := database.DB.Where("posts_id = ?", postId).First(&post).Error
+	if err != nil {
+		// clear temp file
+		utils.ClearTempFiles()
+		// create temp folder
+		utils.CreateTempFolder()
+		return ctx.Status(404).JSON(fiber.Map{
+			"error message": "Post not found",
+		})
+	}
+
+	// Validate Request
+	if errValidate := validate.Struct(postRequest); errValidate != nil {
+		for _, err := range errValidate.(validator.ValidationErrors) {
+			utils.ClearTempFiles()
+			utils.CreateTempFolder()
+			return ctx.Status(400).JSON(fiber.Map{
+				"error": err.Translate(trans), // Use a translator for custom messages
+			})
+		}
+	}
+
+	// Begin a transaction
+	tx := database.DB.Begin()
+	if tx.Error != nil {
+		utils.ClearTempFiles()
+		utils.CreateTempFolder()
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Failed to begin transaction",
+		})
+	}
+
+	// Update fields in Post table based on request data
+	if postRequest.Title != "" {
+		post.Title = postRequest.Title
+	}
+	if postRequest.Description != "" {
+		post.Description = postRequest.Description
+	}
+	if postRequest.Publish_Date != nil {
+		utcTime := postRequest.Publish_Date.UTC()
+		post.Publish_Date = &utcTime
+	}
+	if postRequest.Country_ID != 0 {
+		post.Country_ID = postRequest.Country_ID
+	}
+
+	// Update File Image if provided
+	if _, errFile := ctx.FormFile("image"); errFile == nil {
+		// Remove old file if exists
+		if post.Image != nil {
+			if err := utils.HandleRemoveFileImage(*post.Image); err != nil {
+				log.Println("Failed to remove old image file:", err)
+			}
+		}
+		// Set new file
+		filename := ctx.Locals("filenameImage").(*string)
+		post.Image = filename
+	}
+
+	// Save updated Post record
+	if err := tx.Save(&post).Error; err != nil {
+		utils.ClearTempFiles()
+		utils.CreateTempFolder()
+		tx.Rollback()
+		return ctx.Status(400).JSON(fiber.Map{
+			"error message": "Failed to update post details",
+		})
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		utils.ClearTempFiles()
+		utils.CreateTempFolder()
+		tx.Rollback()
+		return ctx.Status(400).JSON(fiber.Map{
+			"error message": "Failed to commit transaction",
+		})
+	}
+
+	// Construct response data
+	postResponse := response.PostResponseAdd{
+		Post_ID:      post.Posts_ID,
+		Title:        post.Title,
+		Description:  post.Description,
+		Image:        post.Image,
+		Publish_Date: post.Publish_Date,
+		Posts_Type:   post.Posts_Type,
+		Country_ID:   post.Country_ID,
+	}
+
+	// Move files from temp to public
+	utils.RemoveTempToPublic()
+	// Return the updated response
+	return ctx.Status(200).JSON(postResponse)
+}
+
+func DeletePost(ctx fiber.Ctx) error {
+	postId := ctx.Params("id")
+	var post entity.Post
+	err := database.DB.Where("posts_id = ? AND posts_type = ?", postId, "Subject").First(&post).Error
+	if err != nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"message": "post not found",
+		})
+	}
+
+	if post.Image != nil {
+		errDeleteImage := utils.HandleRemoveFileImage(*post.Image)
+		if errDeleteImage != nil {
+			log.Println("Failed to remove image file:", errDeleteImage)
+		}
+	}
+
+	err = database.DB.Delete(&post).Error
+	if err != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"message": "failed to delete post",
+		})
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{
+		"message": "post deleted successfully",
+	})
+}
 
 func GetAllAnnouncePost(ctx fiber.Ctx) error {
 	var posts []entity.Announce_Post
@@ -33,17 +326,17 @@ func GetAllAnnouncePost(ctx fiber.Ctx) error {
 			// สร้างตัวแปรแบบ AnnouncePostResponse
 			// และกำหนดค่าให้กับตัวแปรนี้
 			postsResponse = append(postsResponse, response.AnnouncePostResponse{
-				Announce_ID:    post.Announce_ID,
-				Title:          post.Post.Title,
-				Description:    post.Post.Description,
-				URL:            post.Url,
-				Attach_File:    post.Attach_File,
-				Image:          post.Post.Image,
-				Posts_Type:      post.Post.Posts_Type,
+				Announce_ID:  post.Announce_ID,
+				Title:        post.Post.Title,
+				Description:  post.Post.Description,
+				URL:          post.Url,
+				Attach_File:  post.Attach_File,
+				Image:        post.Post.Image,
+				Posts_Type:   post.Post.Posts_Type,
 				Publish_Date: post.Post.Publish_Date,
-				Close_Date:     post.Close_Date,
-				Category:       post.Category.Name,
-				Country:        post.Post.Country.Name,
+				Close_Date:   post.Close_Date,
+				Category:     post.Category.Name,
+				Country:      post.Post.Country.Name,
 			})
 		}
 		// ส่งข้อมูลกลับไปในรูปแบบ JSON
@@ -63,13 +356,12 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 		})
 	}
 	// Validate Request
-	validate := validator.New()
 	if errValidate := validate.Struct(post); errValidate != nil {
 		for _, err := range errValidate.(validator.ValidationErrors) {
 			utils.ClearTempFiles()
 			utils.CreateTempFolder()
 			return ctx.Status(400).JSON(fiber.Map{
-				"error": err.Error(),
+				"error": err.Translate(trans), // Use a translator for custom messages
 			})
 		}
 	} else {
@@ -83,24 +375,17 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 			post.Publish_Date = &now
 		} else {
 			utcTime := post.Publish_Date.UTC()
-			if utcTime.Before(time.Now().UTC()) {
-				utils.ClearTempFiles()
-				utils.CreateTempFolder()
-				return ctx.Status(400).JSON(fiber.Map{
-					"error": "Publish date cannot be in the past",
-				})
-			}
 			post.Publish_Date = &utcTime
 		}
 
 		if post.Close_Date != nil {
 			utcTime := post.Close_Date.UTC()
-			if utcTime.Before(time.Now().UTC()) || utcTime.Before(*post.Publish_Date) {
+			if utcTime.Before(*post.Publish_Date) {
 				utils.ClearTempFiles()
 				utils.CreateTempFolder()
 				fmt.Println("Close Date: ", post.Close_Date)
 				return ctx.Status(400).JSON(fiber.Map{
-					"error": "Close date cannot be in the past or before publish date",
+					"error": "Close date cannot be before publish date",
 				})
 			}
 			post.Close_Date = &utcTime
@@ -130,9 +415,9 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 			utils.ClearTempFiles()
 			utils.CreateTempFolder()
 			return ctx.Status(400).JSON(fiber.Map{
-				"error": "Failed to create post",
+				"error": "Failed to create post1",
 			})
-			
+
 		}
 		// ตรวจสอบว่าได้ Posts_ID หลังจากการสร้าง post
 		if newPost.Posts_ID == 0 {
@@ -140,7 +425,7 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 			utils.ClearTempFiles()
 			utils.CreateTempFolder()
 			return ctx.Status(400).JSON(fiber.Map{
-				"error": "Failed to create post",
+				"error": "Failed to create post2",
 			})
 		}
 
@@ -174,17 +459,17 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 		// สร้างตัวแปรแบบ AnnouncePostResponse
 		// และกำหนดค่าให้กับตัวแปรนี้
 		postResponse := response.AnnouncePostResponseAdd{
-			Announce_ID:    newAnnouncePost.Announce_ID,
-			Title:          newPost.Title,
-			Description:    newPost.Description,
-			URL:            newAnnouncePost.Url,
-			Attach_File:    newAnnouncePost.Attach_File,
-			Image:          newPost.Image,
-			Posts_Type:      newPost.Posts_Type,
+			Announce_ID:  newAnnouncePost.Announce_ID,
+			Title:        newPost.Title,
+			Description:  newPost.Description,
+			URL:          newAnnouncePost.Url,
+			Attach_File:  newAnnouncePost.Attach_File,
+			Image:        newPost.Image,
+			Posts_Type:   newPost.Posts_Type,
 			Publish_Date: newPost.Publish_Date,
-			Close_Date:     newAnnouncePost.Close_Date,
-			Category_ID:    newAnnouncePost.Category_ID,
-			Country_ID:     newPost.Country_ID,
+			Close_Date:   newAnnouncePost.Close_Date,
+			Category_ID:  newAnnouncePost.Category_ID,
+			Country_ID:   newPost.Country_ID,
 		}
 		// ย้ายไฟล์จาก temp ไปยัง public
 		utils.RemoveTempToPublic()
@@ -214,17 +499,17 @@ func GetAnnouncePostByID(ctx fiber.Ctx) error {
 			// สร้างตัวแปรแบบ AnnouncePostResponse
 			// และกำหนดค่าให้กับตัวแปรนี้
 			postsResponse = append(postsResponse, response.AnnouncePostResponse{
-				Announce_ID:    post.Announce_ID,
-				Title:          post.Post.Title,
-				Description:    post.Post.Description,
-				URL:            post.Url,
-				Attach_File:    post.Attach_File,
-				Image:          post.Post.Image,
-				Posts_Type:      post.Post.Posts_Type,
+				Announce_ID:  post.Announce_ID,
+				Title:        post.Post.Title,
+				Description:  post.Post.Description,
+				URL:          post.Url,
+				Attach_File:  post.Attach_File,
+				Image:        post.Post.Image,
+				Posts_Type:   post.Post.Posts_Type,
 				Publish_Date: post.Post.Publish_Date,
-				Close_Date:     post.Close_Date,
-				Category:       post.Category.Name,
-				Country:        post.Post.Country.Name,
+				Close_Date:   post.Close_Date,
+				Category:     post.Category.Name,
+				Country:      post.Post.Country.Name,
 			})
 		}
 		// ส่งข้อมูลกลับไปในรูปแบบ JSON
@@ -262,13 +547,12 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 	}
 
 	// Validate Request
-	validate := validator.New()
 	if errValidate := validate.Struct(postRequest); errValidate != nil {
 		for _, err := range errValidate.(validator.ValidationErrors) {
 			utils.ClearTempFiles()
 			utils.CreateTempFolder()
 			return ctx.Status(400).JSON(fiber.Map{
-				"error": err.Error(),
+				"error": err.Translate(trans), // Use a translator for custom messages
 			})
 		}
 	}
@@ -295,22 +579,15 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 	}
 	if postRequest.Publish_Date != nil {
 		utcTime := postRequest.Publish_Date.UTC()
-		if utcTime.Before(time.Now().UTC()) {
-			utils.ClearTempFiles()
-			utils.CreateTempFolder()
-			return ctx.Status(400).JSON(fiber.Map{
-				"error": "Publish date cannot be in the past",
-			})
-		}
 		announcePost.Post.Publish_Date = &utcTime
 	}
 	if postRequest.Close_Date != nil {
 		utcTime := postRequest.Close_Date.UTC()
-		if utcTime.Before(time.Now().UTC()) && utcTime.Before(*announcePost.Post.Publish_Date) {
+		if utcTime.Before(*announcePost.Post.Publish_Date) {
 			utils.ClearTempFiles()
 			utils.CreateTempFolder()
 			return ctx.Status(400).JSON(fiber.Map{
-				"error": "Close date cannot be in the past or before publish date",
+				"error": "Close date cannot be before publish date",
 			})
 		}
 		announcePost.Close_Date = &utcTime
@@ -380,17 +657,17 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 
 	// Construct response data
 	postResponse := response.AnnouncePostResponseAdd{
-		Announce_ID:    announcePost.Announce_ID,
-		Title:          announcePost.Post.Title,
-		Description:    announcePost.Post.Description,
-		URL:            announcePost.Url,
-		Attach_File:    announcePost.Attach_File,
-		Image:          announcePost.Post.Image,
-		Posts_Type:      announcePost.Post.Posts_Type,
+		Announce_ID:  announcePost.Announce_ID,
+		Title:        announcePost.Post.Title,
+		Description:  announcePost.Post.Description,
+		URL:          announcePost.Url,
+		Attach_File:  announcePost.Attach_File,
+		Image:        announcePost.Post.Image,
+		Posts_Type:   announcePost.Post.Posts_Type,
 		Publish_Date: announcePost.Post.Publish_Date,
-		Close_Date:     announcePost.Close_Date,
-		Category_ID:    announcePost.Category_ID,
-		Country_ID:     announcePost.Post.Country_ID,
+		Close_Date:   announcePost.Close_Date,
+		Category_ID:  announcePost.Category_ID,
+		Country_ID:   announcePost.Post.Country_ID,
 	}
 
 	// Move files from temp to public
