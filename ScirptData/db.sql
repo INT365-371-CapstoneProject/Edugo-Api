@@ -33,7 +33,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `edugo`.`posts` (
   `posts_id` INT NOT NULL AUTO_INCREMENT,
   `title` VARCHAR(100) NOT NULL,
-  `description` VARCHAR(500) NOT NULL,
+  `description` VARCHAR(3000) NOT NULL,
   `image` LONGTEXT NULL,
   `publish_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(),
   `posts_type` ENUM('Announce', 'Subject') NOT NULL,
@@ -55,7 +55,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `edugo`.`comments` (
   `comments_id` INT NOT NULL AUTO_INCREMENT,
-  `comments_text` VARCHAR(500) NOT NULL,
+  `comments_text` VARCHAR(3000) NOT NULL,
   `comments_image` LONGTEXT NULL,
   `comments_type` ENUM('Announce', 'Subject') NOT NULL,
   `publish_date` DATETIME NULL DEFAULT NULL,
