@@ -10,7 +10,7 @@ INSERT INTO `edugo`.`countries` (`country_id`, `name`) VALUES
 -- Insert into posts
 INSERT INTO `edugo`.`posts` (`posts_id`, `title`, `description`, `image`, `publish_date`, `posts_type`, `country_id`) VALUES
 (1, 'New Announcement', 'This is a new announcement for all users', NULL, NOW(), 'Announce', 1),
-(2, 'Subject Update', 'An update on the subject matter', NULL, "2024-11-10 12:29:29", 'Announce', 2);
+(2, 'Subject Update', 'An update on the subject matter', NULL, "2024-11-10 12:29:29", 'Announce', 2),
 (3, 'Scholarship Opportunities', 'Various scholarships available for students', NULL, NOW(), 'Subject', 3),
 (4, 'Study Abroad Programs', 'Information on study abroad programs', NULL, NOW(), 'Subject', 4);
 
