@@ -494,23 +494,20 @@ func GetAnnouncePostByID(ctx fiber.Ctx) error {
 		utils.GetCategoryName(post)
 		utils.GetPostByAnnounceID(post)
 
-		var postsResponse []response.AnnouncePostResponse
-		for _, post := range post {
-			// สร้างตัวแปรแบบ AnnouncePostResponse
-			// และกำหนดค่าให้กับตัวแปรนี้
-			postsResponse = append(postsResponse, response.AnnouncePostResponse{
-				Announce_ID:  post.Announce_ID,
-				Title:        post.Post.Title,
-				Description:  post.Post.Description,
-				URL:          post.Url,
-				Attach_File:  post.Attach_File,
-				Image:        post.Post.Image,
-				Posts_Type:   post.Post.Posts_Type,
-				Publish_Date: post.Post.Publish_Date,
-				Close_Date:   post.Close_Date,
-				Category:     post.Category.Name,
-				Country:      post.Post.Country.Name,
-			})
+		// สร้างตัวแปรแบบ AnnouncePostResponse
+		// และกำหนดค่าให้กับตัวแปรนี้
+		postsResponse := response.AnnouncePostResponse{
+			Announce_ID:  post[0].Announce_ID,
+			Title:        post[0].Post.Title,
+			Description:  post[0].Post.Description,
+			URL:          post[0].Url,
+			Attach_File:  post[0].Attach_File,
+			Image:        post[0].Post.Image,
+			Posts_Type:   post[0].Post.Posts_Type,
+			Publish_Date: post[0].Post.Publish_Date,
+			Close_Date:   post[0].Close_Date,
+			Category:     post[0].Category.Name,
+			Country:      post[0].Post.Country.Name,
 		}
 		// ส่งข้อมูลกลับไปในรูปแบบ JSON
 		return ctx.Status(200).JSON(postsResponse)
