@@ -74,6 +74,8 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
+      - name: Create Backup Directory
+        run: mkdir -p /home/sysadmin/backup
       - name: Backup Old Container MYSQL
         run: docker exec mysql-container mysqldump -u root --password=${{ secrets.MYSQL_ROOT_PASSWORD }} edugo > /home/sysadmin/backup/edugo.sql
       - name: Delete Old Container MYSQL
