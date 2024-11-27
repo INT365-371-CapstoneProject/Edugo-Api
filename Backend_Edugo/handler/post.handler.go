@@ -542,7 +542,6 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 			"error message": "Post not found",
 		})
 	}
-
 	// Validate Request
 	if errValidate := validate.Struct(postRequest); errValidate != nil {
 		for _, err := range errValidate.(validator.ValidationErrors) {
@@ -595,7 +594,6 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 	if postRequest.Category_ID != 0 {
 		announcePost.Category_ID = postRequest.Category_ID
 	}
-
 	// Update File Image if provided
 	if _, errFile := ctx.FormFile("image"); errFile == nil {
 		// Remove old file if exists

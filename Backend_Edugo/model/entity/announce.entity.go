@@ -11,7 +11,7 @@ type Announce_Post struct {
 	Category_ID uint       `json:"category_id"`
 
 	// ตัวแปร Post ใช้เพื่อเก็บข้อมูลจากตาราง Post
-	Post 	  Post       `gorm:"foreignKey:Posts_ID"`
+	Post 	  Post       `gorm:"foreignKey:Posts_ID;references:Posts_ID "`
 	// ตัวแปร Category ใช้เพื่อเก็บข้อมูลจากตาราง Category
 	Category  Category   `gorm:"foreignKey:Category_ID"`
 }
