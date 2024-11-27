@@ -105,4 +105,4 @@ jobs:
       - name: Copy Backup to New MySQL Container
         run: docker cp /home/sysadmin/backup/edugo.sql mysql-container:/edugo.sql
       - name: Restore Backup to New MySQL Container
-        run: docker exec -i mysql-container mysql -u root --password=${{ secrets.MYSQL_ROOT_PASSWORD }} edugo < /edugo.sql
+        run: docker exec -i mysql-container mysql -u root --password=${{ secrets.MYSQL_ROOT_PASSWORD }} edugo < /home/sysadmin/backup/edugo.sql
