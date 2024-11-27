@@ -677,7 +677,7 @@ func DeleteAnnouncePost(ctx fiber.Ctx) error {
 
 	// ค้นหาและดึงข้อมูล Announce_Post
 	var announcePost entity.Announce_Post
-	err := database.DB.First(&announcePost, "posts_id = ?", postId).Error
+	err := database.DB.Preload("Post").First(&announcePost, "announce_id = ?", postId).Error
 	if err != nil {
 		return ctx.Status(404).JSON(fiber.Map{
 			"message": "announce post not found",
@@ -686,7 +686,7 @@ func DeleteAnnouncePost(ctx fiber.Ctx) error {
 
 	// ค้นหาและดึงข้อมูล Post ที่เกี่ยวข้อง
 	var post entity.Post
-	err = database.DB.First(&post, "posts_id = ?", postId).Error
+	err = database.DB.First(&post, "posts_id = ?", announcePost.Posts_ID).Error
 	if err != nil {
 		return ctx.Status(404).JSON(fiber.Map{
 			"message": "post not found",
@@ -713,7 +713,7 @@ func DeleteAnnouncePost(ctx fiber.Ctx) error {
 	tx := database.DB.Begin()
 
 	// ลบข้อมูล Announce_Post
-	if err := tx.Delete(&announcePost, "posts_id = ?", postId).Error; err != nil {
+	if err := tx.Delete(&announcePost, "announce_id = ?", postId).Error; err != nil {
 		tx.Rollback()
 		return ctx.Status(400).JSON(fiber.Map{
 			"error message": "failed to delete announce post",
@@ -721,7 +721,7 @@ func DeleteAnnouncePost(ctx fiber.Ctx) error {
 	}
 
 	// ลบข้อมูล Post
-	if err := tx.Delete(&post, "posts_id = ?", postId).Error; err != nil {
+	if err := tx.Delete(&post, "posts_id = ?", announcePost.Posts_ID).Error; err != nil {
 		tx.Rollback()
 		return ctx.Status(400).JSON(fiber.Map{
 			"error message": "failed to delete post",
