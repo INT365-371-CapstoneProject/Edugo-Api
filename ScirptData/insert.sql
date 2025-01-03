@@ -197,27 +197,24 @@ INSERT INTO `edugo`.`countries` (`country_id`, `name`) VALUES
 (195, 'Zimbabwe');
 
 -- Insert into posts
-INSERT INTO `edugo`.`posts` (`posts_id`, `title`, `description`, `image`, `publish_date`, `posts_type`, `country_id`) VALUES
-(1, 'New Announcement', 'This is a new announcement for all users', NULL, NOW(), 'Announce', 1),
-(2, 'Subject Update', 'An update on the subject matter', NULL, "2024-11-10 12:29:29", 'Announce', 2),
-(3, 'Scholarship Opportunities', 'Various scholarships available for students', NULL, NOW(), 'Subject', 3),
-(4, 'Study Abroad Programs', 'Information on study abroad programs', NULL, NOW(), 'Subject', 4);
-
-
--- Insert into comments
-INSERT INTO `edugo`.`comments` (`comments_id`, `comments_text`, `comments_image`, `comments_type`, `publish_date`, `posts_id`) VALUES
-(1, 'Great post!', NULL, 'Announce', NOW(), 1);
+INSERT INTO `edugo`.`posts` (`description`, `image`, `posts_type`) VALUES 
+('Announcing new updates!', NULL, 'Announce'),
+('Subject introduction post.', 'https://example.com/image1.jpg', 'Subject'),
+('General post with image.', 'https://example.com/image2.jpg', 'Announce');
 
 -- Insert into categories
-INSERT INTO `edugo`.`categories` (`category_id`, `name`) VALUES
-(1, 'Full Scholarships'),
-(2, 'Partial Tuition Scholarships'),
-(3, 'Merit-Based Scholarships'),
-(4, 'Need-Based Scholarships'),
-(5, 'Research and Special Project Scholarships'),
-(6, 'Government and Corporate Scholarships');
+INSERT INTO `edugo`.`categories` (`name`) VALUES 
+('Education'), 
+('Technology'), 
+('Science');
 
 -- Insert into announce_posts
-INSERT INTO `edugo`.`announce_posts` (`announce_id`, `url`, `attach_file`, `close_date`, `posts_id`, `category_id`) VALUES
-(1, 'https://example.com/announcement1', NULL, "2024-12-20 12:29:29", 1, 1),
-(2, 'https://example.com/announcement2', NULL, "2024-11-15 12:29:29", 2, 2);
+INSERT INTO `edugo`.`announce_posts` (`title`, `url`, `attach_file`, `close_date`, `posts_id`, `category_id`, `country_id`) VALUES 
+('New Course Available', 'https://example.com/course', NULL, '2025-12-31 23:59:59', 1, 1, 1),
+('Conference Announcement', NULL, 'https://example.com/conference.pdf', '2025-10-15 23:59:59', 3, 3, 3);
+
+-- Insert into comments
+INSERT INTO `edugo`.`comments` (`comments_text`, `comments_image`, `comments_type`, `publish_date`, `posts_id`) VALUES 
+('Great post!', NULL, 'Announce', '2025-01-03 10:00:00', 1),
+('Interesting topic.', 'https://example.com/comment1.jpg', 'Subject', '2025-01-03 11:00:00', 2),
+('Thank you for sharing!', NULL, 'Announce', '2025-01-03 12:00:00', 3);

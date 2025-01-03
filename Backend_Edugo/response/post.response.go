@@ -35,7 +35,6 @@ type AnnouncePostResponseAdd struct {
 
 type PostResponse struct {
 	Post_ID    uint    `json:"id"`
-	Title      string  `json:"title"`
 	Description string  `json:"description"`
 	Image	  *string `json:"image"`
 	Publish_Date *time.Time `json:"publish_date"`
