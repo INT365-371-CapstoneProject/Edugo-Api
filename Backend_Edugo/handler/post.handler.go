@@ -476,38 +476,35 @@ func GetAllAnnouncePost(ctx fiber.Ctx) error {
 // 	})
 // }
 
-// func GetAnnouncePostByID(ctx fiber.Ctx) error {
-// 	postId := ctx.Params("id")
-// 	var post []entity.Announce_Post
-// 	result := database.DB.Where("announce_id = ?", postId).First(&post)
-// 	if result.Error != nil {
-// 		return ctx.Status(404).JSON(fiber.Map{
-// 			"error message": result.Error.Error(),
-// 		})
-// 	} else {
-// 		utils.GetCategoryName(post)
-// 		utils.GetPostByAnnounceID(post)
+func GetAnnouncePostByID(ctx fiber.Ctx) error {
+	postId := ctx.Params("id")
+	var post []entity.Announce_Post
+	result := database.DB.Where("announce_id = ?", postId).Preload("Category").Preload("Country").Preload("Post").First(&post)
+	if result.Error != nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"error message": result.Error.Error(),
+		})
+	} else {
+		// สร้างตัวแปรแบบ AnnouncePostResponse
+		// และกำหนดค่าให้กับตัวแปรนี้
+		postsResponse := response.AnnouncePostResponse{
+			Announce_ID:  post[0].Announce_ID,
+			Title:        post[0].Title,
+			Description:  post[0].Post.Description,
+			URL:          post[0].Url,
+			Attach_File:  post[0].Attach_File,
+			Image:        post[0].Post.Image,
+			Posts_Type:   post[0].Post.Posts_Type,
+			Publish_Date: post[0].Post.Publish_Date,
+			Close_Date:   post[0].Close_Date,
+			Category:     post[0].Category.Name,
+			Country:      post[0].Country.Name,
+		}
+		// ส่งข้อมูลกลับไปในรูปแบบ JSON
+		return ctx.Status(200).JSON(postsResponse)
+	}
 
-// 		// สร้างตัวแปรแบบ AnnouncePostResponse
-// 		// และกำหนดค่าให้กับตัวแปรนี้
-// 		postsResponse := response.AnnouncePostResponse{
-// 			Announce_ID:  post[0].Announce_ID,
-// 			Title:        post[0].Post.Title,
-// 			Description:  post[0].Post.Description,
-// 			URL:          post[0].Url,
-// 			Attach_File:  post[0].Attach_File,
-// 			Image:        post[0].Post.Image,
-// 			Posts_Type:   post[0].Post.Posts_Type,
-// 			Publish_Date: post[0].Post.Publish_Date,
-// 			Close_Date:   post[0].Close_Date,
-// 			Category:     post[0].Category.Name,
-// 			Country:      post[0].Post.Country.Name,
-// 		}
-// 		// ส่งข้อมูลกลับไปในรูปแบบ JSON
-// 		return ctx.Status(200).JSON(postsResponse)
-// 	}
-
-// }
+}
 
 // func UpdateAnnouncePost(ctx fiber.Ctx) error {
 // 	// Bind the update request data

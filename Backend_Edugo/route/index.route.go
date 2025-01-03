@@ -14,7 +14,7 @@ func RouteInit(r *fiber.App) {
 	// r.Get("/api/subject", handler.GetAllPost)
 	// r.Get("/api/country", handler.GatAllCountry)
 	// r.Get("/api/category", handler.GetAllCategory)
-	// r.Get("/api/announce/:id", handler.GetAnnouncePostByID)
+	r.Get("/api/announce/:id", handler.GetAnnouncePostByID)
 	// r.Get("/api/subject/:id", handler.GetPostByID)
 	// r.Post("/api/announce/add", handler.CreateAnnouncePost,utils.HandleFileImage,utils.HandleFileAttach)
 	// r.Post("/api/subject/add", handler.CreatePost,utils.HandleFileImage)
