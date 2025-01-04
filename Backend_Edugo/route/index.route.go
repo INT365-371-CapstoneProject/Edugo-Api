@@ -5,7 +5,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/tk-neng/demo-go-fiber/config"
 	"github.com/tk-neng/demo-go-fiber/handler"
-	// "github.com/tk-neng/demo-go-fiber/utils"
+	"github.com/tk-neng/demo-go-fiber/utils"
 )
 
 func RouteInit(r *fiber.App) {
@@ -16,7 +16,7 @@ func RouteInit(r *fiber.App) {
 	// r.Get("/api/category", handler.GetAllCategory)
 	r.Get("/api/announce/:id", handler.GetAnnouncePostByID)
 	// r.Get("/api/subject/:id", handler.GetPostByID)
-	// r.Post("/api/announce/add", handler.CreateAnnouncePost,utils.HandleFileImage,utils.HandleFileAttach)
+	r.Post("/api/announce/add", handler.CreateAnnouncePost,utils.HandleFileImage,utils.HandleFileAttach)
 	// r.Post("/api/subject/add", handler.CreatePost,utils.HandleFileImage)
 	// r.Put("/api/announce/update/:id", handler.UpdateAnnouncePost, utils.HandleFileImage, utils.HandleFileAttach)
 	// r.Put("/api/subject/update/:id", handler.UpdatePost, utils.HandleFileImage)
