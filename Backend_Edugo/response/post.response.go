@@ -39,7 +39,6 @@ type PostResponse struct {
 	Image	  *string `json:"image"`
 	Publish_Date *time.Time `json:"publish_date"`
 	Posts_Type  string  `json:"posts_type"`
-	Country     string `json:"country"`
 }
 
 type PostResponseAdd struct {
