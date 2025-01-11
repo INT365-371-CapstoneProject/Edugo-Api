@@ -5,12 +5,14 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/tk-neng/demo-go-fiber/config"
 	"github.com/tk-neng/demo-go-fiber/handler"
+	"github.com/tk-neng/demo-go-fiber/middleware"
 	"github.com/tk-neng/demo-go-fiber/utils"
 )
 
+
 func RouteInit(r *fiber.App) {
 	r.Get("/api/public/*", static.New(config.ProjectRootPath+"/public"))
-	r.Get("/api/announce", handler.GetAllAnnouncePost)
+	r.Get("/api/announce", handler.GetAllAnnouncePost,middleware.Auth)
 	r.Get("/api/subject", handler.GetAllPost)
 	r.Get("/api/country", handler.GatAllCountry)
 	r.Get("/api/category", handler.GetAllCategory)
