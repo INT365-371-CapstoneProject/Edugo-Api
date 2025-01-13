@@ -14,16 +14,22 @@ func RouteInit(r *fiber.App) {
 	r.Get("/api/public/*", static.New(config.ProjectRootPath+"/public"))
 	r.Post("/api/login", handler.Login) 
 
-	r.Get("/api/announce", handler.GetAllAnnouncePost,middleware.Auth)
-	r.Get("/api/subject", handler.GetAllPost)
+	// route user
+	r.Get("/api/user", handler.GetAllUser)
+
+	// route country and category
 	r.Get("/api/country", handler.GatAllCountry)
 	r.Get("/api/category", handler.GetAllCategory)
+
+	// route post
+	r.Get("/api/announce", handler.GetAllAnnouncePost,middleware.Auth)
+	r.Get("/api/subject", handler.GetAllPost)
 	r.Get("/api/announce/:id", handler.GetAnnouncePostByID)
 	r.Get("/api/subject/:id", handler.GetPostByID)
-	r.Post("/api/announce/add", handler.CreateAnnouncePost,utils.HandleFileImage,utils.HandleFileAttach)
-	r.Post("/api/subject/add", handler.CreatePost,utils.HandleFileImage)
-	r.Put("/api/announce/update/:id", handler.UpdateAnnouncePost, utils.HandleFileImage, utils.HandleFileAttach)
-	r.Put("/api/subject/update/:id", handler.UpdatePost, utils.HandleFileImage)
-	r.Delete("/api/announce/delete/:id", handler.DeleteAnnouncePost)
-	r.Delete("/api/subject/delete/:id", handler.DeletePost)
+	r.Post("/api/announce", handler.CreateAnnouncePost,utils.HandleFileImage,utils.HandleFileAttach)
+	r.Post("/api/subject", handler.CreatePost,utils.HandleFileImage)
+	r.Put("/api/announce/:id", handler.UpdateAnnouncePost, utils.HandleFileImage, utils.HandleFileAttach)
+	r.Put("/api/subject/:id", handler.UpdatePost, utils.HandleFileImage)
+	r.Delete("/api/announce/:id", handler.DeleteAnnouncePost)
+	r.Delete("/api/subject/:id", handler.DeletePost)
 }
