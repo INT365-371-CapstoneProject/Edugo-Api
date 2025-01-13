@@ -12,6 +12,8 @@ import (
 
 func RouteInit(r *fiber.App) {
 	r.Get("/api/public/*", static.New(config.ProjectRootPath+"/public"))
+	r.Post("/api/login", handler.Login) 
+
 	r.Get("/api/announce", handler.GetAllAnnouncePost,middleware.Auth)
 	r.Get("/api/subject", handler.GetAllPost)
 	r.Get("/api/country", handler.GatAllCountry)
