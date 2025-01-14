@@ -2,6 +2,7 @@ package handler
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/go-playground/locales/en"
@@ -30,6 +31,55 @@ func init() {
 	trans, _ = uni.GetTranslator("en")
 	validate = validator.New()
 	enTranslations.RegisterDefaultTranslations(validate, trans)
+
+	// Register custom translations
+	translations := []struct {
+		tag         string
+		translation string
+	}{
+		{"required", "{0} is required"},
+		{"min", "{0} must be at least {1} characters"},
+		{"max", "{0} must be at most {1} characters"},
+		{"url", "URL must be a valid URL"},
+		{"oneof", "{0} must be {1}"},
+	}
+
+	// Register all translations
+	for _, t := range translations {
+		validate.RegisterTranslation(t.tag, trans, func(ut ut.Translator) error {
+			return ut.Add(t.tag, t.translation, true)
+		}, func(ut ut.Translator, fe validator.FieldError) string {
+			param := fe.Param()
+			if t.tag == "oneof" {
+				param = "'" + param + "'"
+			}
+			t, _ := ut.T(t.tag, fe.Field(), param)
+			return t
+		})
+	}
+
+	// Register custom messages for specific fields
+	fieldMessages := map[string]string{
+		"Title.required":        "Title is required and must be between 5-100 characters",
+		"Description.required":  "Description is required and must be between 10-500 characters",
+		"Posts_Type.required":   "Posts_Type is required and must be 'Subject' or 'Announce'",
+		"Close_Date.required":   "Close_Date is required",
+		"Category_ID.required":  "Category_ID is required",
+		"Country_ID.required":   "Country_ID is required",
+	}
+
+	for field, msg := range fieldMessages {
+		parts := strings.Split(field, ".")
+		validate.RegisterTranslation(parts[1], trans, func(ut ut.Translator) error {
+			return ut.Add(field, msg, true)
+		}, func(ut ut.Translator, fe validator.FieldError) string {
+			if fe.Field() == parts[0] {
+				t, _ := ut.T(field)
+				return t
+			}
+			return fe.Error()
+		})
+	}
 }
 
 // ฟังก์ชันสำหรับจัดการข้อผิดพลาด

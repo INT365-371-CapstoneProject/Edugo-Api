@@ -8,6 +8,7 @@ import (
 	"github.com/tk-neng/demo-go-fiber/database"
 	"github.com/tk-neng/demo-go-fiber/model/entity"
 	"github.com/tk-neng/demo-go-fiber/request"
+	"github.com/tk-neng/demo-go-fiber/utils"
 )
 
 func Login(ctx fiber.Ctx) error {
@@ -16,20 +17,20 @@ func Login(ctx fiber.Ctx) error {
 	
 	loginRequest := new(request.LoginRequest)
 	if err := ctx.Bind().JSON(loginRequest); err != nil {
-		return handleError(ctx, 400, "Invalid request body")
+		return utils.HandleError(ctx, 400, "Invalid request body")
 	}
 
 	// Validate Request
 	if errValidate := validate.Struct(loginRequest); errValidate != nil {
 		for _, err := range errValidate.(validator.ValidationErrors) {
-			return handleError(ctx, 400, err.Translate(trans))
+			return utils.HandleError(ctx, 400, err.Translate(trans))
 		}
 	}
 
 	var account entity.Account
 	err := database.DB.First(&account, "email = ? OR username = ?", loginRequest.Email, loginRequest.Username).Error
 	if err != nil {
-		return handleError(ctx, 404, "User not found")
+		return utils.HandleError(ctx, 404, "User not found")
 	}
 
 	return ctx.JSON(fiber.Map{
