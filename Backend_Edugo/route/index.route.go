@@ -9,34 +9,40 @@ import (
 	"github.com/tk-neng/demo-go-fiber/utils"
 )
 
-
 func RouteInit(r *fiber.App) {
-	r.Get("/api/public/*", static.New(config.ProjectRootPath+"/public"))
-	r.Post("/api/login", handler.Login) 
+	// Public routes
+	public := r.Group("/api")
+	public.Get("/public/*", static.New(config.ProjectRootPath+"/public"))
+	public.Post("/login", handler.Login)
 
-	// route user
-	r.Get("/api/user", handler.GetAllUser)
-	r.Get("/api/user/:id", handler.GetUserByID)
-	r.Post("/api/user", handler.CreateUser)
+	// User routes
+	userGroup := public.Group("/user")
+	userGroup.Get("/", handler.GetAllUser)
+	userGroup.Get("/:id", handler.GetUserByID)
+	userGroup.Post("/", handler.CreateUser)
 
+	// Provider routes
+	providerGroup := public.Group("/provider", middleware.Auth)
+	providerGroup.Get("/", handler.GetAllProvider)
 
-	// route provider
-	r.Get("/api/provider", handler.GetAllProvider)
+	// Metadata routes (country and category)
+	metadataGroup := public.Group("")
+	metadataGroup.Get("/country", handler.GatAllCountry)
+	metadataGroup.Get("/category", handler.GetAllCategory)
 
+	// Announcement routes
+	announceGroup := public.Group("/announce")
+	announceGroup.Get("/", handler.GetAllAnnouncePost)
+	announceGroup.Get("/:id", handler.GetAnnouncePostByID)
+	announceGroup.Post("/", handler.CreateAnnouncePost, utils.HandleFileImage, utils.HandleFileAttach)
+	announceGroup.Put("/:id", handler.UpdateAnnouncePost, utils.HandleFileImage, utils.HandleFileAttach)
+	announceGroup.Delete("/:id", handler.DeleteAnnouncePost)
 
-	// route country and category
-	r.Get("/api/country", handler.GatAllCountry)
-	r.Get("/api/category", handler.GetAllCategory)
-
-	// route post
-	r.Get("/api/announce", handler.GetAllAnnouncePost,middleware.Auth)
-	r.Get("/api/subject", handler.GetAllPost)
-	r.Get("/api/announce/:id", handler.GetAnnouncePostByID)
-	r.Get("/api/subject/:id", handler.GetPostByID)
-	r.Post("/api/announce", handler.CreateAnnouncePost,utils.HandleFileImage,utils.HandleFileAttach)
-	r.Post("/api/subject", handler.CreatePost,utils.HandleFileImage)
-	r.Put("/api/announce/:id", handler.UpdateAnnouncePost, utils.HandleFileImage, utils.HandleFileAttach)
-	r.Put("/api/subject/:id", handler.UpdatePost, utils.HandleFileImage)
-	r.Delete("/api/announce/:id", handler.DeleteAnnouncePost)
-	r.Delete("/api/subject/:id", handler.DeletePost)
+	// Subject routes
+	subjectGroup := public.Group("/subject")
+	subjectGroup.Get("/", handler.GetAllPost)
+	subjectGroup.Get("/:id", handler.GetPostByID)
+	subjectGroup.Post("/", handler.CreatePost, utils.HandleFileImage)
+	subjectGroup.Put("/:id", handler.UpdatePost, utils.HandleFileImage)
+	subjectGroup.Delete("/:id", handler.DeletePost)
 }
