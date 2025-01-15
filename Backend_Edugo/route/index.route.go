@@ -16,7 +16,9 @@ func RouteInit(r *fiber.App) {
 
 	// route user
 	r.Get("/api/user", handler.GetAllUser)
+	r.Get("/api/user/:id", handler.GetUserByID)
 	r.Post("/api/user", handler.CreateUser)
+
 
 	// route country and category
 	r.Get("/api/country", handler.GatAllCountry)

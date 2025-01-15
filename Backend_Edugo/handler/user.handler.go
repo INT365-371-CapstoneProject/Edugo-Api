@@ -59,6 +59,28 @@ func GetAllUser(ctx fiber.Ctx) error {
 	return ctx.Status(200).JSON(userResponse)
 }
 
+func GetUserByID(ctx fiber.Ctx) error {
+	// Get parameter value
+	accountId := ctx.Params("id")
+	var user entity.Account
+	result := database.DB.Where("account_id = ? AND role = ?", accountId, "user").First(&user)
+	if result.Error != nil {
+		return utils.HandleError(ctx, 404, "User not found")
+	}
+
+	userResponse := response.UserResponse{
+		Account_ID: user.Account_ID,
+		Username: user.Username,
+		Email: user.Email,
+		Create_On: user.Create_On,
+		Last_Login: user.Last_Login,
+		Update_On: user.Update_On,
+		Role: user.Role,
+	}
+
+	return ctx.Status(200).JSON(userResponse)
+}
+
 func CreateUser(ctx fiber.Ctx) error {
 	user := new(request.UserRequest)
 	if err := ctx.Bind().Body(user); err != nil {
