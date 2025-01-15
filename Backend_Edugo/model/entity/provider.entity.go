@@ -2,10 +2,11 @@ package entity
 
 type Provider struct {
 	Provider_ID uint   `json:"id" gorm:"primaryKey"`
-	Provider_Name string `json:"provider_name"`
+	Company_Name string `json:"company_name"`
 	URL string `json:"url"`
 	Address string `json:"address"`
 	Status string `json:"status"`
+	Phone string `json:"phone"`
 	Verify string `json:"verify"`
 	Account_ID uint `json:"account_id"`
 

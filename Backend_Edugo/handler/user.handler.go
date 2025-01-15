@@ -143,3 +143,4 @@ func CreateUser(ctx fiber.Ctx) error {
 
 	return ctx.Status(201).JSON(userResponse)
 }
+
