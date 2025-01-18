@@ -22,8 +22,9 @@ func RouteInit(r *fiber.App) {
 	userGroup.Post("/", handler.CreateUser)
 
 	// Provider routes
-	providerGroup := public.Group("/provider", middleware.Auth)
+	providerGroup := public.Group("/provider")
 	providerGroup.Get("/", handler.GetAllProvider)
+	providerGroup.Post("/", handler.CreateProvider)
 
 	// Metadata routes (country and category)
 	metadataGroup := public.Group("")
@@ -31,7 +32,7 @@ func RouteInit(r *fiber.App) {
 	metadataGroup.Get("/category", handler.GetAllCategory)
 
 	// Announcement routes
-	announceGroup := public.Group("/announce")
+	announceGroup := public.Group("/announce", middleware.Auth)
 	announceGroup.Get("/", handler.GetAllAnnouncePost)
 	announceGroup.Get("/:id", handler.GetAnnouncePostByID)
 	announceGroup.Post("/", handler.CreateAnnouncePost, utils.HandleFileImage, utils.HandleFileAttach)
