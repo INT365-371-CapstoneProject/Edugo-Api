@@ -1,4 +1,40 @@
+-- Insert into accounts
+INSERT INTO `edugo`.`accounts` (`account_id`, `username`, `password`, `email`, `create_on`, `last_login`, `update_on`, `role`) 
+VALUES 
+(1, 'admin_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'admin@example.com', NOW(), NOW(), NOW(), 'admin'),
+(2, 'provider_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'provider@example.com', NOW(), NOW(), NOW(), 'provider'),
+(3, 'normal_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'user@example.com', NOW(), NOW(), NOW(), 'user');
+
+-- Insert into admins
+INSERT INTO `edugo`.`admins` (`admin_id`, `firstname`, `lastname`, `status`, `account_id`) 
+VALUES 
+(1, 'John', 'Doe', 'Active', 1);
+
+-- Insert into providers
+INSERT INTO `edugo`.`providers` (`provider_id`, `company_name`, `url`, `address`, `status`, `phone`, `verify`, `account_id`) 
+VALUES 
+(1, 'Tech Solutions', 'www.techsolutions.com', '123 Main St', 'Active', '0123456789', 'Y', 2);
+
 -- Insert into countries
+INSERT INTO `edugo`.`countries` (`country_id`, `name`) 
+VALUES 
+(1, 'Thailand'),
+(2, 'USA'),
+(3, 'Japan');
+
+-- Insert into posts
+INSERT INTO `edugo`.`posts` (`posts_id`, `description`, `image`, `publish_date`, `posts_type`, `account_id`) 
+VALUES 
+(1, 'Welcome to our new platform!', NULL, NOW(), 'Announce', 1),
+(2, 'New subject added to the curriculum.', NULL, NOW(), 'Announce', 3);
+
+-- Insert into comments
+INSERT INTO `edugo`.`comments` (`comments_id`, `comments_text`, `comments_image`, `comments_type`, `publish_date`, `posts_id`, `account_id`) 
+VALUES 
+(1, 'Great announcement!', NULL, 'Announce', NOW(), 1, 3),
+(2, 'Excited for this update.', NULL, 'Subject', NOW(), 2, 3);
+
+-- Insert into categories
 INSERT INTO `edugo`.`countries` (`country_id`, `name`) VALUES
 (1, 'Afghanistan'),
 (2, 'Albania'),
@@ -196,25 +232,8 @@ INSERT INTO `edugo`.`countries` (`country_id`, `name`) VALUES
 (194, 'Zambia'),
 (195, 'Zimbabwe');
 
--- Insert into posts
-INSERT INTO `edugo`.`posts` (`description`, `image`, `posts_type`) VALUES 
-('Announcing new updates!', NULL, 'Announce'),
-('Subject introduction post.', 'https://example.com/image1.jpg', 'Subject'),
-('General post with image.', 'https://example.com/image2.jpg', 'Announce');
-
--- Insert into categories
-INSERT INTO `edugo`.`categories` (`name`) VALUES 
-('Education'), 
-('Technology'), 
-('Science');
-
 -- Insert into announce_posts
-INSERT INTO `edugo`.`announce_posts` (`title`, `url`, `attach_file`, `close_date`, `posts_id`, `category_id`, `country_id`) VALUES 
-('New Course Available', 'https://example.com/course', NULL, '2025-12-31 23:59:59', 1, 1, 1),
-('Conference Announcement', NULL, 'https://example.com/conference.pdf', '2025-10-15 23:59:59', 3, 3, 3);
-
--- Insert into comments
-INSERT INTO `edugo`.`comments` (`comments_text`, `comments_image`, `comments_type`, `publish_date`, `posts_id`) VALUES 
-('Great post!', NULL, 'Announce', '2025-01-03 10:00:00', 1),
-('Interesting topic.', 'https://example.com/comment1.jpg', 'Subject', '2025-01-03 11:00:00', 2),
-('Thank you for sharing!', NULL, 'Announce', '2025-01-03 12:00:00', 3);
+INSERT INTO `edugo`.`announce_posts` (`announce_id`, `title`, `url`, `attach_file`, `close_date`, `posts_id`, `category_id`, `country_id`, `account_id`) 
+VALUES 
+(1, 'Scholarship Announcement', NULL, NULL, '2025-12-31 23:59:59', 1, 1, 1, 1),
+(2, 'New Online Course', 'www.onlinecourse.com', NULL, '2025-06-30 23:59:59', 2, 1, 2, 3);
