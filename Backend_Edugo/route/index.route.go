@@ -40,7 +40,7 @@ func RouteInit(r *fiber.App) {
 	announceGroup.Delete("/:id", handler.DeleteAnnouncePost)
 
 	// Subject routes
-	subjectGroup := public.Group("/subject")
+	subjectGroup := public.Group("/subject", middleware.AuthAny)
 	subjectGroup.Get("/", handler.GetAllPost)
 	subjectGroup.Get("/:id", handler.GetPostByID)
 	subjectGroup.Post("/", handler.CreatePost, utils.HandleFileImage)

@@ -1,36 +1,34 @@
 package middleware
 
 import (
+	"errors"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/utils"
 	"strings" // added import
 )
 
-// AuthProvider ใช้ตรวจสอบการยืนยันตัวตนของผู้ใช้ผ่าน JWT
-func AuthProvider(ctx fiber.Ctx) error {
-	// ดึงค่า Authorization จาก headers
+// extractAndDecodeToken extracts and decodes the JWT token from the Authorization header
+func extractAndDecodeToken(ctx fiber.Ctx) (map[string]interface{}, error) {
 	token := ctx.Get("Authorization")
 	if token == "" {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"message": "Unauthorized",
-		})
+		return nil, errors.New("Unauthorized")
 	}
-	// แยกโทเค็นออกเป็นส่วนๆ
 	parts := strings.Split(token, " ")
 	if len(parts) != 2 || parts[0] != "Bearer" {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"message": "Unauthorized",
-		})
+		return nil, errors.New("Unauthorized")
 	}
-	token = parts[1]
-	// ถอดรหัสโทเค็นเพื่อนำข้อมูลผู้ใช้มาใช้
-	claims, err := utils.DecodeToken(token)
+	return utils.DecodeToken(parts[1])
+}
+
+// AuthProvider ใช้ตรวจสอบการยืนยันตัวตนของผู้ใช้ผ่าน JWT
+func AuthProvider(ctx fiber.Ctx) error {
+	claims, err := extractAndDecodeToken(ctx)
 	if err != nil {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"message": "Unauthorized",
 		})
 	}
-	
+
 	// ตรวจสอบบทบาทของผู้ใช้
 	role := claims["role"].(string)
 	if role != "provider" && role != "admin" {
@@ -40,8 +38,21 @@ func AuthProvider(ctx fiber.Ctx) error {
 	}
 
 	// ดำเนินการต่อกับ middleware ถัดไป
-	// ctx.Locals("user", claims)
-	// ctx.Locals("role", claims["role"])
+	ctx.Locals("user", claims)
+	return ctx.Next()
+}
+
+// AuthAny ใช้ตรวจสอบการยืนยันตัวตนของผู้ใช้ผ่าน JWT โดยไม่ตรวจสอบบทบาท
+func AuthAny(ctx fiber.Ctx) error {
+	claims, err := extractAndDecodeToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Unauthorized",
+		})
+	}
+
+	// ดำเนินการต่อกับ middleware ถัดไป
+	ctx.Locals("user", claims)
 	return ctx.Next()
 }
 
