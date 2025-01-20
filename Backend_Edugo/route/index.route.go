@@ -32,7 +32,7 @@ func RouteInit(r *fiber.App) {
 	metadataGroup.Get("/category", handler.GetAllCategory)
 
 	// Announcement routes
-	announceGroup := public.Group("/announce", middleware.Auth)
+	announceGroup := public.Group("/announce", middleware.AuthProvider)
 	announceGroup.Get("/", handler.GetAllAnnouncePost)
 	announceGroup.Get("/:id", handler.GetAnnouncePostByID)
 	announceGroup.Post("/", handler.CreateAnnouncePost, utils.HandleFileImage, utils.HandleFileAttach)
