@@ -1,10 +1,12 @@
 package handler
 
 import (
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
 	"github.com/tk-neng/demo-go-fiber/model/entity"
+	"github.com/tk-neng/demo-go-fiber/request"
 	"github.com/tk-neng/demo-go-fiber/response"
 	"github.com/tk-neng/demo-go-fiber/utils"
 )
@@ -40,7 +42,7 @@ func GetAllProvider(ctx fiber.Ctx) error {
 }
 
 func CreateProvider(ctx fiber.Ctx) error {
-    provider := new(entity.Provider)
+    provider := new(request.ProviderCreateRequest)
     if err := ctx.Bind().Body(provider); err != nil {
         return ctx.Status(400).JSON(fiber.Map{
             "message": err.Error(),
@@ -55,7 +57,7 @@ func CreateProvider(ctx fiber.Ctx) error {
 
     // check duplicate email
     var account entity.Account
-    result := database.DB.Where("email = ?", provider.Account.Email).First(&account)
+    result := database.DB.Where("email = ?", provider.Email).First(&account)
     if result.RowsAffected > 0 {
         return ctx.Status(400).JSON(fiber.Map{
             "message": "Email already exists",
@@ -63,7 +65,7 @@ func CreateProvider(ctx fiber.Ctx) error {
     }
 
     // check duplicate username
-    result = database.DB.Where("username = ?", provider.Account.Username).First(&account)
+    result = database.DB.Where("username = ?", provider.Username).First(&account)
     if result.RowsAffected > 0 {
         return ctx.Status(400).JSON(fiber.Map{
             "message": "Username already exists",
@@ -80,14 +82,14 @@ func CreateProvider(ctx fiber.Ctx) error {
 
     // Create account
     newAccount := entity.Account{
-        Username:    provider.Account.Username,
-        Email:       provider.Account.Email,
+        Username:    provider.Username,
+        Email:       provider.Email,
         Last_Login:  nil,
         Role:        "provider",
     }
 
     // Hash password
-    hashedPassword, err := utils.HashingPassword(provider.Account.Password)
+    hashedPassword, err := utils.HashingPassword(provider.Password)
     if err != nil {
         tx.Rollback()
         return ctx.Status(500).JSON(fiber.Map{
@@ -106,7 +108,7 @@ func CreateProvider(ctx fiber.Ctx) error {
 
     // Create provider
     newProvider := entity.Provider{
-        Company_Name: provider.Company_Name,
+        Company_Name: provider.Company_name,
         URL:         provider.URL,
         Address:     provider.Address,
         Status:      "Active",

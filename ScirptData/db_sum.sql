@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`admins` (
   CONSTRAINT `fk_admins_accounts1`
     FOREIGN KEY (`account_id`)
     REFERENCES `edugo`.`accounts` (`account_id`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 AUTO_INCREMENT = 2
@@ -69,7 +69,7 @@ COLLATE = utf8mb4_0900_ai_ci;
 CREATE TABLE IF NOT EXISTS `edugo`.`providers` (
   `provider_id` INT NOT NULL AUTO_INCREMENT,
   `company_name` VARCHAR(50) NOT NULL,
-  `url` VARCHAR(50) NOT NULL,
+  `url` VARCHAR(500) NOT NULL,
   `address` VARCHAR(100) NOT NULL,
   `status` ENUM('Active', 'Inactive') NOT NULL,
   `phone` VARCHAR(10) NOT NULL,
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`providers` (
   CONSTRAINT `fk_providers_accounts1`
     FOREIGN KEY (`account_id`)
     REFERENCES `edugo`.`accounts` (`account_id`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 AUTO_INCREMENT = 3

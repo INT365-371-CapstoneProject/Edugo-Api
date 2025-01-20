@@ -14,9 +14,9 @@ import (
 )
 
 func Login(ctx fiber.Ctx) error {
-	
+
 	loginRequest := new(request.LoginRequest)
-	if err := ctx.Bind().JSON(loginRequest); err != nil {
+	if err := ctx.Bind().Body(loginRequest); err != nil {
 		return utils.HandleError(ctx, 400, "Invalid request body")
 	}
 
@@ -40,13 +40,21 @@ func Login(ctx fiber.Ctx) error {
 		return utils.HandleError(ctx, 400, "Invalid password")
 	}
 
+	// กำหนดระยะเวลา token ตาม RememberMe
+	var expirationTime time.Time
+	if loginRequest.RememberMe {
+		expirationTime = time.Now().Add(time.Hour * 24 * 30) // 30 days
+	} else {
+		expirationTime = time.Now().Add(time.Hour * 24) // 1 day
+	}
+
 	// Generate JWT Token
 	claims := jwt.MapClaims{}
 	claims["email"] = account.Email
 	claims["username"] = account.Username
 	claims["role"] = account.Role
 	// Set token expire time to 7 days
-	claims["exp"] = time.Now().Add(time.Hour * 24 * 7).Unix()
+	claims["exp"] = expirationTime.Unix()
 
 	token, errGenerateToken := utils.GenerateToken(&claims)
 	if errGenerateToken != nil {
