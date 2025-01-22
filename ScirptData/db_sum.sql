@@ -40,6 +40,29 @@ AUTO_INCREMENT = 4
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
+-- -----------------------------------------------------
+-- Table `edugo`.`otps`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `edugo`.`otps` (
+  `otp_id` INT NOT NULL AUTO_INCREMENT,
+  `code` VARCHAR(6) NOT NULL,
+  `is_used` BOOLEAN DEFAULT FALSE,
+  `attempt_count` INT DEFAULT 0,
+  `expired_at` DATETIME NOT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `account_id` INT NOT NULL,
+  PRIMARY KEY (`otp_id`),
+  INDEX `idx_account_code` (`account_id`, `code`),
+  INDEX `idx_expired_at` (`expired_at`),
+  CONSTRAINT `fk_otps_accounts`
+    FOREIGN KEY (`account_id`)
+    REFERENCES `edugo`.`accounts` (`account_id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+) ENGINE = InnoDB
+  DEFAULT CHARACTER SET = utf8mb4
+  COLLATE = utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
 -- Table `edugo`.`admins`

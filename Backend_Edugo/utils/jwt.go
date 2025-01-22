@@ -44,5 +44,5 @@ func DecodeToken(tokenString string) (jwt.MapClaims, error) {
 		return claims, nil
 	} 
 
-	return nil, fmt.Errorf("Invalid token")
+	return nil, fmt.Errorf("invalid token")
 }

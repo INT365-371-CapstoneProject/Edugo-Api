@@ -15,6 +15,10 @@ func RouteInit(r *fiber.App) {
 	public.Get("/public/*", static.New(config.ProjectRootPath+"/public"))
 	public.Post("/login", handler.Login)
 
+	// forgot password
+	public.Post("/auth/forgot-password", handler.ForgotPassword)
+	public.Post("/auth/verify-otp", handler.VerifyOTP)
+
 	// User routes
 	userGroup := public.Group("/user")
 	userGroup.Get("/", handler.GetAllUser)

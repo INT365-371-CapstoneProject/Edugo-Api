@@ -15,12 +15,6 @@ INSERT INTO `edugo`.`providers` (`provider_id`, `company_name`, `url`, `address`
 VALUES 
 (1, 'Tech Solutions', 'www.techsolutions.com', '123 Main St', 'Active', '0123456789', 'Y', 2);
 
--- Insert into countries
-INSERT INTO `edugo`.`countries` (`country_id`, `name`) 
-VALUES 
-(1, 'Thailand'),
-(2, 'USA'),
-(3, 'Japan');
 
 -- Insert into posts
 INSERT INTO `edugo`.`posts` (`posts_id`, `description`, `image`, `publish_date`, `posts_type`, `account_id`) 
@@ -35,6 +29,15 @@ VALUES
 (2, 'Excited for this update.', NULL, 'Subject', NOW(), 2, 3);
 
 -- Insert into categories
+INSERT INTO `edugo`.`categories` (`category_id`, `name`) VALUES
+(1, 'Full Scholarships'),
+(2, 'Partial Tuition Scholarships'),
+(3, 'Merit-Based Scholarships'),
+(4, 'Need-Based Scholarships'),
+(5, 'Research and Special Project Scholarships'),
+(6, 'Government and Corporate Scholarships');
+
+-- Insert into countries
 INSERT INTO `edugo`.`countries` (`country_id`, `name`) VALUES
 (1, 'Afghanistan'),
 (2, 'Albania'),
@@ -231,6 +234,12 @@ INSERT INTO `edugo`.`countries` (`country_id`, `name`) VALUES
 (193, 'Yemen'),
 (194, 'Zambia'),
 (195, 'Zimbabwe');
+
+-- Insert sample data for otps table
+INSERT INTO `edugo`.`otps` (`code`, `is_used`, `expired_at`, `account_id`) 
+VALUES 
+('123456', false, DATE_ADD(NOW(), INTERVAL 15 MINUTE), 1),
+('654321', true, DATE_ADD(NOW(), INTERVAL 15 MINUTE), 2);
 
 -- Insert into announce_posts
 INSERT INTO `edugo`.`announce_posts` (`announce_id`, `title`, `url`, `attach_file`, `close_date`, `posts_id`, `category_id`, `country_id`, `account_id`) 
