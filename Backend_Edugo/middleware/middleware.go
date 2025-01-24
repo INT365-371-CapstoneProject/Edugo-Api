@@ -60,3 +60,8 @@ func AuthAny(ctx fiber.Ctx) error {
 func PermissionCreate(ctx fiber.Ctx) error {
 	return ctx.Next()
 }
+
+func GetTokenClaims(ctx fiber.Ctx) map[string]interface{} {
+	claims, _ := extractAndDecodeToken(ctx)
+	return claims
+}

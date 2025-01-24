@@ -12,10 +12,12 @@ import (
 	enTranslations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
+	"github.com/tk-neng/demo-go-fiber/middleware"
 	"github.com/tk-neng/demo-go-fiber/model/entity"
 	"github.com/tk-neng/demo-go-fiber/request"
 	"github.com/tk-neng/demo-go-fiber/response"
 	"github.com/tk-neng/demo-go-fiber/utils"
+	"gorm.io/gorm" // Add this import
 )
 
 // ตัวแปรสำหรับการแปลภาษาและตรวจสอบความถูกต้อง
@@ -350,7 +352,11 @@ func DeletePost(ctx fiber.Ctx) error {
 }
 
 // GetAllAnnouncePost - ดึงข้อมูลประกาศทั้งหมด
-func GetAllAnnouncePost(ctx fiber.Ctx) error {
+func GetAllAnnouncePostForProvider(ctx fiber.Ctx) error {
+	// เรียกใช้ฟังก์ชัน GetTokenClaims เพื่อดึงข้อมูลจาก JWT
+	claims := middleware.GetTokenClaims(ctx)
+	username := claims["username"].(string)
+
 	// Get page and limit from query parameters
 	page := 1
 	if pageStr := ctx.Query("page"); pageStr != "" {
@@ -372,14 +378,27 @@ func GetAllAnnouncePost(ctx fiber.Ctx) error {
 	var posts []entity.Announce_Post
 	var total int64
 
+	// หา account_id จาก username ก่อน
+	var account entity.Account
+	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+		return handleError(ctx, 404, "Account not found")
+	}
+
 	// Count total records
-	database.DB.Model(&entity.Announce_Post{}).Count(&total)
+	database.DB.Model(&entity.Announce_Post{}).
+		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+		Where("posts.account_id = ?", account.Account_ID).
+		Count(&total)
 
 	// Get paginated data with preloaded relations
 	result := database.DB.
-		Preload("Post").
+		Preload("Post", func(db *gorm.DB) *gorm.DB {
+			return db.Where("account_id = ?", account.Account_ID)
+		}).
 		Preload("Category").
 		Preload("Country").
+		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+		Where("posts.account_id = ?", account.Account_ID).
 		Offset(offset).
 		Limit(limit).
 		Find(&posts)
@@ -419,10 +438,27 @@ func GetAllAnnouncePost(ctx fiber.Ctx) error {
 }
 
 // GetAnnouncePostByID - ดึงข้อมูลประกาศตาม ID ที่ระบุ
-func GetAnnouncePostByID(ctx fiber.Ctx) error {
+func GetAnnouncePostByIDForProvider(ctx fiber.Ctx) error {
+	// เรียกใช้ฟังก์ชัน GetTokenClaims เพื่อดึงข้อมูลจาก JWT
+	claims := middleware.GetTokenClaims(ctx)
+	username := claims["username"].(string)
 	postId := ctx.Params("id")
+
+	// หา account จาก username
+	var account entity.Account
+	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Account not found",
+		})
+	}
+
 	var post []entity.Announce_Post
-	result := database.DB.Where("announce_id = ?", postId).Preload("Category").Preload("Country").Preload("Post").First(&post)
+	result := database.DB.Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+		Where("announce_posts.announce_id = ? AND posts.account_id = ?", postId, account.Account_ID).
+		Preload("Category").
+		Preload("Country").
+		Preload("Post").
+		First(&post)
 	if result.Error != nil {
 		return handleError(ctx, 404, result.Error.Error())
 	}
@@ -469,7 +505,7 @@ func GetAnnouncePostAttach(ctx fiber.Ctx) error {
 }
 
 // CreateAnnouncePost - สร้างประกาศใหม่
-func CreateAnnouncePost(ctx fiber.Ctx) error {
+func CreateAnnouncePostForProvider(ctx fiber.Ctx) error {
 	post := new(request.AnnouncePostCreateRequest)
 	if err := ctx.Bind().Body(post); err != nil {
 		return handleError(ctx, 400, "Invalid request data")
@@ -603,16 +639,31 @@ func CreateAnnouncePost(ctx fiber.Ctx) error {
 }
 
 // UpdateAnnouncePost - อัปเดตประกาศ
-func UpdateAnnouncePost(ctx fiber.Ctx) error {
+func UpdateAnnouncePostForProvider(ctx fiber.Ctx) error {
+	// เรียกใช้ฟังก์ชัน GetTokenClaims เพื่อดึงข้อมูลจาก JWT
+	claims := middleware.GetTokenClaims(ctx)
+	username := claims["username"].(string)
+	postId := ctx.Params("id")
+
+	// หา account จาก username
+	var account entity.Account
+	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Account not found",
+		})
+	}
+
 	// Bind the update request data
 	postRequest := new(request.AnnouncePostUpdateRequest)
 	if err := ctx.Bind().Body(postRequest); err != nil {
 		return handleError(ctx, 400, "Invalid request data")
 	}
-	postId := ctx.Params("id")
 	// Find the existing announce post and preload the associated post
 	var announcePost entity.Announce_Post
-	err := database.DB.Preload("Post").Where("announce_id = ?", postId).First(&announcePost).Error
+	err := database.DB.Preload("Post").
+		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+		Where("announce_posts.announce_id = ? AND posts.account_id = ?", postId, account.Account_ID).
+		First(&announcePost).Error
 	if err != nil {
 		return handleError(ctx, 404, "Post not found")
 	}
@@ -710,35 +761,160 @@ func UpdateAnnouncePost(ctx fiber.Ctx) error {
 }
 
 // DeleteAnnouncePost - ลบประกาศ
-func DeleteAnnouncePost(ctx fiber.Ctx) error {
+func DeleteAnnouncePostForProvider(ctx fiber.Ctx) error {
+	// เรียกใช้ฟังก์ชัน GetTokenClaims เพื่อดึงข้อมูลจาก JWT
+	claims := middleware.GetTokenClaims(ctx)
+	username := claims["username"].(string)
+	postId := ctx.Params("id")
+
+	// หา account จาก username
+	var account entity.Account
+	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Account not found",
+		})
+	}
+
+	// Begin transaction
+	tx := database.DB.Begin()
+	if tx.Error != nil {
+		return handleError(ctx, 400, "failed to begin transaction")
+	}
+
+	// Find and delete announce post with authorization check
+	var announcePost entity.Announce_Post
+	if err := tx.Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+		Where("announce_posts.announce_id = ? AND posts.account_id = ?", postId, account.Account_ID).
+		First(&announcePost).Error; err != nil {
+		tx.Rollback()
+		return handleError(ctx, 404, "announce post not found")
+	}
+
+	// Delete associated post
+	if err := tx.Delete(&entity.Post{}, "posts_id = ?", announcePost.Posts_ID).Error; err != nil {
+		tx.Rollback()
+		return handleError(ctx, 400, "failed to delete post")
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return handleError(ctx, 400, "failed to commit transaction")
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{
+		"message": "post deleted successfully",
+	})
+}
+
+// GetAllAnnouncePostForUser - ดึงข้อมูลประกาศทั้งหมดสำหรับผู้ใช้ทั่วไป
+func GetAllAnnouncePostForUser(ctx fiber.Ctx) error {
+    // Get page and limit from query parameters
+    page := 1
+    if pageStr := ctx.Query("page"); pageStr != "" {
+        if pageNum, err := strconv.Atoi(pageStr); err == nil && pageNum > 0 {
+            page = pageNum
+        }
+    }
+
+    limit := 10
+    if limitStr := ctx.Query("limit"); limitStr != "" {
+        if limitNum, err := strconv.Atoi(limitStr); err == nil && limitNum > 0 {
+            limit = limitNum
+        }
+    }
+
+    // Calculate offset
+    offset := (page - 1) * limit
+
+    var posts []entity.Announce_Post
+    var total int64
+
+    // Count total records for active announcements
+    database.DB.Model(&entity.Announce_Post{}).
+        Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+        Where("posts.posts_type = ? AND (announce_posts.close_date IS NULL OR announce_posts.close_date > ?)", 
+            "Announce", time.Now()).
+        Count(&total)
+
+    // Get paginated data with preloaded relations
+    result := database.DB.
+        Preload("Post").
+        Preload("Category").
+        Preload("Country").
+        Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+        Where("posts.posts_type = ? AND (announce_posts.close_date IS NULL OR announce_posts.close_date > ?)", 
+            "Announce", time.Now()).
+        Order("posts.publish_date DESC").
+        Offset(offset).
+        Limit(limit).
+        Find(&posts)
+
+    if result.Error != nil {
+        return handleError(ctx, 404, result.Error.Error())
+    }
+
+    var postsResponse []response.AnnouncePostResponse
+    for _, post := range posts {
+        postsResponse = append(postsResponse, response.AnnouncePostResponse{
+            Announce_ID:  post.Announce_ID,
+            Title:        post.Title,
+            Description:  post.Post.Description,
+            URL:          post.Url,
+            Attach_Name:  post.Attach_Name,
+            Posts_Type:   post.Post.Posts_Type,
+            Publish_Date: post.Post.Publish_Date,
+            Close_Date:   post.Close_Date,
+            Category:     post.Category.Name,
+            Country:      post.Country.Name,
+            Post_ID:      post.Post.Posts_ID,
+        })
+    }
+
+    // Calculate last page
+    lastPage := int(math.Ceil(float64(total) / float64(limit)))
+
+    // Create paginated response
+    return ctx.Status(200).JSON(response.PaginatedAnnouncePostResponse{
+        Data:     postsResponse,
+        Total:    total,
+        Page:     page,
+        LastPage: lastPage,
+        PerPage:  limit,
+    })
+}
+
+// GetAnnouncePostByIDForUser - ดึงข้อมูลประกาศตาม ID สำหรับผู้ใช้ทั่วไป
+func GetAnnouncePostByIDForUser(ctx fiber.Ctx) error {
     postId := ctx.Params("id")
 
-    // Begin transaction
-    tx := database.DB.Begin()
-    if tx.Error != nil {
-        return handleError(ctx, 400, "failed to begin transaction")
-    }
-	
-    // Find and delete announce post
-    var announcePost entity.Announce_Post
-    if err := tx.First(&announcePost, "announce_id = ?", postId).Error; err != nil {
-        tx.Rollback()
-        return handleError(ctx, 404, "announce post not found")
+    var post entity.Announce_Post
+    result := database.DB.
+        Preload("Post").
+        Preload("Category").
+        Preload("Country").
+        Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+        Where("announce_posts.announce_id = ? AND posts.posts_type = ? AND (announce_posts.close_date IS NULL OR announce_posts.close_date > ?)", 
+            postId, "Announce", time.Now()).
+        First(&post)
+
+    if result.Error != nil {
+        return handleError(ctx, 404, "Announcement not found or no longer available")
     }
 
-    // Delete associated post
-    if err := tx.Delete(&entity.Post{}, "posts_id = ?", announcePost.Posts_ID).Error; err != nil {
-        tx.Rollback()
-        return handleError(ctx, 400, "failed to delete post")
+    postResponse := response.AnnouncePostResponse{
+        Announce_ID:  post.Announce_ID,
+        Title:        post.Title,
+        Description:  post.Post.Description,
+        URL:          post.Url,
+        Attach_Name:  post.Attach_Name,
+        Posts_Type:   post.Post.Posts_Type,
+        Publish_Date: post.Post.Publish_Date,
+        Close_Date:   post.Close_Date,
+        Category:     post.Category.Name,
+        Country:      post.Country.Name,
+        Post_ID:      post.Post.Posts_ID,
     }
 
-    // Commit transaction
-    if err := tx.Commit().Error; err != nil {
-        tx.Rollback()
-        return handleError(ctx, 400, "failed to commit transaction")
-    }
-
-    return ctx.Status(200).JSON(fiber.Map{
-        "message": "post deleted successfully",
-    })
+    return ctx.Status(200).JSON(postResponse)
 }

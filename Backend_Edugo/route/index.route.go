@@ -5,7 +5,7 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/tk-neng/demo-go-fiber/config"
 	"github.com/tk-neng/demo-go-fiber/handler"
-	// "github.com/tk-neng/demo-go-fiber/middleware"
+	"github.com/tk-neng/demo-go-fiber/middleware"
 	// "github.com/tk-neng/demo-go-fiber/utils"
 )
 
@@ -22,33 +22,38 @@ func RouteInit(r *fiber.App) {
 	public.Post("/auth/verify-otp", handler.VerifyOTP)
 
 	// User routes
-	userGroup := public.Group("/user")
+	userGroup := public.Group("/user", middleware.PermissionCreate)
 	userGroup.Get("/", handler.GetAllUser)
 	userGroup.Get("/:id", handler.GetUserByID)
 	userGroup.Post("/", handler.CreateUser)
 
 	// Provider routes
-	providerGroup := public.Group("/provider")
+	providerGroup := public.Group("/provider", middleware.PermissionCreate)
 	providerGroup.Get("/", handler.GetAllProvider)
 	providerGroup.Post("/", handler.CreateProvider)
 
 	// Metadata routes (country and category)
-	metadataGroup := public.Group("")
+	metadataGroup := public.Group("", middleware.AuthAny)
 	metadataGroup.Get("/country", handler.GatAllCountry)
 	metadataGroup.Get("/category", handler.GetAllCategory)
 
+	// Announcement for user routes
+	announceUserGroup := public.Group("/announce-user", middleware.AuthAny)
+	announceUserGroup.Get("/", handler.GetAllAnnouncePostForUser)
+	announceUserGroup.Get("/:id", handler.GetAnnouncePostByIDForUser)
+
 	// Announcement routes
-	announceGroup := public.Group("/announce")
-	announceGroup.Get("/", handler.GetAllAnnouncePost)
-	announceGroup.Get("/:id", handler.GetAnnouncePostByID)
+	announceGroup := public.Group("/announce", middleware.AuthProvider)
+	announceGroup.Get("/", handler.GetAllAnnouncePostForProvider)
+	announceGroup.Get("/:id", handler.GetAnnouncePostByIDForProvider)
 	announceGroup.Get("/:id/image", handler.GetPostImage)
 	announceGroup.Get("/:id/attach", handler.GetAnnouncePostAttach)
-	announceGroup.Post("/", handler.CreateAnnouncePost)
-	announceGroup.Put("/:id", handler.UpdateAnnouncePost)
-	announceGroup.Delete("/:id", handler.DeleteAnnouncePost)
+	announceGroup.Post("/", handler.CreateAnnouncePostForProvider)
+	announceGroup.Put("/:id", handler.UpdateAnnouncePostForProvider)
+	announceGroup.Delete("/:id", handler.DeleteAnnouncePostForProvider)
 
 	// Subject routes
-	subjectGroup := public.Group("/subject")
+	subjectGroup := public.Group("/subject", middleware.AuthAny)
 	subjectGroup.Get("/", handler.GetAllPost)
 	subjectGroup.Get("/:id", handler.GetPostByID)
 	subjectGroup.Get("/:id/image", handler.GetPostImage)
@@ -56,9 +61,8 @@ func RouteInit(r *fiber.App) {
 	subjectGroup.Put("/:id", handler.UpdatePost)
 	subjectGroup.Delete("/:id", handler.DeletePost)
 
-
 	// Comment routes
-	commentGroup := public.Group("/comment")
+	commentGroup := public.Group("/comment", middleware.AuthAny)
 	commentGroup.Get("/:id/image", handler.GetCommentImage)
 	commentGroup.Post("/", handler.CreateComment)
 }
