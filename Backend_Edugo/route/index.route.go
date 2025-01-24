@@ -5,21 +5,64 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/tk-neng/demo-go-fiber/config"
 	"github.com/tk-neng/demo-go-fiber/handler"
-	"github.com/tk-neng/demo-go-fiber/utils"
+	"github.com/tk-neng/demo-go-fiber/middleware"
+	// "github.com/tk-neng/demo-go-fiber/utils"
 )
 
 func RouteInit(r *fiber.App) {
-	r.Get("/api/public/*", static.New(config.ProjectRootPath+"/public"))
-	r.Get("/api/announce", handler.GetAllAnnouncePost)
-	r.Get("/api/subject", handler.GetAllPost)
-	r.Get("/api/country", handler.GatAllCountry)
-	r.Get("/api/category", handler.GetAllCategory)
-	r.Get("/api/announce/:id", handler.GetAnnouncePostByID)
-	r.Get("/api/subject/:id", handler.GetPostByID)
-	r.Post("/api/announce/add", handler.CreateAnnouncePost,utils.HandleFileImage,utils.HandleFileAttach)
-	r.Post("/api/subject/add", handler.CreatePost,utils.HandleFileImage)
-	r.Put("/api/announce/update/:id", handler.UpdateAnnouncePost, utils.HandleFileImage, utils.HandleFileAttach)
-	r.Put("/api/subject/update/:id", handler.UpdatePost, utils.HandleFileImage)
-	r.Delete("/api/announce/delete/:id", handler.DeleteAnnouncePost)
-	r.Delete("/api/subject/delete/:id", handler.DeletePost)
+	// Public routes
+	public := r.Group("/api")
+	public.Get("/public/*", static.New(config.ProjectRootPath+"/public"))
+
+	// Login routes
+	public.Post("/login", handler.Login)
+
+	// forgot password
+	public.Post("/auth/forgot-password", handler.ForgotPassword)
+	public.Post("/auth/verify-otp", handler.VerifyOTP)
+
+	// User routes
+	userGroup := public.Group("/user", middleware.PermissionCreate)
+	userGroup.Get("/", handler.GetAllUser)
+	userGroup.Get("/:id", handler.GetUserByID)
+	userGroup.Post("/", handler.CreateUser)
+
+	// Provider routes
+	providerGroup := public.Group("/provider", middleware.PermissionCreate)
+	providerGroup.Get("/", handler.GetAllProvider)
+	providerGroup.Post("/", handler.CreateProvider)
+
+	// Metadata routes (country and category)
+	metadataGroup := public.Group("", middleware.AuthAny)
+	metadataGroup.Get("/country", handler.GatAllCountry)
+	metadataGroup.Get("/category", handler.GetAllCategory)
+
+	// Announcement for user routes
+	announceUserGroup := public.Group("/announce-user", middleware.AuthAny)
+	announceUserGroup.Get("/", handler.GetAllAnnouncePostForUser)
+	announceUserGroup.Get("/:id", handler.GetAnnouncePostByIDForUser)
+
+	// Announcement routes
+	announceGroup := public.Group("/announce", middleware.AuthProvider)
+	announceGroup.Get("/", handler.GetAllAnnouncePostForProvider)
+	announceGroup.Get("/:id", handler.GetAnnouncePostByIDForProvider)
+	announceGroup.Get("/:id/image", handler.GetPostImage)
+	announceGroup.Get("/:id/attach", handler.GetAnnouncePostAttach)
+	announceGroup.Post("/", handler.CreateAnnouncePostForProvider)
+	announceGroup.Put("/:id", handler.UpdateAnnouncePostForProvider)
+	announceGroup.Delete("/:id", handler.DeleteAnnouncePostForProvider)
+
+	// Subject routes
+	subjectGroup := public.Group("/subject", middleware.AuthAny)
+	subjectGroup.Get("/", handler.GetAllPost)
+	subjectGroup.Get("/:id", handler.GetPostByID)
+	subjectGroup.Get("/:id/image", handler.GetPostImage)
+	subjectGroup.Post("/", handler.CreatePost)
+	subjectGroup.Put("/:id", handler.UpdatePost)
+	subjectGroup.Delete("/:id", handler.DeletePost)
+
+	// Comment routes
+	commentGroup := public.Group("/comment", middleware.AuthAny)
+	commentGroup.Get("/:id/image", handler.GetCommentImage)
+	commentGroup.Post("/", handler.CreateComment)
 }

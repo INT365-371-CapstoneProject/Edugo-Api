@@ -1,3 +1,43 @@
+-- Insert into accounts
+INSERT INTO `edugo`.`accounts` (`account_id`, `username`, `password`, `email`, `create_on`, `last_login`, `update_on`, `role`) 
+VALUES 
+(1, 'admin_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'admin@example.com', NOW(), NOW(), NOW(), 'admin'),
+(2, 'provider_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'provider@example.com', NOW(), NOW(), NOW(), 'provider'),
+(3, 'normal_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'user@example.com', NOW(), NOW(), NOW(), 'user');
+
+-- Insert into admins
+INSERT INTO `edugo`.`admins` (`admin_id`, `firstname`, `lastname`, `status`, `account_id`) 
+VALUES 
+(1, 'John', 'Doe', 'Active', 1);
+
+-- Insert into providers
+INSERT INTO `edugo`.`providers` (`provider_id`, `company_name`, `url`, `address`, `status`, `phone`, `verify`, `account_id`) 
+VALUES 
+(1, 'Tech Solutions', 'www.techsolutions.com', '123 Main St', 'Active', '0123456789', 'Y', 2);
+
+
+-- Insert into posts
+INSERT INTO `edugo`.`posts` (`posts_id`, `description`, `image`, `publish_date`, `posts_type`, `account_id`) 
+VALUES 
+(1, 'Welcome to our new platform!', NULL, NOW(), 'Announce', 2),
+(2, 'New subject added to the curriculum.', NULL, NOW(), 'Announce', 2),
+(3, 'New feature added to the platform.', NULL, NOW(), 'Subject', 3);
+
+-- Insert into comments
+INSERT INTO `edugo`.`comments` (`comments_id`, `comments_text`, `comments_image`, `publish_date`, `posts_id`, `account_id`) 
+VALUES 
+(1, 'Great announcement!', NULL, NOW(), 1, 3),
+(2, 'Excited for this update.', NULL, NOW(), 2, 3);
+
+-- Insert into categories
+INSERT INTO `edugo`.`categories` (`category_id`, `name`) VALUES
+(1, 'Full Scholarships'),
+(2, 'Partial Tuition Scholarships'),
+(3, 'Merit-Based Scholarships'),
+(4, 'Need-Based Scholarships'),
+(5, 'Research and Special Project Scholarships'),
+(6, 'Government and Corporate Scholarships');
+
 -- Insert into countries
 INSERT INTO `edugo`.`countries` (`country_id`, `name`) VALUES
 (1, 'Afghanistan'),
@@ -196,28 +236,14 @@ INSERT INTO `edugo`.`countries` (`country_id`, `name`) VALUES
 (194, 'Zambia'),
 (195, 'Zimbabwe');
 
--- Insert into posts
-INSERT INTO `edugo`.`posts` (`posts_id`, `title`, `description`, `image`, `publish_date`, `posts_type`, `country_id`) VALUES
-(1, 'New Announcement', 'This is a new announcement for all users', NULL, NOW(), 'Announce', 1),
-(2, 'Subject Update', 'An update on the subject matter', NULL, "2024-11-10 12:29:29", 'Announce', 2),
-(3, 'Scholarship Opportunities', 'Various scholarships available for students', NULL, NOW(), 'Subject', 3),
-(4, 'Study Abroad Programs', 'Information on study abroad programs', NULL, NOW(), 'Subject', 4);
-
-
--- Insert into comments
-INSERT INTO `edugo`.`comments` (`comments_id`, `comments_text`, `comments_image`, `comments_type`, `publish_date`, `posts_id`) VALUES
-(1, 'Great post!', NULL, 'Announce', NOW(), 1);
-
--- Insert into categories
-INSERT INTO `edugo`.`categories` (`category_id`, `name`) VALUES
-(1, 'Full Scholarships'),
-(2, 'Partial Tuition Scholarships'),
-(3, 'Merit-Based Scholarships'),
-(4, 'Need-Based Scholarships'),
-(5, 'Research and Special Project Scholarships'),
-(6, 'Government and Corporate Scholarships');
+-- Insert sample data for otps table
+INSERT INTO `edugo`.`otps` (`code`, `is_used`, `expired_at`, `account_id`) 
+VALUES 
+('123456', false, DATE_ADD(NOW(), INTERVAL 15 MINUTE), 1),
+('654321', true, DATE_ADD(NOW(), INTERVAL 15 MINUTE), 2);
 
 -- Insert into announce_posts
-INSERT INTO `edugo`.`announce_posts` (`announce_id`, `url`, `attach_file`, `close_date`, `posts_id`, `category_id`) VALUES
-(1, 'https://example.com/announcement1', NULL, "2024-12-20 12:29:29", 1, 1),
-(2, 'https://example.com/announcement2', NULL, "2024-11-15 12:29:29", 2, 2);
+INSERT INTO `edugo`.`announce_posts` (`announce_id`, `title`, `url`, `attach_file`, `close_date`, `posts_id`, `category_id`, `country_id`) 
+VALUES 
+(1, 'Scholarship Announcement', NULL, NULL, '2025-12-31 23:59:59', 1, 1, 1),
+(2, 'New Online Course', 'www.onlinecourse.com', NULL, '2025-06-30 23:59:59', 2, 1, 2);
