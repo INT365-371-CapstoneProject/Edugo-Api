@@ -190,90 +190,107 @@ func GetPostImage(ctx fiber.Ctx) error {
 
 // CreatePost - สร้างโพสต์ใหม่
 func CreatePost(ctx fiber.Ctx) error {
-	post := new(request.PostCreateRequest)
-	if err := ctx.Bind().Body(post); err != nil {
-		return handleError(ctx, 400, "Invalid request data")
-	}
+    // เรียกใช้ฟังก์ชัน GetTokenClaims เพื่อดึงข้อมูลจาก JWT
+    claims := middleware.GetTokenClaims(ctx)
+    username := claims["username"].(string)
 
-	// ตรวจสอบความถูกต้องของข้อมูล
-	if err := validate.Struct(post); err != nil {
-		return handleError(ctx, 400, err.(validator.ValidationErrors)[0].Translate(trans))
-	}
+    // หา account จาก username
+    var account entity.Account
+    if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+        return handleError(ctx, 404, "Account not found")
+    }
 
-	// ตรวจสอบว่ามี Account_ID ที่ระบุหรือไม่
-	accErr := database.DB.Where("account_id = ?", post.Account_ID).Error
-	if accErr != nil {
-		return handleError(ctx, 404, "Account not found")
-	}
+    post := new(request.PostCreateRequest)
+    if err := ctx.Bind().Body(post); err != nil {
+        return handleError(ctx, 400, "Invalid request data")
+    }
 
-	// ใช้ฟังก์ชัน HandleImageUpload แทนการจัดการไฟล์โดยตรง
-	if err := utils.HandleImageUpload(ctx, "image"); err != nil {
-		return handleError(ctx, 400, "Error handling image upload: "+err.Error())
-	}
+    // ตรวจสอบความถูกต้องของข้อมูล
+    if err := validate.Struct(post); err != nil {
+        return handleError(ctx, 400, err.(validator.ValidationErrors)[0].Translate(trans))
+    }
 
-	// กำหนดวันที่เผยแพร่
-	if post.Publish_Date == nil {
-		now := time.Now().UTC()
-		post.Publish_Date = &now
-	} else {
-		utcTime := post.Publish_Date.UTC()
-		post.Publish_Date = &utcTime
-	}
+    // ใช้ฟังก์ชัน HandleImageUpload แทนการจัดการไฟล์โดยตรง
+    if err := utils.HandleImageUpload(ctx, "image"); err != nil {
+        return handleError(ctx, 400, "Error handling image upload: "+err.Error())
+    }
 
-	// Create New Post
-	newPost := entity.Post{
-		Description:  post.Description,
-		Posts_Type:   "Subject",
-		Publish_Date: post.Publish_Date,
-		Account_ID:   post.Account_ID,
-	}
+    // กำหนดวันที่เผยแพร่
+    if post.Publish_Date == nil {
+        now := time.Now().UTC()
+        post.Publish_Date = &now
+    } else {
+        utcTime := post.Publish_Date.UTC()
+        post.Publish_Date = &utcTime
+    }
 
-	// ตรวจสอบว่ามีรูปภาพถูกอัพโหลดหรือไม่
-	if imageBytes := ctx.Locals("imageBytes"); imageBytes != nil {
-		newPost.Image = imageBytes.([]byte)
-	}
+    // Create New Post with account ID from JWT
+    newPost := entity.Post{
+        Description:  post.Description,
+        Posts_Type:   "Subject",
+        Publish_Date: post.Publish_Date,
+        Account_ID:   account.Account_ID, // ใช้ Account_ID จาก JWT
+    }
 
-	// Begin transaction
-	tx := database.DB.Begin()
-	if tx.Error != nil {
-		return handleError(ctx, 400, "Failed to begin transaction")
-	}
+    // ตรวจสอบว่ามีรูปภาพถูกอัพโหลดหรือไม่
+    if imageBytes := ctx.Locals("imageBytes"); imageBytes != nil {
+        newPost.Image = imageBytes.([]byte)
+    }
 
-	// Create post
-	if err := tx.Create(&newPost).Error; err != nil {
-		tx.Rollback()
-		return handleError(ctx, 400, "Failed to create post")
-	}
+    // Begin transaction
+    tx := database.DB.Begin()
+    if tx.Error != nil {
+        return handleError(ctx, 400, "Failed to begin transaction")
+    }
 
-	// Commit transaction
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return handleError(ctx, 400, "Failed to commit transaction")
-	}
+    // Create post
+    if err := tx.Create(&newPost).Error; err != nil {
+        tx.Rollback()
+        return handleError(ctx, 400, "Failed to create post")
+    }
 
-	postResponse := response.PostResponse{
-		Post_ID:      newPost.Posts_ID,
-		Description:  newPost.Description,
-		Publish_Date: newPost.Publish_Date,
-		Posts_Type:   newPost.Posts_Type,
-		Account_ID:   newPost.Account_ID,
-	}
+    // Commit transaction
+    if err := tx.Commit().Error; err != nil {
+        tx.Rollback()
+        return handleError(ctx, 400, "Failed to commit transaction")
+    }
 
-	return ctx.Status(201).JSON(postResponse)
+    postResponse := response.PostResponse{
+        Post_ID:      newPost.Posts_ID,
+        Description:  newPost.Description,
+        Publish_Date: newPost.Publish_Date,
+        Posts_Type:   newPost.Posts_Type,
+        Account_ID:   newPost.Account_ID,
+    }
+
+    return ctx.Status(201).JSON(postResponse)
 }
 
 // UpdatePost - อัปเดตโพสต์
 func UpdatePost(ctx fiber.Ctx) error {
+	// เรียกใช้ฟังก์ชัน GetTokenClaims เพื่อดึงข้อมูลจาก JWT
+	claims := middleware.GetTokenClaims(ctx)
+	username := claims["username"].(string)
+
 	postRequest := new(request.PostUpdateRequest)
 	if err := ctx.Bind().Body(postRequest); err != nil {
 		return handleError(ctx, 400, "Invalid request data")
 	}
 	postId := ctx.Params("id")
 
+	// หา account จาก username
+	var account entity.Account
+	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Account not found",
+		})
+	}
+
 	var post entity.Post
-	err := database.DB.Where("posts_id = ? AND posts_type = ?", postId, "Subject").First(&post).Error
+	err := database.DB.Where("posts_id = ? AND posts_type = ? AND account_id = ?", 
+		postId, "Subject", account.Account_ID).First(&post).Error
 	if err != nil {
-		return handleError(ctx, 404, "Post not found")
+		return handleError(ctx, 404, "Post not found or unauthorized")
 	}
 
 	// Validate Request
@@ -335,19 +352,33 @@ func UpdatePost(ctx fiber.Ctx) error {
 
 // DeletePost - ลบโพสต์
 func DeletePost(ctx fiber.Ctx) error {
+	// เรียกใช้ฟังก์ชัน GetTokenClaims เพื่อดึงข้อมูลจาก JWT
+	claims := middleware.GetTokenClaims(ctx)
+	username := claims["username"].(string)
+
 	postId := ctx.Params("id")
+
+	// หา account จาก username
+	var account entity.Account
+	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Account not found",
+		})
+	}
+
 	var post entity.Post
-	err := database.DB.Where("posts_id = ? AND posts_type = ?", postId, "Subject").First(&post).Error
+	err := database.DB.Where("posts_id = ? AND posts_type = ? AND account_id = ?", 
+		postId, "Subject", account.Account_ID).First(&post).Error
 	if err != nil {
-		return handleError(ctx, 404, "post not found")
+		return handleError(ctx, 404, "Post not found or unauthorized")
 	}
 	err = database.DB.Delete(&post).Error
 	if err != nil {
-		return handleError(ctx, 400, "failed to delete post")
+		return handleError(ctx, 400, "Failed to delete post")
 	}
 
 	return ctx.Status(200).JSON(fiber.Map{
-		"message": "post deleted successfully",
+		"message": "Post deleted successfully",
 	})
 }
 
@@ -506,136 +537,133 @@ func GetAnnouncePostAttach(ctx fiber.Ctx) error {
 
 // CreateAnnouncePost - สร้างประกาศใหม่
 func CreateAnnouncePostForProvider(ctx fiber.Ctx) error {
-	post := new(request.AnnouncePostCreateRequest)
-	if err := ctx.Bind().Body(post); err != nil {
-		return handleError(ctx, 400, "Invalid request data")
-	}
+    // เรียกใช้ฟังก์ชัน GetTokenClaims เพื่อดึงข้อมูลจาก JWT
+    claims := middleware.GetTokenClaims(ctx)
+    username := claims["username"].(string)
 
-	// ตรวจสอบความถูกต้องของข้อมูล
-	if err := validate.Struct(post); err != nil {
-		return handleError(ctx, 400, err.(validator.ValidationErrors)[0].Translate(trans))
-	}
+    // หา account จาก username
+    var account entity.Account
+    if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+        return handleError(ctx, 404, "Account not found")
+    }
 
-	// ตรวจสอบว่ามี Account_ID ที่ระบุหรือไม่
-	if post.Account_ID == 0 {
-		return handleError(ctx, 400, "Account_ID is required")
-	}
+    post := new(request.AnnouncePostCreateRequest)
+    if err := ctx.Bind().Body(post); err != nil {
+        return handleError(ctx, 400, "Invalid request data")
+    }
 
-	// ตรวจสอบว่า Account_ID มีอยู่จริงในฐานข้อมูล
-	accErr := database.DB.Where("account_id = ?", post.Account_ID).Error
-	if accErr != nil {
-		return handleError(ctx, 404, "Account not found")
-	}
+    // ตรวจสอบความถูกต้องของข้อมูล
+    if err := validate.Struct(post); err != nil {
+        return handleError(ctx, 400, err.(validator.ValidationErrors)[0].Translate(trans))
+    }
 
-	// จัดการไฟล์รูปภาพ
-	if err := utils.HandleImageUpload(ctx, "image"); err != nil {
-		return handleError(ctx, 400, "Error handling image upload: "+err.Error())
-	}
+    // จัดการไฟล์รูปภาพและไฟล์แนบ
+    if err := utils.HandleImageUpload(ctx, "image"); err != nil {
+        return handleError(ctx, 400, "Error handling image upload: "+err.Error())
+    }
 
-	// จัดการไฟล์แนบ
-	if err := utils.HandleAttachUpload(ctx, "attach_file"); err != nil {
-		return handleError(ctx, 400, "Error handling attachment upload: "+err.Error())
-	}
+    if err := utils.HandleAttachUpload(ctx, "attach_file"); err != nil {
+        return handleError(ctx, 400, "Error handling attachment upload: "+err.Error())
+    }
 
-	// เก็บชื่อไฟล์แนบ (ถ้ามี)
-	var attachFileName *string
-	if attachFile, err := ctx.FormFile("attach_file"); err == nil && attachFile != nil {
-		fileName := attachFile.Filename
-		attachFileName = &fileName
-	}
+    // เก็บชื่อไฟล์แนบ (ถ้ามี)
+    var attachFileName *string
+    if attachFile, err := ctx.FormFile("attach_file"); err == nil && attachFile != nil {
+        fileName := attachFile.Filename
+        attachFileName = &fileName
+    }
 
-	// กำหนดวันที่เผยแพร่
-	if post.Publish_Date == nil {
-		now := time.Now().UTC()
-		post.Publish_Date = &now
-	} else {
-		utcTime := post.Publish_Date.UTC()
-		post.Publish_Date = &utcTime
-	}
+    // กำหนดวันที่
+    if post.Publish_Date == nil {
+        now := time.Now().UTC()
+        post.Publish_Date = &now
+    } else {
+        utcTime := post.Publish_Date.UTC()
+        post.Publish_Date = &utcTime
+    }
 
-	// กำหนดวันที่ปิดประกาศ
-	if post.Close_Date != nil {
-		utcTime := post.Close_Date.UTC()
-		if utcTime.Before(*post.Publish_Date) {
-			return handleError(ctx, 400, "Close date cannot be before publish date")
-		}
-		post.Close_Date = &utcTime
-	}
+    if post.Close_Date != nil {
+        utcTime := post.Close_Date.UTC()
+        if utcTime.Before(*post.Publish_Date) {
+            return handleError(ctx, 400, "Close date cannot be before publish date")
+        }
+        post.Close_Date = &utcTime
+    }
 
-	// เริ่ม Transaction
-	tx := database.DB.Begin()
-	if tx.Error != nil {
-		return handleError(ctx, 400, "Failed to begin transaction")
-	}
+    // Begin transaction
+    tx := database.DB.Begin()
+    if tx.Error != nil {
+        return handleError(ctx, 400, "Failed to begin transaction")
+    }
 
-	// Create New Post
-	newPost := entity.Post{
-		Description:  post.Description,
-		Posts_Type:   "Announce",
-		Publish_Date: post.Publish_Date,
-		Account_ID:   post.Account_ID,
-	}
+    // Create New Post with account ID from JWT
+    newPost := entity.Post{
+        Description:  post.Description,
+        Posts_Type:   "Announce",
+        Publish_Date: post.Publish_Date,
+        Account_ID:   account.Account_ID, // ใช้ Account_ID จาก JWT
+    }
 
-	// เพิ่มรูปภาพถ้ามีการอัพโหลด
-	if imageBytes := ctx.Locals("imageBytes"); imageBytes != nil {
-		newPost.Image = imageBytes.([]byte)
-	}
+    // เพิ่มรูปภาพถ้ามีการอัพโหลด
+    if imageBytes := ctx.Locals("imageBytes"); imageBytes != nil {
+        newPost.Image = imageBytes.([]byte)
+    }
 
-	if err := tx.Create(&newPost).Error; err != nil {
-		tx.Rollback()
-		return handleError(ctx, 400, "Failed to create post")
-	}
+    if err := tx.Create(&newPost).Error; err != nil {
+        tx.Rollback()
+        return handleError(ctx, 400, "Failed to create post")
+    }
 
-	// ตรวจสอบว่าได้ Posts_ID หลังจากการสร้าง post
-	if newPost.Posts_ID == 0 {
-		tx.Rollback()
-		return handleError(ctx, 400, "Failed to create post")
-	}
+    // ตรวจสอบว่าได้ Posts_ID หลังจากการสร้าง post
+    if newPost.Posts_ID == 0 {
+        tx.Rollback()
+        return handleError(ctx, 400, "Failed to create post")
+    }
 
-	// Create New Announce Post
-	newAnnouncePost := entity.Announce_Post{
-		Title:       post.Title,
-		Posts_ID:    newPost.Posts_ID,
-		Url:         post.URL,
-		Attach_Name: attachFileName,
-		Close_Date:  post.Close_Date,
-		Category_ID: post.Category_ID,
-		Country_ID:  post.Country_ID,
-	}
+    // Create New Announce Post
+    newAnnouncePost := entity.Announce_Post{
+        Title:       post.Title,
+        Posts_ID:    newPost.Posts_ID,
+        Url:         post.URL,
+        Attach_Name: attachFileName,
+        Close_Date:  post.Close_Date,
+        Category_ID: post.Category_ID,
+        Country_ID:  post.Country_ID,
+    }
 
-	// เพิ่มไฟล์แนบถ้ามีการอัพโหลด
-	if attachBytes := ctx.Locals("attachBytes"); attachBytes != nil {
-		newAnnouncePost.Attach_File = attachBytes.([]byte)
-	}
+    // เพิ่มไฟล์แนบถ้ามีการอัพโหลด
+    if attachBytes := ctx.Locals("attachBytes"); attachBytes != nil {
+        newAnnouncePost.Attach_File = attachBytes.([]byte)
+    }
 
-	if err := tx.Create(&newAnnouncePost).Error; err != nil {
-		tx.Rollback()
-		return handleError(ctx, 400, "Failed to create announce post")
-	}
+    if err := tx.Create(&newAnnouncePost).Error; err != nil {
+        tx.Rollback()
+        return handleError(ctx, 400, "Failed to create announce post")
+    }
 
-	// ยืนยันการทำงานของ Transaction
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return handleError(ctx, 400, "Failed to commit transaction")
-	}
+    // ยืนยันการทำงานของ Transaction
+    if err := tx.Commit().Error; err != nil {
+        tx.Rollback()
+        return handleError(ctx, 400, "Failed to commit transaction")
+    }
 
-	// สร้างตัวแปรแบบ AnnouncePostResponse
-	// และกำหนดค่าให้กับตัวแปรนี้
-	postResponse := response.AnnouncePostResponseAdd{
-		Announce_ID:  newAnnouncePost.Announce_ID,
-		Title:        newAnnouncePost.Title,
-		Description:  newPost.Description,
-		URL:          newAnnouncePost.Url,
-		Attach_Name:  newAnnouncePost.Attach_Name,
-		Posts_Type:   newPost.Posts_Type,
-		Publish_Date: newPost.Publish_Date,
-		Close_Date:   newAnnouncePost.Close_Date,
-		Category_ID:  newAnnouncePost.Category_ID,
-		Country_ID:   newAnnouncePost.Country_ID,
-		Account_ID:   newPost.Account_ID,
-	}
-	// ส่งข้อมูลกลับไปในรูปแบบ JSON
-	return ctx.Status(201).JSON(postResponse)
+    // สร้างตัวแปรแบบ AnnouncePostResponse
+    // และกำหนดค่าให้กับตัวแปรนี้
+    postResponse := response.AnnouncePostResponseAdd{
+        Announce_ID:  newAnnouncePost.Announce_ID,
+        Title:        newAnnouncePost.Title,
+        Description:  newPost.Description,
+        URL:          newAnnouncePost.Url,
+        Attach_Name:  newAnnouncePost.Attach_Name,
+        Posts_Type:   newPost.Posts_Type,
+        Publish_Date: newPost.Publish_Date,
+        Close_Date:   newAnnouncePost.Close_Date,
+        Category_ID:  newAnnouncePost.Category_ID,
+        Country_ID:   newAnnouncePost.Country_ID,
+        Account_ID:   newPost.Account_ID,
+    }
+    // ส่งข้อมูลกลับไปในรูปแบบ JSON
+    return ctx.Status(201).JSON(postResponse)
 }
 
 // UpdateAnnouncePost - อัปเดตประกาศ

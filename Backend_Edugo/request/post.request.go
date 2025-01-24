@@ -15,7 +15,6 @@ type AnnouncePostCreateRequest struct {
 	Close_Date   *time.Time      `json:"close_date" validate:"required"`
 	Category_ID  uint            `json:"category_id" validate:"required"`
 	Country_ID   uint            `json:"country_id" validate:"required"`
-	Account_ID   uint            `json:"account_id" validate:"required"`
 }
 
 type AnnouncePostUpdateRequest struct {
@@ -35,7 +34,6 @@ type PostCreateRequest struct {
 	Description  string          `json:"description" validate:"required,min=10,max=3000"`
 	Image        *multipart.File `json:"image"`
 	Publish_Date *time.Time      `json:"publish_date"`
-	Account_ID   uint            `json:"account_id" validate:"required"`
 }
 
 type PostUpdateRequest struct {
