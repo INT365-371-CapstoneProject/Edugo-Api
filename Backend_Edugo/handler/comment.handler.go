@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"fmt"
-	"io"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
@@ -40,6 +38,11 @@ func CreateComment(ctx fiber.Ctx) error {
 		return utils.HandleError(ctx, 400, "Account not found")
 	}
 
+	// ใช้ฟังก์ชัน HandleImageUpload แทนการจัดการไฟล์โดยตรง
+	if err := utils.HandleImageUpload(ctx, "comments_image"); err != nil {
+		return utils.HandleError(ctx, 400, "Error handling image upload: "+err.Error())
+	}
+
 	// Create comment
 	newComment := entity.Comment{
 		Comments_Text: comment.Comments_Text,
@@ -47,24 +50,9 @@ func CreateComment(ctx fiber.Ctx) error {
 		Account_ID:    comment.Account_ID,
 	}
 
-	// จัดการไฟล์รูปภาพ
-	file, err := ctx.FormFile("comments_image")
-	if err == nil && file != nil {
-		// เปิดไฟล์
-		fileContent, err := file.Open()
-		if err != nil {
-			return utils.HandleError(ctx, 400, "Cannot open image file: "+err.Error())
-		}
-		defer fileContent.Close()
-
-		// อ่านข้อมูลไฟล์
-		imageBytes, err := io.ReadAll(fileContent)
-		if err != nil {
-			return utils.HandleError(ctx, 400, "Error reading image file: "+err.Error())
-		}
-
-		newComment.Comments_Image = imageBytes
-		fmt.Printf("Image size: %d bytes\n", len(imageBytes))
+	// ตรวจสอบว่ามีรูปภาพถูกอัพโหลดหรือไม่
+	if imageBytes := ctx.Locals("imageBytes"); imageBytes != nil {
+		newComment.Comments_Image = imageBytes.([]byte)
 	}
 
 	// Create comment with debug log

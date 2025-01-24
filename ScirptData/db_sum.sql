@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`accounts` (
   `create_on` DATETIME NOT NULL,
   `last_login` DATETIME NULL DEFAULT NULL,
   `update_on` DATETIME NOT NULL,
-  `role` ENUM('admin', 'user', 'provider') NOT NULL,
+  `role` ENUM('admin', 'user', 'provider', 'superadmin') NOT NULL,
   PRIMARY KEY (`account_id`),
   UNIQUE INDEX `username` (`username` ASC) VISIBLE,
   UNIQUE INDEX `email` (`email` ASC) VISIBLE)
@@ -128,7 +128,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `edugo`.`posts` (
   `posts_id` INT NOT NULL AUTO_INCREMENT,
   `description` VARCHAR(3000) NOT NULL,
-  `image` LONGTEXT NULL DEFAULT NULL,
+  `image` LONGBLOB NULL DEFAULT NULL,
   `publish_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP(),
   `posts_type` ENUM('Announce', 'Subject') NOT NULL,
   `account_id` INT NOT NULL,
@@ -188,7 +188,8 @@ CREATE TABLE IF NOT EXISTS `edugo`.`announce_posts` (
   `announce_id` INT NOT NULL AUTO_INCREMENT,
   `title` VARCHAR(100) NOT NULL,
   `url` VARCHAR(255) NULL DEFAULT NULL,
-  `attach_file` LONGTEXT NULL DEFAULT NULL,
+  `attach_name` VARCHAR(255) NULL DEFAULT NULL,
+  `attach_file` LONGBLOB NULL DEFAULT NULL,
   `close_date` DATETIME NOT NULL,
   `posts_id` INT NOT NULL,
   `category_id` INT NOT NULL,

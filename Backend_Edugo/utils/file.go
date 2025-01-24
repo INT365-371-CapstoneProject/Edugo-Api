@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"mime/multipart"
 	"os"
@@ -19,20 +20,20 @@ const MaxFileSize = 5 * 1024 * 1024 // 5MB
 func HandleFileImage(ctx fiber.Ctx) error {
 	// Handle File Image
 	fileImage, errFileImage := ctx.FormFile("image")
-	if errFileImage != nil {
+	if (errFileImage != nil) {
 		log.Println("Error File Image = ", errFileImage)
 	}
 
 	var filenameImage *string
-	if fileImage != nil {
-		if fileImage.Size > MaxFileSize {
+	if (fileImage != nil) {
+		if (fileImage.Size > MaxFileSize) {
 			return ctx.Status(fiber.StatusRequestEntityTooLarge).JSON(fiber.Map{
 				"error message": "File size exceeds 5MB",
 			})
 		}
 
 		errCheckContentType := checkContentTypeImage(fileImage, "image/jpeg", "image/png", "image/jpg")
-		if errCheckContentType != nil {
+		if (errCheckContentType != nil) {
 			return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
 				"error message": errCheckContentType.Error(),
 			})
@@ -50,7 +51,7 @@ func HandleFileImage(ctx fiber.Ctx) error {
 
 		// บันทึกไฟล์ใน temp directory
 		errSaveFileImage := ctx.SaveFile(fileImage, fmt.Sprintf("./temp/images/%s", filenameOnly))
-		if errSaveFileImage != nil {
+		if (errSaveFileImage != nil) {
 			log.Println("Fail to store file into temp/images directory.")
 		}
 
@@ -65,13 +66,13 @@ func HandleFileImage(ctx fiber.Ctx) error {
 func HandleFileAttach(ctx fiber.Ctx) error {
 	// Handle File Attach
 	fileAttach, errFileAttach := ctx.FormFile("attach_file")
-	if errFileAttach != nil {
+	if (errFileAttach != nil) {
 		log.Println("Error File Attach = ", errFileAttach)
 	}
 
 	var filenameAttach *string
-	if fileAttach != nil {
-		if fileAttach.Size > MaxFileSize {
+	if (fileAttach != nil) {
+		if (fileAttach.Size > MaxFileSize) {
 			return ctx.Status(fiber.StatusRequestEntityTooLarge).JSON(fiber.Map{
 				"error message": "File size exceeds 5MB",
 			})
@@ -79,7 +80,7 @@ func HandleFileAttach(ctx fiber.Ctx) error {
 
 		// ตรวจสอบประเภทไฟล์
 		errCheckContentType := checkContentTypeImage(fileAttach, "application/pdf")
-		if errCheckContentType != nil {
+		if (errCheckContentType != nil) {
 			return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
 				"error message": errCheckContentType.Error(),
 			})
@@ -97,7 +98,7 @@ func HandleFileAttach(ctx fiber.Ctx) error {
 
 		// บันทึกไฟล์ใน temp directory
 		errSaveFileAttach := ctx.SaveFile(fileAttach, fmt.Sprintf("./temp/pdfs/%s", filenameOnly))
-		if errSaveFileAttach != nil {
+		if (errSaveFileAttach != nil) {
 			log.Println("Fail to store file into temp/pdfs directory.")
 		}
 	} else {
@@ -112,7 +113,7 @@ func HandleFileAttach(ctx fiber.Ctx) error {
 
 func HandleRemoveFileImage(filename string) error {
 	err := os.Remove(fmt.Sprintf(DefaultPathImage, filename))
-	if err != nil {
+	if (err != nil) {
 		log.Println("Failed to remove image file")
 		return err
 	}
@@ -121,7 +122,7 @@ func HandleRemoveFileImage(filename string) error {
 
 func HandleRemoveFileAttach(filename string) error {
 	err := os.Remove(fmt.Sprintf(DefaultPathAttach, filename))
-	if err != nil {
+	if (err != nil) {
 		log.Println("Failed to remove attach file")
 		return err
 	}
@@ -129,10 +130,10 @@ func HandleRemoveFileAttach(filename string) error {
 }
 
 func checkContentTypeImage(file *multipart.FileHeader, contentTypes ...string) error {
-	if len(contentTypes) > 0 {
+	if (len(contentTypes) > 0) {
 		for _, contentType := range contentTypes {
 			contentTypeFile := file.Header.Get("Content-Type")
-			if contentTypeFile == contentType {
+			if (contentTypeFile == contentType) {
 				return nil
 			}
 		}
@@ -147,7 +148,7 @@ func checkContentTypeImage(file *multipart.FileHeader, contentTypes ...string) e
 func ClearTempFiles() {
 	// อ่านไฟล์ทั้งหมดในโฟลเดอร์ ./temp
 	files, err := os.ReadDir("./temp")
-	if err != nil {
+	if (err != nil) {
 		log.Println("ไม่สามารถอ่านโฟลเดอร์ ./temp:", err)
 		return
 	}
@@ -156,7 +157,7 @@ func ClearTempFiles() {
 	for _, file := range files {
 		filePath := fmt.Sprintf("./temp/%s", file.Name())
 		err := os.RemoveAll(filePath) // ลบไฟล์หรือโฟลเดอร์ย่อย
-		if err != nil {
+		if (err != nil) {
 			log.Printf("ไม่สามารถลบไฟล์หรือโฟลเดอร์ %s: %v", filePath, err)
 		} else {
 			log.Printf("ลบไฟล์หรือโฟลเดอร์ %s สำเร็จ", filePath)
@@ -166,12 +167,12 @@ func ClearTempFiles() {
 
 func CreateTempFolder() {
 	err := os.MkdirAll("./temp/images", 0755)
-	if err != nil {
+	if (err != nil) {
 		log.Println("Failed to create temp/images directory:", err)
 	}
 
 	err = os.MkdirAll("./temp/pdfs", 0755)
-	if err != nil {
+	if (err != nil) {
 		log.Println("Failed to create temp/pdfs directory:", err)
 	}
 }
@@ -188,7 +189,7 @@ func RemoveTempToPublic() {
 // moveFiles ย้ายไฟล์ทั้งหมดจาก sourceDir ไปที่ destDir
 func moveFiles(sourceDir, destDir string) {
 	files, err := os.ReadDir(sourceDir)
-	if err != nil {
+	if (err != nil) {
 		log.Printf("ไม่สามารถอ่านโฟลเดอร์ %s: %v", sourceDir, err)
 		return
 	}
@@ -199,7 +200,7 @@ func moveFiles(sourceDir, destDir string) {
 
 		// ย้ายไฟล์จาก sourcePath ไปที่ destPath
 		err := os.Rename(sourcePath, destPath)
-		if err != nil {
+		if (err != nil) {
 			log.Printf("ไม่สามารถย้ายไฟล์ %s ไปที่ %s: %v", sourcePath, destPath, err)
 		} else {
 			log.Printf("ย้ายไฟล์ %s ไปที่ %s สำเร็จ", sourcePath, destPath)
@@ -228,4 +229,56 @@ func checkUniqueFileName(filePath string) string {
 func fileExists(filePath string) bool {
 	_, err := os.Stat(filePath)
 	return !os.IsNotExist(err)
+}
+
+// เพิ่มฟังก์ชันใหม่ที่รับพารามิเตอร์ fieldName
+func HandleImageUpload(ctx fiber.Ctx, fieldName string) error {
+	// Handle panic recovery
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered from panic in HandleImageUpload: %v", r)
+			ctx.Locals("imageBytes", nil)
+		}
+	}()
+
+	// Try to get the file from form
+	file, err := ctx.FormFile(fieldName)
+
+	// If no file is uploaded, set imageBytes to nil and return nil
+	if err != nil {
+		ctx.Locals("imageBytes", nil)
+		return nil // เปลี่ยนจาก ctx.Next() เป็น return nil
+	}
+
+	// If file exists, process it
+	if file != nil {
+		// ตรวจสอบขนาดไฟล์
+		if file.Size > MaxFileSize {
+			return errors.New("file size exceeds 5MB")
+		}
+
+		// ตรวจสอบประเภทไฟล์
+		if err := checkContentTypeImage(file, "image/jpeg", "image/png", "image/jpg"); err != nil {
+			return err
+		}
+
+		fileContent, err := file.Open()
+		if err != nil {
+			ctx.Locals("imageBytes", nil)
+			return err
+		}
+		defer fileContent.Close()
+
+		imageBytes, err := io.ReadAll(fileContent)
+		if err != nil {
+			ctx.Locals("imageBytes", nil)
+			return err
+		}
+
+		ctx.Locals("imageBytes", imageBytes)
+	} else {
+		ctx.Locals("imageBytes", nil)
+	}
+
+	return nil // เปลี่ยนจาก ctx.Next() เป็น return nil
 }

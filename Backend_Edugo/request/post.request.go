@@ -1,6 +1,9 @@
 package request
 
-import "time"
+import (
+	"mime/multipart"
+	"time"
+)
 
 type AnnouncePostCreateRequest struct {
 	Title        string     `json:"title" validate:"required,min=5,max=100"`
@@ -18,18 +21,15 @@ type AnnouncePostCreateRequest struct {
 type PostCreateRequest struct {
 	Title        string     `json:"title" validate:"required,min=5,max=100"`
 	Description  string     `json:"description" validate:"required,min=10,max=3000"`
-	Image        *string    `json:"image"`
-	Posts_Type   string     `json:"posts_type" validate:"required,oneof=Subject"`
+	Image        *multipart.File    `json:"image"`
 	Publish_Date *time.Time `json:"publish_date"`
-	Country_ID   uint       `json:"country_id" validate:"required"`
+	Account_ID   uint       `json:"account_id" validate:"required"`
 }
 
 type PostUpdateRequest struct {
-	Title        string     `json:"title" validate:"omitempty,min=5,max=100"`
 	Description  string     `json:"description" validate:"omitempty,min=10,max=3000"`
 	Image        *string    `json:"image"`
 	Publish_Date *time.Time `json:"publish_date"`
-	Country_ID   uint       `json:"country_id"`
 }
 
 type AnnouncePostUpdateRequest struct {

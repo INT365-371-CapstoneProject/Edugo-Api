@@ -36,17 +36,22 @@ type AnnouncePostResponseAdd struct {
 type PostResponse struct {
 	Post_ID    uint    `json:"id"`
 	Description string  `json:"description"`
-	Image	  *string `json:"image"`
 	Publish_Date *time.Time `json:"publish_date"`
 	Posts_Type  string  `json:"posts_type"`
+	Account_ID  uint    `json:"account_id"`
+}
+type PaginatedPostResponse struct {
+    Data       []PostResponse `json:"data"`
+    Total      int64         `json:"total"`
+    Page       int           `json:"page"`
+    LastPage   int           `json:"last_page"`
+    PerPage    int           `json:"per_page"`
 }
 
 type PostResponseAdd struct {
 	Post_ID    uint    `json:"id"`
-	Title      string  `json:"title"`
 	Description string  `json:"description"`
-	Image	  *string `json:"image"`
 	Publish_Date *time.Time `json:"publish_date"`
 	Posts_Type  string  `json:"posts_type"`
-	Country_ID  uint    `json:"country_id"`
+	Account_ID  uint    `json:"account_id"`
 }

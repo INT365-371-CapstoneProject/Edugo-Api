@@ -6,7 +6,8 @@ type Announce_Post struct {
 	Announce_ID uint       `json:"id" gorm:"primaryKey"`
 	Title       string     `json:"title"`
 	Url         *string    `json:"url"`
-	Attach_File *string    `json:"attach_file"`
+	Attach_Name *string    `json:"attach_name"`
+	Attach_File []byte     `gorm:"type:longblob" json:"attach_file"`
 	Close_Date *time.Time `json:"close_date"`
 	Posts_ID     uint       `json:"post_id"`
 	Category_ID uint       `json:"category_id"`
