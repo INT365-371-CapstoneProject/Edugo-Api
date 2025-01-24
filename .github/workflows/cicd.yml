@@ -21,6 +21,10 @@ jobs:
           echo "DB_PORT=${{ secrets.PORT_DATABASE }}" >> .env
           echo "DB_NAME=edugo" >> .env
           echo "DB_OPTION=charset=utf8mb4&parseTime=True&loc=Local" >> .env
+          echo "SMTP_HOST=smtp.gmail.com" >> .env
+          echo "SMTP_PORT=587" >> .env
+          echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> .env
+          echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env
       - name: Login to Docker Hub
         run: |
           cd Backend_Edugo
@@ -33,7 +37,7 @@ jobs:
               echo "ENV MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD}}" >> Dockerfile
               echo "ENV MYSQL_DATABASE=edugo" >> Dockerfile
               echo "ENV LANG en_US.UTF-8" >> Dockerfile
-              echo "COPY ./db.sql /docker-entrypoint-initdb.d/" >> Dockerfile
+              echo "COPY ./db_sum.sql /docker-entrypoint-initdb.d/" >> Dockerfile
               echo "COPY ./insert.sql /docker-entrypoint-initdb.d/" >> Dockerfile
               echo "EXPOSE ${{ secrets.PORT_DATABASE}}" >> Dockerfile
               echo 'ENTRYPOINT ["docker-entrypoint.sh"]' >> Dockerfile

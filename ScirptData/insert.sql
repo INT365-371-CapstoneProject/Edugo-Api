@@ -20,7 +20,8 @@ VALUES
 INSERT INTO `edugo`.`posts` (`posts_id`, `description`, `image`, `publish_date`, `posts_type`, `account_id`) 
 VALUES 
 (1, 'Welcome to our new platform!', NULL, NOW(), 'Announce', 2),
-(2, 'New subject added to the curriculum.', NULL, NOW(), 'Announce', 2);
+(2, 'New subject added to the curriculum.', NULL, NOW(), 'Announce', 2),
+(3, 'New feature added to the platform.', NULL, NOW(), 'Subject', 3);
 
 -- Insert into comments
 INSERT INTO `edugo`.`comments` (`comments_id`, `comments_text`, `comments_image`, `publish_date`, `posts_id`, `account_id`) 
