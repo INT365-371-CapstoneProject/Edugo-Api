@@ -50,4 +50,9 @@ func RouteInit(r *fiber.App) {
 	subjectGroup.Post("/", handler.CreatePost, utils.HandleFileImage)
 	subjectGroup.Put("/:id", handler.UpdatePost, utils.HandleFileImage)
 	subjectGroup.Delete("/:id", handler.DeletePost)
+
+	// Comment routes
+	commentGroup := public.Group("/comment")
+	commentGroup.Get("/:id/image", handler.GetCommentImage)
+	commentGroup.Post("/", handler.CreateComment)
 }

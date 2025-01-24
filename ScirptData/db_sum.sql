@@ -149,8 +149,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `edugo`.`comments` (
   `comments_id` INT NOT NULL AUTO_INCREMENT,
   `comments_text` VARCHAR(3000) NOT NULL,
-  `comments_image` LONGTEXT NULL DEFAULT NULL,
-  `comments_type` ENUM('Announce', 'Subject') NOT NULL,
+  `comments_image` LONGBLOB NULL DEFAULT NULL,
   `publish_date` DATETIME NULL DEFAULT NULL,
   `posts_id` INT NOT NULL,
   `account_id` INT NOT NULL,

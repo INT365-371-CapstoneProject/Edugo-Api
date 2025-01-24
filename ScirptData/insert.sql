@@ -19,14 +19,14 @@ VALUES
 -- Insert into posts
 INSERT INTO `edugo`.`posts` (`posts_id`, `description`, `image`, `publish_date`, `posts_type`, `account_id`) 
 VALUES 
-(1, 'Welcome to our new platform!', NULL, NOW(), 'Announce', 1),
-(2, 'New subject added to the curriculum.', NULL, NOW(), 'Announce', 3);
+(1, 'Welcome to our new platform!', NULL, NOW(), 'Announce', 2),
+(2, 'New subject added to the curriculum.', NULL, NOW(), 'Announce', 2);
 
 -- Insert into comments
-INSERT INTO `edugo`.`comments` (`comments_id`, `comments_text`, `comments_image`, `comments_type`, `publish_date`, `posts_id`, `account_id`) 
+INSERT INTO `edugo`.`comments` (`comments_id`, `comments_text`, `comments_image`, `publish_date`, `posts_id`, `account_id`) 
 VALUES 
-(1, 'Great announcement!', NULL, 'Announce', NOW(), 1, 3),
-(2, 'Excited for this update.', NULL, 'Subject', NOW(), 2, 3);
+(1, 'Great announcement!', NULL, NOW(), 1, 3),
+(2, 'Excited for this update.', NULL, NOW(), 2, 3);
 
 -- Insert into categories
 INSERT INTO `edugo`.`categories` (`category_id`, `name`) VALUES
