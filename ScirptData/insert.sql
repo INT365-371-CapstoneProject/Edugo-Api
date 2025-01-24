@@ -242,7 +242,7 @@ VALUES
 ('654321', true, DATE_ADD(NOW(), INTERVAL 15 MINUTE), 2);
 
 -- Insert into announce_posts
-INSERT INTO `edugo`.`announce_posts` (`announce_id`, `title`, `url`, `attach_file`, `close_date`, `posts_id`, `category_id`, `country_id`, `account_id`) 
+INSERT INTO `edugo`.`announce_posts` (`announce_id`, `title`, `url`, `attach_file`, `close_date`, `posts_id`, `category_id`, `country_id`) 
 VALUES 
-(1, 'Scholarship Announcement', NULL, NULL, '2025-12-31 23:59:59', 1, 1, 1, 1),
-(2, 'New Online Course', 'www.onlinecourse.com', NULL, '2025-06-30 23:59:59', 2, 1, 2, 3);
+(1, 'Scholarship Announcement', NULL, NULL, '2025-12-31 23:59:59', 1, 1, 1),
+(2, 'New Online Course', 'www.onlinecourse.com', NULL, '2025-06-30 23:59:59', 2, 1, 2);

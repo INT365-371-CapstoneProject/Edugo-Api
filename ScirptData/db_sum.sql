@@ -194,13 +194,11 @@ CREATE TABLE IF NOT EXISTS `edugo`.`announce_posts` (
   `posts_id` INT NOT NULL,
   `category_id` INT NOT NULL,
   `country_id` INT NOT NULL,
-  `account_id` INT NOT NULL,
   PRIMARY KEY (`announce_id`),
   UNIQUE INDEX `unique_attach_file` (`attach_file`(255) ASC) VISIBLE,
   INDEX `fk_announce_posts_posts1_idx` (`posts_id` ASC) VISIBLE,
   INDEX `fk_announce_posts_categories1_idx` (`category_id` ASC) VISIBLE,
   INDEX `fk_announce_posts_countries1_idx` (`country_id` ASC) VISIBLE,
-  INDEX `fk_announce_posts_accounts1_idx` (`account_id` ASC) VISIBLE,
   CONSTRAINT `fk_announce_posts_posts1`
     FOREIGN KEY (`posts_id`)
     REFERENCES `edugo`.`posts` (`posts_id`)
@@ -214,11 +212,6 @@ CREATE TABLE IF NOT EXISTS `edugo`.`announce_posts` (
   CONSTRAINT `fk_announce_posts_countries1`
     FOREIGN KEY (`country_id`)
     REFERENCES `edugo`.`countries` (`country_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_announce_posts_accounts1`
-    FOREIGN KEY (`account_id`)
-    REFERENCES `edugo`.`accounts` (`account_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;

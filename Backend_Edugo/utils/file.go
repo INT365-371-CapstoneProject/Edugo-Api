@@ -282,3 +282,55 @@ func HandleImageUpload(ctx fiber.Ctx, fieldName string) error {
 
 	return nil // เปลี่ยนจาก ctx.Next() เป็น return nil
 }
+
+// เพิ่มฟังก์ชันใหม่ที่รับพารามิเตอร์ fieldName
+func HandleAttachUpload(ctx fiber.Ctx, fieldName string) error {
+	// Handle panic recovery
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered from panic in HandleAttachUpload: %v", r)
+			ctx.Locals("attachBytes", nil)
+		}
+	}()
+
+	// Try to get the file from form
+	file, err := ctx.FormFile(fieldName)
+
+	// If no file is uploaded, set attachBytes to nil and return nil
+	if err != nil {
+		ctx.Locals("attachBytes", nil)
+		return nil // เปลี่ยนจาก ctx.Next() เป็น return nil
+	}
+
+	// If file exists, process it
+	if file != nil {
+		// ตรวจสอบขนาดไฟล์
+		if file.Size > MaxFileSize {
+			return errors.New("file size exceeds 5MB")
+		}
+
+		// ตรวจสอบประเภทไฟล์
+		if err := checkContentTypeImage(file, "application/pdf"); err != nil {
+			return err
+		}
+
+		fileContent, err := file.Open()
+		if err != nil {
+			ctx.Locals("attachBytes", nil)
+			return err
+		}
+		defer fileContent.Close()
+
+		attachBytes, err := io.ReadAll(fileContent)
+		if err != nil {
+			ctx.Locals("attachBytes", nil)
+			return err
+		}
+
+		ctx.Locals("attachBytes", attachBytes)
+	} else {
+		ctx.Locals("attachBytes", nil)
+	}
+
+	return nil // เปลี่ยนจาก ctx.Next() เป็น return nil
+}
