@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strings"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
@@ -28,8 +29,11 @@ func main() {
 	// Middleware
 	app.Use(cors.New(cors.Config{
 		AllowOriginsFunc: func(origin string) bool {
-			return origin == "http://localhost:5173" || 
-			       origin == "https://capstone24.sit.kmutt.ac.th/un2"
+			return origin == "http://localhost:5173" ||
+				origin == "https://capstone24.sit.kmutt.ac.th/un2" ||
+				strings.HasPrefix(origin, "http://192.168.") || // อนุญาต local network
+				strings.HasPrefix(origin, "http://10.0.2.") || // อนุญาต Android emulator
+				strings.HasPrefix(origin, "http://localhost") // อนุญาต localhost ทุก port
 		},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
