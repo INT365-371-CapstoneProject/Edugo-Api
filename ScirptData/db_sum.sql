@@ -28,8 +28,6 @@ CREATE TABLE IF NOT EXISTS `edugo`.`accounts` (
   `username` VARCHAR(50) NOT NULL,
   `password` VARCHAR(500) NOT NULL,
   `email` VARCHAR(50) NOT NULL,
-  `firstname` VARCHAR(50) NULL DEFAULT NULL,
-  `lastname` VARCHAR(50) NULL DEFAULT NULL,
   `create_on` DATETIME NOT NULL,
   `last_login` DATETIME NULL DEFAULT NULL,
   `update_on` DATETIME NOT NULL,
@@ -65,6 +63,25 @@ CREATE TABLE IF NOT EXISTS `edugo`.`otps` (
   DEFAULT CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
 
+-- -----------------------------------------------------
+-- Table `edugo`.`admins`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `edugo`.`admins` (
+  `admin_id` INT NOT NULL AUTO_INCREMENT,
+  `firstname` VARCHAR(50) NOT NULL,
+  `lastname` VARCHAR(50) NOT NULL,
+  `status` ENUM('Active', 'Inactive') NOT NULL,
+  `account_id` INT NOT NULL,
+  PRIMARY KEY (`admin_id`),
+  INDEX `fk_admins_accounts1_idx` (`account_id` ASC) VISIBLE,
+  CONSTRAINT `fk_admins_accounts1`
+    FOREIGN KEY (`account_id`)
+    REFERENCES `edugo`.`accounts` (`account_id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
 -- Table `edugo`.`providers`

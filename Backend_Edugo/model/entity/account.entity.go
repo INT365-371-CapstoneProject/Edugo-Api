@@ -9,8 +9,6 @@ type Account struct {
 	Username   string    `json:"username"`
 	Password   string    `json:"password"`
 	Email      string    `json:"email"`
-	Firstname string    `json:"firstname"`
-	Lastname   string    `json:"lastname"`
 	Create_On  time.Time `json:"create_on" gorm:"autoCreateTime"`
 	Last_Login *time.Time `json:"last_login"`
 	Update_On  time.Time `json:"update_on" gorm:"autoUpdateTime"`
