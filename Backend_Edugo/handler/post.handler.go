@@ -572,6 +572,29 @@ func GetAnnouncePostAttach(ctx fiber.Ctx) error {
 	return ctx.Send(post.Attach_File)
 }
 
+// GetAnnounceImage - ดึงข้อมูลรูปภาพของประกาศ
+func GetAnnounceImage(ctx fiber.Ctx) error {
+    postId := ctx.Params("id")
+    
+    var announcePost entity.Announce_Post
+    result := database.DB.
+        Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+        Where("announce_posts.announce_id = ?", postId).
+        Preload("Post").
+        First(&announcePost)
+        
+    if result.Error != nil {
+        return handleError(ctx, 404, "Announcement not found")
+    }
+
+    if announcePost.Post.Image == nil {
+        return handleError(ctx, 404, "Image not found")
+    }
+
+    ctx.Set("Content-Type", "image/jpeg")
+    return ctx.Send(announcePost.Post.Image)
+}
+
 // CreateAnnouncePost - สร้างประกาศใหม่
 func CreateAnnouncePostForProvider(ctx fiber.Ctx) error {
 	// ตรวจสอบ role จาก JWT

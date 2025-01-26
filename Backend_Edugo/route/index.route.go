@@ -56,7 +56,7 @@ func RouteInit(r *fiber.App) {
 	announceGroup := public.Group("/announce", middleware.AuthProvider)
 	announceGroup.Get("/", handler.GetAllAnnouncePostForProvider)
 	announceGroup.Get("/:id", handler.GetAnnouncePostByIDForProvider)
-	announceGroup.Get("/:id/image", handler.GetPostImage)
+	announceGroup.Get("/:id/image", handler.GetAnnounceImage)
 	announceGroup.Get("/:id/attach", handler.GetAnnouncePostAttach)
 	announceGroup.Post("/", handler.CreateAnnouncePostForProvider)
 	announceGroup.Put("/:id", handler.UpdateAnnouncePostForProvider)
