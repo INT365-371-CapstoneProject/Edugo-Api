@@ -2,9 +2,10 @@ package middleware
 
 import (
 	"errors"
+	"strings" // added import
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/utils"
-	"strings" // added import
 )
 
 // extractAndDecodeToken extracts and decodes the JWT token from the Authorization header
@@ -18,6 +19,28 @@ func extractAndDecodeToken(ctx fiber.Ctx) (map[string]interface{}, error) {
 		return nil, errors.New("Unauthorized")
 	}
 	return utils.DecodeToken(parts[1])
+}
+
+// AuthAdmin ใช้ตรวจสอบการยืนยันตัวตนของผู้ใช้ผ่าน JWT
+func AuthAdmin(ctx fiber.Ctx) error {
+	claims, err := extractAndDecodeToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Unauthorized",
+		})
+	}
+
+	// ตรวจสอบบทบาทของผู้ใช้
+	role := claims["role"].(string)
+	if role != "admin" && role != "superadmin" {
+		return ctx.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"message": "Forbidden access",
+		})
+	}
+
+	// ดำเนินการต่อกับ middleware ถัดไป
+	ctx.Locals("user", claims)
+	return ctx.Next()
 }
 
 // AuthProvider ใช้ตรวจสอบการยืนยันตัวตนของผู้ใช้ผ่าน JWT

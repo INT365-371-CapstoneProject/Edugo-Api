@@ -1,14 +1,11 @@
 -- Insert into accounts
-INSERT INTO `edugo`.`accounts` (`account_id`, `username`, `password`, `email`, `create_on`, `last_login`, `update_on`, `role`) 
+INSERT INTO `edugo`.`accounts` (`account_id`, `username`, `password`, `email`, `firstname`, `lastname`,`create_on`, `last_login`, `update_on`, `role`) 
 VALUES 
-(1, 'admin_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'admin@example.com', NOW(), NOW(), NOW(), 'admin'),
-(2, 'provider_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'provider@example.com', NOW(), NOW(), NOW(), 'provider'),
-(3, 'normal_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'user@example.com', NOW(), NOW(), NOW(), 'user');
+(1, 'superadmin', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC','superadmin@example.com', 'Super', 'Admin', NOW(), NOW(), NOW(), 'superadmin'),
+(2, 'admin_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'admin@example.com', 'John', 'De',NOW(), NOW(), NOW(), 'admin'),
+(3, 'provider_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'provider@example.com', 'Pam', 'Kub',NOW(), NOW(), NOW(), 'provider'),
+(4, 'normal_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'user@example.com', 'Test', 'HHOOO',NOW(), NOW(), NOW(), 'user');
 
--- Insert into admins
-INSERT INTO `edugo`.`admins` (`admin_id`, `firstname`, `lastname`, `status`, `account_id`) 
-VALUES 
-(1, 'John', 'Doe', 'Active', 1);
 
 -- Insert into providers
 INSERT INTO `edugo`.`providers` (`provider_id`, `company_name`, `url`, `address`, `status`, `phone`, `verify`, `account_id`) 
@@ -19,9 +16,9 @@ VALUES
 -- Insert into posts
 INSERT INTO `edugo`.`posts` (`posts_id`, `description`, `image`, `publish_date`, `posts_type`, `account_id`) 
 VALUES 
-(1, 'Welcome to our new platform!', NULL, NOW(), 'Announce', 2),
-(2, 'New subject added to the curriculum.', NULL, NOW(), 'Announce', 2),
-(3, 'New feature added to the platform.', NULL, NOW(), 'Subject', 3);
+(1, 'Welcome to our new platform!', NULL, NOW(), 'Announce', 3),
+(2, 'New subject added to the curriculum.', NULL, NOW(), 'Announce', 3),
+(3, 'New feature added to the platform.', NULL, NOW(), 'Subject', 4);
 
 -- Insert into comments
 INSERT INTO `edugo`.`comments` (`comments_id`, `comments_text`, `comments_image`, `publish_date`, `posts_id`, `account_id`) 
