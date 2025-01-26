@@ -42,11 +42,21 @@ func RouteInit(r *fiber.App) {
 	announceUserGroup.Get("/", handler.GetAllAnnouncePostForUser)
 	announceUserGroup.Get("/:id", handler.GetAnnouncePostByIDForUser)
 
+	// Announcement for Admin routes
+	announceAdminGroup := public.Group("/announce-admin", middleware.AuthAdmin)
+	announceAdminGroup.Get("/", handler.GetAllAnnouncePostForAdmin)
+	announceAdminGroup.Get("/:id", handler.GetAnnouncePostByIDForAdmin)
+	announceAdminGroup.Delete("/:id", handler.DeleteAnnouncePostForAdmin)
+
+	// Subject for Admin routes
+	subjectAdminGroup := public.Group("/subject-admin", middleware.AuthAdmin)
+	subjectAdminGroup.Delete("/:id", handler.DeletePostForAdmin)
+
 	// Announcement routes
 	announceGroup := public.Group("/announce", middleware.AuthProvider)
 	announceGroup.Get("/", handler.GetAllAnnouncePostForProvider)
 	announceGroup.Get("/:id", handler.GetAnnouncePostByIDForProvider)
-	announceGroup.Get("/:id/image", handler.GetPostImage)
+	announceGroup.Get("/:id/image", handler.GetAnnounceImage)
 	announceGroup.Get("/:id/attach", handler.GetAnnouncePostAttach)
 	announceGroup.Post("/", handler.CreateAnnouncePostForProvider)
 	announceGroup.Put("/:id", handler.UpdateAnnouncePostForProvider)
