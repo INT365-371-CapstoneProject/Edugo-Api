@@ -19,7 +19,6 @@ func main() {
 		BodyLimit: 50 * 1024 * 1024,
 	})
 
-
 	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
@@ -28,9 +27,13 @@ func main() {
 
 	// Middleware
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"*"},
-		AllowHeaders: []string{"Origin", "Content-Type", "Accept"},
-		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		AllowOriginsFunc: func(origin string) bool {
+			return origin == "http://localhost:5173" || 
+			       origin == "https://capstone24.sit.kmutt.ac.th/un2"
+		},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowCredentials: true,
 	}))
 
 	// Initial route
