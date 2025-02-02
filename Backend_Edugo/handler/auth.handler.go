@@ -9,8 +9,10 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/tk-neng/demo-go-fiber/database"
+	"github.com/tk-neng/demo-go-fiber/middleware"
 	"github.com/tk-neng/demo-go-fiber/model/entity"
 	"github.com/tk-neng/demo-go-fiber/request"
+	"github.com/tk-neng/demo-go-fiber/response"
 	"github.com/tk-neng/demo-go-fiber/utils"
 )
 
@@ -173,4 +175,21 @@ func VerifyOTP(ctx fiber.Ctx) error {
 	return ctx.JSON(fiber.Map{
 		"message": "Password has been reset successfully",
 	})
+}
+
+func GetProfile(ctx fiber.Ctx) error {
+	claims := middleware.GetTokenClaims(ctx)
+	var account entity.Account
+	if err := database.DB.First(&account, "email = ?", claims["email"]).Error; err != nil {
+		return utils.HandleError(ctx, 404, "User not found")
+	}
+
+	// Response
+	profile := response.ProfileResponse{
+		ID:       account.Account_ID, // แก้จาก account.ID เป็น account.Account_ID
+		Email:    account.Email,
+		Username: account.Username,
+		Role:     account.Role,
+	}
+	return ctx.JSON(profile)
 }

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -1218,4 +1219,178 @@ func DeletePostForAdmin(ctx fiber.Ctx) error {
 	return ctx.Status(200).JSON(fiber.Map{
 		"message": "Post deleted successfully",
 	})
+}
+
+// SearchPosts - แก้ไขการใช้ ILIKE เป็น LIKE with LOWER()
+func SearchPosts(ctx fiber.Ctx) error {
+    // Get search parameters from query
+    search := ctx.Query("search")
+    dateFrom := ctx.Query("date_from")
+    dateTo := ctx.Query("date_to")
+    sortBy := ctx.Query("sort_by", "publish_date") // default sort by publish date
+    sortOrder := ctx.Query("sort_order", "desc")   // default descending order
+
+    // Get pagination parameters
+    page, limit, offset := getPaginationParams(ctx)
+
+    // Initialize the base query
+    query := database.DB.Model(&entity.Post{}).Where("posts_type = ?", "Subject")
+
+    // Apply search filter if provided
+    if search != "" {
+        query = query.Where("LOWER(description) LIKE LOWER(?)", "%"+search+"%")
+    }
+
+    // Apply date filters if provided
+    if dateFrom != "" {
+        if fromDate, err := time.Parse("2006-01-02", dateFrom); err == nil {
+            query = query.Where("publish_date >= ?", fromDate)
+        }
+    }
+    if dateTo != "" {
+        if toDate, err := time.Parse("2006-01-02", dateTo); err == nil {
+            query = query.Where("publish_date <= ?", toDate)
+        }
+    }
+
+    // Apply sorting
+    if sortOrder != "asc" {
+        sortOrder = "desc"
+    }
+    query = query.Order(fmt.Sprintf("%s %s", sortBy, sortOrder))
+
+    // Count total records
+    var total int64
+    if err := query.Count(&total).Error; err != nil {
+        return handleError(ctx, 500, "Error counting records")
+    }
+
+    // Get paginated results
+    var posts []entity.Post
+    if err := query.Offset(offset).Limit(limit).Find(&posts).Error; err != nil {
+        return handleError(ctx, 500, "Error fetching posts")
+    }
+
+    // Transform to response format
+    var postsResponse []response.PostResponse
+    for _, post := range posts {
+        postsResponse = append(postsResponse, response.PostResponse{
+            Post_ID:      post.Posts_ID,
+            Description:  post.Description,
+            Publish_Date: post.Publish_Date,
+            Posts_Type:   post.Posts_Type,
+        })
+    }
+
+    // Calculate last page
+    lastPage := int(math.Ceil(float64(total) / float64(limit)))
+
+    return ctx.Status(200).JSON(response.PaginatedPostResponse{
+        Data:     postsResponse,
+        Total:    total,
+        Page:     page,
+        LastPage: lastPage,
+        PerPage:  limit,
+    })
+}
+
+// SearchAnnouncements - แก้ไขการใช้ ILIKE เป็น LIKE with LOWER()
+func SearchAnnouncements(ctx fiber.Ctx) error {
+    // Get search parameters from query
+    search := ctx.Query("search")
+    dateFrom := ctx.Query("date_from")
+    dateTo := ctx.Query("date_to")
+    category := ctx.Query("category")
+    country := ctx.Query("country")
+    sortBy := ctx.Query("sort_by", "publish_date") // default sort by publish date
+    sortOrder := ctx.Query("sort_order", "desc")   // default descending order
+
+    // Get pagination parameters
+    page, limit, offset := getPaginationParams(ctx)
+
+    // Initialize the base query
+    query := database.DB.Model(&entity.Announce_Post{}).
+        Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+        Preload("Post").
+        Preload("Category").
+        Preload("Country")
+
+    // Apply search filters if provided
+    if search != "" {
+        query = query.Where(
+            "LOWER(announce_posts.title) LIKE LOWER(?) OR LOWER(posts.description) LIKE LOWER(?)",
+            "%"+search+"%", "%"+search+"%",
+        )
+    }
+
+    // Apply date filters if provided
+    if dateFrom != "" {
+        if fromDate, err := time.Parse("2006-01-02", dateFrom); err == nil {
+            query = query.Where("posts.publish_date >= ?", fromDate)
+        }
+    }
+    if dateTo != "" {
+        if toDate, err := time.Parse("2006-01-02", dateTo); err == nil {
+            query = query.Where("posts.publish_date <= ?", toDate)
+        }
+    }
+
+    // Apply category filter if provided
+    if category != "" {
+        query = query.Joins("JOIN categories ON announce_posts.category_id = categories.category_id").
+            Where("LOWER(categories.name) LIKE LOWER(?)", "%"+category+"%")
+    }
+
+    // Apply country filter if provided
+    if country != "" {
+        query = query.Joins("JOIN countries ON announce_posts.country_id = countries.country_id").
+            Where("LOWER(countries.name) LIKE LOWER(?)", "%"+country+"%")
+    }
+
+    // Apply sorting
+    if sortOrder != "asc" {
+        sortOrder = "desc"
+    }
+    query = query.Order(fmt.Sprintf("posts.%s %s", sortBy, sortOrder))
+
+    // Count total records
+    var total int64
+    if err := query.Count(&total).Error; err != nil {
+        return handleError(ctx, 500, "Error counting records")
+    }
+
+    // Get paginated results
+    var announcements []entity.Announce_Post
+    if err := query.Offset(offset).Limit(limit).Find(&announcements).Error; err != nil {
+        return handleError(ctx, 500, "Error fetching announcements")
+    }
+
+    // Transform to response format
+    var announcementsResponse []response.AnnouncePostResponse
+    for _, announce := range announcements {
+        announcementsResponse = append(announcementsResponse, response.AnnouncePostResponse{
+            Announce_ID:  announce.Announce_ID,
+            Title:        announce.Title,
+            Description:  announce.Post.Description,
+            URL:          announce.Url,
+            Attach_Name:  announce.Attach_Name,
+            Posts_Type:   announce.Post.Posts_Type,
+            Publish_Date: announce.Post.Publish_Date,
+            Close_Date:   announce.Close_Date,
+            Category:     announce.Category.Name,
+            Country:      announce.Country.Name,
+            Post_ID:      announce.Post.Posts_ID,
+        })
+    }
+
+    // Calculate last page
+    lastPage := int(math.Ceil(float64(total) / float64(limit)))
+
+    return ctx.Status(200).JSON(response.PaginatedAnnouncePostResponse{
+        Data:     announcementsResponse,
+        Total:    total,
+        Page:     page,
+        LastPage: lastPage,
+        PerPage:  limit,
+    })
 }
