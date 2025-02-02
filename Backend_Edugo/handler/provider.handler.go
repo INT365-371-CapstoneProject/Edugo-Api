@@ -113,7 +113,7 @@ func CreateProvider(ctx fiber.Ctx) error {
         Address:     provider.Address,
         Status:      "Active",
         Phone:       provider.Phone,
-        Verify:      "N",
+        Verify:      "Y",
         Account_ID:  newAccount.Account_ID,
     }
 
