@@ -12,6 +12,7 @@ type Announce_Post struct {
 	Posts_ID     uint       `json:"post_id"`
 	Category_ID uint       `json:"category_id"`
 	Country_ID  uint       `json:"country_id"`
+	Education_Level string `json:"education_level"`
 
 	// ตัวแปร Post ใช้เพื่อเก็บข้อมูลจากตาราง Post
 	Post 	  Post       `gorm:"foreignKey:Posts_ID;references:Posts_ID "`

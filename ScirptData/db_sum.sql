@@ -186,6 +186,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`announce_posts` (
   `url` VARCHAR(255) NULL DEFAULT NULL,
   `attach_name` VARCHAR(255) NULL DEFAULT NULL,
   `attach_file` LONGBLOB NULL DEFAULT NULL,
+  `education_level` ENUM('Undergraduate', 'Master', 'Doctorate') NOT NULL,
   `close_date` DATETIME NOT NULL,
   `posts_id` INT NOT NULL,
   `category_id` INT NOT NULL,
