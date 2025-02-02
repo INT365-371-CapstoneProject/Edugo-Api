@@ -84,6 +84,17 @@ func init() {
 			return fe.Error()
 		})
 	}
+
+	// Add this validator in the init() function
+	validate.RegisterValidation("education_level", func(fl validator.FieldLevel) bool {
+		value := fl.Field().String()
+		validLevels := map[string]bool{
+			"Undergraduate": true,
+			"Master":       true,
+			"Doctorate":    true,
+		}
+		return validLevels[value]
+	})
 }
 
 // ฟังก์ชันสำหรับจัดการข้อผิดพลาด
@@ -485,6 +496,7 @@ func GetAllAnnouncePostForProvider(ctx fiber.Ctx) error {
 			Category:     post.Category.Name,
 			Country:      post.Country.Name,
 			Post_ID:      post.Post.Posts_ID,
+			Education_Level: post.Education_Level,
 		}
 	}
 
@@ -544,6 +556,7 @@ func GetAnnouncePostByIDForProvider(ctx fiber.Ctx) error {
 		Category:     post[0].Category.Name,
 		Country:      post[0].Country.Name,
 		Post_ID:      post[0].Post.Posts_ID,
+		Education_Level: post[0].Education_Level,
 	}
 	return ctx.Status(200).JSON(postsResponse)
 }
@@ -689,13 +702,14 @@ func CreateAnnouncePostForProvider(ctx fiber.Ctx) error {
 
 	// Create New Announce Post
 	newAnnouncePost := entity.Announce_Post{
-		Title:       post.Title,
-		Posts_ID:    newPost.Posts_ID,
-		Url:         post.URL,
-		Attach_Name: attachFileName,
-		Close_Date:  post.Close_Date,
-		Category_ID: post.Category_ID,
-		Country_ID:  post.Country_ID,
+		Title:           post.Title,
+		Posts_ID:        newPost.Posts_ID,
+		Url:             post.URL,
+		Attach_Name:     attachFileName,
+		Close_Date:      post.Close_Date,
+		Category_ID:     post.Category_ID,
+		Country_ID:      post.Country_ID,
+		Education_Level: post.Education_Level,
 	}
 
 	// เพิ่มไฟล์แนบถ้ามีการอัพโหลด
@@ -717,17 +731,18 @@ func CreateAnnouncePostForProvider(ctx fiber.Ctx) error {
 	// สร้างตัวแปรแบบ AnnouncePostResponse
 	// และกำหนดค่าให้กับตัวแปรนี้
 	postResponse := response.AnnouncePostResponseAdd{
-		Announce_ID:  newAnnouncePost.Announce_ID,
-		Title:        newAnnouncePost.Title,
-		Description:  newPost.Description,
-		URL:          newAnnouncePost.Url,
-		Attach_Name:  newAnnouncePost.Attach_Name,
-		Posts_Type:   newPost.Posts_Type,
-		Publish_Date: newPost.Publish_Date,
-		Close_Date:   newAnnouncePost.Close_Date,
-		Category_ID:  newAnnouncePost.Category_ID,
-		Country_ID:   newAnnouncePost.Country_ID,
-		Account_ID:   newPost.Account_ID,
+		Announce_ID:     newAnnouncePost.Announce_ID,
+		Title:           newAnnouncePost.Title,
+		Description:     newPost.Description,
+		URL:             newAnnouncePost.Url,
+		Attach_Name:     newAnnouncePost.Attach_Name,
+		Posts_Type:      newPost.Posts_Type,
+		Publish_Date:    newPost.Publish_Date,
+		Close_Date:      newAnnouncePost.Close_Date,
+		Category_ID:     newAnnouncePost.Category_ID,
+		Country_ID:      newAnnouncePost.Country_ID,
+		Account_ID:      newPost.Account_ID,
+		Education_Level: newAnnouncePost.Education_Level,
 	}
 	// ส่งข้อมูลกลับไปในรูปแบบ JSON
 	return ctx.Status(201).JSON(postResponse)
@@ -804,6 +819,9 @@ func UpdateAnnouncePostForProvider(ctx fiber.Ctx) error {
 	if postRequest.Category_ID != 0 {
 		announcePost.Category_ID = postRequest.Category_ID
 	}
+	if postRequest.Education_Level != "" {
+		announcePost.Education_Level = postRequest.Education_Level
+	}
 	// Update File Image if provided
 	if err := utils.HandleImageUpload(ctx, "image"); err == nil {
 		if imageBytes := ctx.Locals("imageBytes"); imageBytes != nil {
@@ -844,17 +862,18 @@ func UpdateAnnouncePostForProvider(ctx fiber.Ctx) error {
 
 	// Construct response data
 	postResponse := response.AnnouncePostResponseAdd{
-		Announce_ID:  announcePost.Announce_ID,
-		Title:        announcePost.Title,
-		Description:  announcePost.Post.Description,
-		URL:          announcePost.Url,
-		Attach_Name:  announcePost.Attach_Name,
-		Posts_Type:   announcePost.Post.Posts_Type,
-		Publish_Date: announcePost.Post.Publish_Date,
-		Close_Date:   announcePost.Close_Date,
-		Category_ID:  announcePost.Category_ID,
-		Country_ID:   announcePost.Country_ID,
-		Account_ID:   announcePost.Post.Account_ID,
+		Announce_ID:     announcePost.Announce_ID,
+		Title:           announcePost.Title,
+		Description:     announcePost.Post.Description,
+		URL:             announcePost.Url,
+		Attach_Name:     announcePost.Attach_Name,
+		Posts_Type:      announcePost.Post.Posts_Type,
+		Publish_Date:    announcePost.Post.Publish_Date,
+		Close_Date:      announcePost.Close_Date,
+		Category_ID:     announcePost.Category_ID,
+		Country_ID:      announcePost.Country_ID,
+		Account_ID:      announcePost.Post.Account_ID,
+		Education_Level: announcePost.Education_Level,
 	}
 	// Return the updated response
 	return ctx.Status(200).JSON(postResponse)

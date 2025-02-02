@@ -3,14 +3,15 @@ package response
 import "time"
 
 type AnnouncePostResponse struct {
-	Announce_ID  uint       `json:"id"`
-	Title        string     `json:"title"`
-	Attach_Name  *string    `json:"attach_name"`
-	Description  string     `json:"description"`
-	URL          *string    `json:"url"`
-	Posts_Type   string     `json:"posts_type"`
-	Publish_Date *time.Time `json:"publish_date"`
-	Close_Date   *time.Time `json:"close_date"`
+	Announce_ID     uint       `json:"id"`
+	Title           string     `json:"title"`
+	Attach_Name     *string    `json:"attach_name"`
+	Description     string     `json:"description"`
+	URL             *string    `json:"url"`
+	Posts_Type      string     `json:"posts_type"`
+	Publish_Date    *time.Time `json:"publish_date"`
+	Close_Date      *time.Time `json:"close_date"`
+	Education_Level string     `json:"education_level"`
 
 	// ตัวแปร Category ใช้เพื่อเก็บข้อมูลจากตาราง Category
 	Category string `json:"category"`
@@ -20,17 +21,18 @@ type AnnouncePostResponse struct {
 }
 
 type AnnouncePostResponseAdd struct {
-	Announce_ID  uint       `json:"id"`
-	Title        string     `json:"title"`
-	Description  string     `json:"description"`
-	URL          *string    `json:"url"`
-	Attach_Name  *string    `json:"attach_name"`
-	Posts_Type   string     `json:"posts_type"`
-	Publish_Date *time.Time `json:"publish_date"`
-	Close_Date   *time.Time `json:"close_date"`
-	Category_ID  uint       `json:"category_id"`
-	Country_ID   uint       `json:"country_id"`
-	Account_ID   uint       `json:"account_id"`
+	Announce_ID     uint       `json:"id"`
+	Title           string     `json:"title"`
+	Description     string     `json:"description"`
+	URL             *string    `json:"url"`
+	Attach_Name     *string    `json:"attach_name"`
+	Posts_Type      string     `json:"posts_type"`
+	Publish_Date    *time.Time `json:"publish_date"`
+	Close_Date      *time.Time `json:"close_date"`
+	Category_ID     uint       `json:"category_id"`
+	Country_ID      uint       `json:"country_id"`
+	Account_ID      uint       `json:"account_id"`
+	Education_Level string     `json:"education_level"`
 }
 
 type PostResponse struct {
