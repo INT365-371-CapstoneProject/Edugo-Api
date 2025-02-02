@@ -15,7 +15,7 @@ VALUES
 -- Insert into providers
 INSERT INTO `edugo`.`providers` (`provider_id`, `company_name`, `url`, `address`, `status`, `phone`, `verify`, `account_id`) 
 VALUES 
-(1, 'Tech Solutions', 'www.techsolutions.com', '123 Main St', 'Active', '0123456789', 'Y', 2);
+(1, 'Tech Solutions', 'www.techsolutions.com', '123 Main St', 'Active', '0123456789', 'Y', 3);
 
 
 -- Insert into posts

@@ -41,6 +41,39 @@ func GetAllProvider(ctx fiber.Ctx) error {
 	return ctx.Status(200).JSON(providerResponse)
 }
 
+func GetIDProvider(ctx fiber.Ctx) error {
+    // Get provider ID from params
+    providerID := ctx.Params("id")
+
+    // Find provider in database with Account preloaded
+    var provider entity.Provider
+    result := database.DB.Preload("Account", "role = ?", "provider").First(&provider, providerID)
+    if result.Error != nil {
+        return ctx.Status(404).JSON(fiber.Map{
+            "message": "Provider not found",
+        })
+    }
+
+    // Create response
+    providerResponse := response.ProviderResponse{
+        Provider_ID:  provider.Provider_ID,
+        Company_Name: provider.Company_Name,
+        Username:     provider.Account.Username,
+        Email:        provider.Account.Email,
+        URL:         provider.URL,
+        Address:     provider.Address,
+        Phone:       provider.Phone,
+        Status:      provider.Status,
+        Verify:      provider.Verify,
+        Create_On:   provider.Account.Create_On,
+        Last_Login:  provider.Account.Last_Login,
+        Update_On:   provider.Account.Update_On,
+        Role:        provider.Account.Role,
+    }
+
+    return ctx.Status(200).JSON(providerResponse)
+}
+
 func CreateProvider(ctx fiber.Ctx) error {
     provider := new(request.ProviderCreateRequest)
     if err := ctx.Bind().Body(provider); err != nil {
