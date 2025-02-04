@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS `edugo`.`accounts` (
   `username` VARCHAR(50) NOT NULL,
   `password` VARCHAR(500) NOT NULL,
   `email` VARCHAR(50) NOT NULL,
+  `first_name` VARCHAR(50) NULL DEFAULT NULL,
+  `last_name` VARCHAR(50) NULL DEFAULT NULL,
   `create_on` DATETIME NOT NULL,
   `last_login` DATETIME NULL DEFAULT NULL,
   `update_on` DATETIME NOT NULL,
