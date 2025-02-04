@@ -193,3 +193,72 @@ func GetProfile(ctx fiber.Ctx) error {
 	}
 	return ctx.JSON(profile)
 }
+
+func EditProfile(ctx fiber.Ctx) error {
+    // 1. รับและตรวจสอบ request
+    editRequest := new(request.EditProfileRequest)
+    if err := ctx.Bind().Body(editRequest); err != nil {
+        return utils.HandleError(ctx, 400, "Invalid request body")
+    }
+
+    // 2. ดึงข้อมูล account จาก token
+    claims := middleware.GetTokenClaims(ctx)
+    var account entity.Account
+    if err := database.DB.First(&account, "email = ?", claims["email"]).Error; err != nil {
+        return utils.HandleError(ctx, 404, "User not found")
+    }
+
+    // 3. สร้าง map สำหรับเก็บข้อมูลที่จะอัพเดท
+    updates := buildUpdatesMap(editRequest)
+    
+    // 4. อัพเดทข้อมูลถ้ามีการเปลี่ยนแปลง
+    if len(updates) > 0 {
+        if err := updateProfile(&account, updates); err != nil {
+            return utils.HandleError(ctx, 500, "Failed to update profile")
+        }
+    }
+
+    // 5. ส่งข้อมูลกลับ
+    return ctx.JSON(fiber.Map{
+        "message": "Profile updated successfully",
+        "profile": response.ProfileResponse{
+            ID:        account.Account_ID,
+            Email:     account.Email,
+            Username:  account.Username,
+            FirstName: account.FirstName,
+            LastName:  account.LastName,
+            Role:      account.Role,
+        },
+    })
+}
+
+// helper functions
+func buildUpdatesMap(req *request.EditProfileRequest) map[string]interface{} {
+    updates := make(map[string]interface{})
+    
+    if req.FirstName != nil {
+        updates["first_name"] = req.FirstName
+    }
+    if req.LastName != nil {
+        updates["last_name"] = req.LastName
+    }
+    if req.Email != nil {
+        updates["email"] = req.Email
+    }
+    if req.Username != nil {
+        updates["username"] = req.Username
+    }
+    
+    return updates
+}
+
+func updateProfile(account *entity.Account, updates map[string]interface{}) error {
+    result := database.DB.Model(account).Updates(updates)
+    if result.Error != nil {
+        log.Printf("Error updating profile: %v", result.Error)
+        return result.Error
+    }
+    
+    // ดึงข้อมูลล่าสุด
+    return database.DB.First(account, account.Account_ID).Error
+}
