@@ -8,8 +8,36 @@ type LoginRequest struct {
 }
 
 type EditProfileRequest struct {
+	Username  *string `json:"username" validate:"omitempty,min=3,max=50"`
+	FirstName *string `json:"first_name" validate:"omitempty,min=2,max=50"`
+	LastName  *string `json:"last_name" validate:"omitempty,min=2,max=50"`
+	Email     *string `json:"email" validate:"omitempty,email"`
+}
+
+type AdminUpdateRequest struct {
+	Username  *string `json:"username" validate:"omitempty,min=3,max=50"`
+	Email     *string `json:"email" validate:"omitempty,email"`
+	FirstName *string `json:"first_name" validate:"omitempty,min=2"`
+	LastName  *string `json:"last_name" validate:"omitempty,min=2"`
+	Phone     *string `json:"phone" validate:"omitempty"`
+}
+
+type ProviderUpdateRequest struct {
 	Username    *string `json:"username" validate:"omitempty,min=3,max=50"`
-	FirstName   *string `json:"first_name" validate:"omitempty,min=2,max=50"`
-	LastName    *string `json:"last_name" validate:"omitempty,min=2,max=50"`
 	Email       *string `json:"email" validate:"omitempty,email"`
+	FirstName   *string `json:"first_name" validate:"omitempty,min=2"`
+	LastName    *string `json:"last_name" validate:"omitempty,min=2"`
+	CompanyName *string `json:"company_name" validate:"omitempty"`
+	Phone       *string `json:"phone" validate:"omitempty"`
+	Address     *string `json:"address" validate:"omitempty"`
+	City        *string `json:"city" validate:"omitempty"`
+	Country     *string `json:"country" validate:"omitempty"`
+	PostalCode  *string `json:"postal_code" validate:"omitempty"`
+}
+
+type UserUpdateRequest struct {
+	Username  *string `json:"username" validate:"omitempty,min=3,max=50"`
+	Email     *string `json:"email" validate:"omitempty,email"`
+	FirstName *string `json:"first_name" validate:"omitempty,min=2"`
+	LastName  *string `json:"last_name" validate:"omitempty,min=2"`
 }

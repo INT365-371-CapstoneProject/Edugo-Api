@@ -41,7 +41,7 @@ func RouteInit(r *fiber.App) {
 	// Profile routes
 	profileGroup := public.Group("/profile", middleware.AuthAny)
 	profileGroup.Get("/", handler.GetProfile)
-	//profileGroup.Put("/", handler.EditProfile)
+	profileGroup.Put("/", handler.UpdateProfile)
 
 	// Search routes
 	searchGroup := public.Group("/search", middleware.AuthAny)
