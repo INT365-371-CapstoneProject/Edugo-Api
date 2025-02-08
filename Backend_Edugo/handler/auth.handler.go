@@ -280,6 +280,13 @@ func UpdateProfile(ctx fiber.Ctx) error {
 }
 
 func updateAdminProfile(ctx fiber.Ctx, account entity.Account) error {
+	// Handle avatar upload first
+	if err := utils.HandleAvatarUpload(ctx, "avatar"); err != nil {
+		return utils.HandleError(ctx, 400, "Failed to upload avatar")
+	}
+
+	avatarBytes := ctx.Locals("avatarBytes")
+
 	updateRequest := new(request.AdminUpdateRequest)
 	if err := ctx.Bind().Body(updateRequest); err != nil {
 		return utils.HandleError(ctx, 400, "Invalid request body")
@@ -306,6 +313,11 @@ func updateAdminProfile(ctx fiber.Ctx, account entity.Account) error {
 	}
 	if updateRequest.LastName != nil {
 		updates["last_name"] = *updateRequest.LastName
+	}
+
+	// Add avatar to updates if provided
+	if avatarBytes != nil {
+		updates["avatar"] = avatarBytes
 	}
 
 	// Update account information if there are changes
@@ -348,6 +360,13 @@ func updateAdminProfile(ctx fiber.Ctx, account entity.Account) error {
 }
 
 func updateProviderProfile(ctx fiber.Ctx, account entity.Account) error {
+	// Handle avatar upload first
+	if err := utils.HandleAvatarUpload(ctx, "avatar"); err != nil {
+		return utils.HandleError(ctx, 400, "Failed to upload avatar")
+	}
+
+	avatarBytes := ctx.Locals("avatarBytes")
+
 	updateRequest := new(request.ProviderUpdateRequest)
 	if err := ctx.Bind().Body(updateRequest); err != nil {
 		return utils.HandleError(ctx, 400, "Invalid request body")
@@ -374,6 +393,11 @@ func updateProviderProfile(ctx fiber.Ctx, account entity.Account) error {
 	}
 	if updateRequest.LastName != nil {
 		accountUpdates["last_name"] = *updateRequest.LastName
+	}
+
+	// Add avatar to account updates if provided
+	if avatarBytes != nil {
+		accountUpdates["avatar"] = avatarBytes
 	}
 
 	// Update account information if there are changes
@@ -450,6 +474,13 @@ func updateProviderProfile(ctx fiber.Ctx, account entity.Account) error {
 }
 
 func updateUserProfile(ctx fiber.Ctx, account entity.Account) error {
+	// Handle avatar upload first
+	if err := utils.HandleAvatarUpload(ctx, "avatar"); err != nil {
+		return utils.HandleError(ctx, 400, "Failed to upload avatar")
+	}
+
+	avatarBytes := ctx.Locals("avatarBytes")
+
 	updateRequest := new(request.UserUpdateRequest)
 	if err := ctx.Bind().Body(updateRequest); err != nil {
 		return utils.HandleError(ctx, 400, "Invalid request body")
@@ -475,6 +506,11 @@ func updateUserProfile(ctx fiber.Ctx, account entity.Account) error {
 		updates["last_name"] = *updateRequest.LastName
 	}
 
+	// Add avatar to updates if provided
+	if avatarBytes != nil {
+		updates["avatar"] = avatarBytes
+	}
+
 	// Update account information if there are changes
 	if len(updates) > 0 {
 		if err := database.DB.Model(&account).Updates(updates).Error; err != nil {
@@ -492,4 +528,25 @@ func updateUserProfile(ctx fiber.Ctx, account entity.Account) error {
 			Role:      account.Role,
 		},
 	})
+}
+
+func GetAvatarImage(ctx fiber.Ctx) error {
+	claims := middleware.GetTokenClaims(ctx)
+
+	var account entity.Account
+	if err := database.DB.Select("avatar").First(&account, "account_id = ?", claims["account_id"]).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Avatar not found")
+	}
+
+	// If no avatar is stored
+	if len(account.Avatar) == 0 {
+		return utils.HandleError(ctx, 404, "No avatar image found")
+	}
+
+	// Set content type header for image
+	ctx.Set("Content-Type", "image/jpeg")             // You might want to store the content type in DB if you support multiple formats
+	ctx.Set("Cache-Control", "public, max-age=86400") // Cache for 24 hours
+
+	// Return the image bytes directly
+	return ctx.Send(account.Avatar)
 }

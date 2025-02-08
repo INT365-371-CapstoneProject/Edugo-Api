@@ -1,5 +1,7 @@
 package request
 
+import "mime/multipart"
+
 type LoginRequest struct {
 	Email      string `json:"email" validate:"required_without=Username,omitempty,email" message:"Email is required when username is not provided"`
 	Username   string `json:"username" validate:"required_without=Email,omitempty" message:"Username is required when email is not provided"`
@@ -15,11 +17,12 @@ type EditProfileRequest struct {
 }
 
 type AdminUpdateRequest struct {
-	Username  *string `json:"username" validate:"omitempty,min=3,max=50"`
-	Email     *string `json:"email" validate:"omitempty,email"`
-	FirstName *string `json:"first_name" validate:"omitempty,min=2"`
-	LastName  *string `json:"last_name" validate:"omitempty,min=2"`
-	Phone     *string `json:"phone" validate:"omitempty"`
+	Username  *string         `json:"username" validate:"omitempty,min=3,max=50"`
+	Email     *string         `json:"email" validate:"omitempty,email"`
+	FirstName *string         `json:"first_name" validate:"omitempty,min=2"`
+	LastName  *string         `json:"last_name" validate:"omitempty,min=2"`
+	Phone     *string         `json:"phone" validate:"omitempty"`
+	Avatar    *multipart.File `json:"avatar" form:"avatar" validate:"omitempty"`
 }
 
 type ProviderUpdateRequest struct {
@@ -33,6 +36,7 @@ type ProviderUpdateRequest struct {
 	City        *string `json:"city" validate:"omitempty"`
 	Country     *string `json:"country" validate:"omitempty"`
 	PostalCode  *string `json:"postal_code" validate:"omitempty"`
+	Avatar      *multipart.File `json:"avatar" form:"avatar" validate:"omitempty"`
 }
 
 type UserUpdateRequest struct {
@@ -40,4 +44,5 @@ type UserUpdateRequest struct {
 	Email     *string `json:"email" validate:"omitempty,email"`
 	FirstName *string `json:"first_name" validate:"omitempty,min=2"`
 	LastName  *string `json:"last_name" validate:"omitempty,min=2"`
+	Avatar    *multipart.File `json:"avatar" form:"avatar" validate:"omitempty"`
 }

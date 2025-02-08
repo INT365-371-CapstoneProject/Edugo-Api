@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`accounts` (
   `email` VARCHAR(50) NOT NULL,
   `first_name` VARCHAR(50) NULL DEFAULT NULL,
   `last_name` VARCHAR(50) NULL DEFAULT NULL,
+  `avatar` LONGBLOB NULL DEFAULT NULL,
   `create_on` DATETIME NOT NULL,
   `last_login` DATETIME NULL DEFAULT NULL,
   `update_on` DATETIME NOT NULL,
