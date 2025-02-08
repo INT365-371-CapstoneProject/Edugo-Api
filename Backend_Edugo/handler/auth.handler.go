@@ -14,6 +14,7 @@ import (
 	"github.com/tk-neng/demo-go-fiber/request"
 	"github.com/tk-neng/demo-go-fiber/response"
 	"github.com/tk-neng/demo-go-fiber/utils"
+	// "gorm.io/gorm"
 )
 
 func Login(ctx fiber.Ctx) error {
@@ -159,7 +160,7 @@ func VerifyOTP(ctx fiber.Ctx) error {
 
 	// Update password and mark OTP as used
 	tx := database.DB.Begin()
-	
+
 	if err := tx.Model(&account).Update("password", hashedPassword).Error; err != nil {
 		tx.Rollback()
 		return utils.HandleError(ctx, 500, "Failed to update password")
@@ -184,81 +185,78 @@ func GetProfile(ctx fiber.Ctx) error {
 		return utils.HandleError(ctx, 404, "User not found")
 	}
 
-	// Response
-	profile := response.ProfileResponse{
-		ID:       account.Account_ID, // แก้จาก account.ID เป็น account.Account_ID
-		Email:    account.Email,
-		Username: account.Username,
-		Role:     account.Role,
+	switch account.Role {
+	case "admin":
+		return getAdminProfile(ctx, account)
+	case "provider":
+		return getProviderProfile(ctx, account)
+	case "user":
+		return getUserProfile(ctx, account)
+	default:
+		return utils.HandleError(ctx, 400, "Invalid role")
 	}
-	return ctx.JSON(profile)
 }
 
-func EditProfile(ctx fiber.Ctx) error {
-    // 1. รับและตรวจสอบ request
-    editRequest := new(request.EditProfileRequest)
-    if err := ctx.Bind().Body(editRequest); err != nil {
-        return utils.HandleError(ctx, 400, "Invalid request body")
-    }
+func getAdminProfile(ctx fiber.Ctx, account entity.Account) error {
+	// Change this line to use a pointer
+	var adminDetails *entity.Admin
+	// Use &adminDetails to pass the pointer
+	if err := database.DB.First(&adminDetails, "account_id = ?", account.Account_ID).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Admin details not found")
+	}
 
-    // 2. ดึงข้อมูล account จาก token
-    claims := middleware.GetTokenClaims(ctx)
-    var account entity.Account
-    if err := database.DB.First(&account, "email = ?", claims["email"]).Error; err != nil {
-        return utils.HandleError(ctx, 404, "User not found")
-    }
-
-    // 3. สร้าง map สำหรับเก็บข้อมูลที่จะอัพเดท
-    updates := buildUpdatesMap(editRequest)
-    
-    // 4. อัพเดทข้อมูลถ้ามีการเปลี่ยนแปลง
-    if len(updates) > 0 {
-        if err := updateProfile(&account, updates); err != nil {
-            return utils.HandleError(ctx, 500, "Failed to update profile")
-        }
-    }
-
-    // 5. ส่งข้อมูลกลับ
-    return ctx.JSON(fiber.Map{
-        "message": "Profile updated successfully",
-        "profile": response.ProfileResponse{
-            ID:        account.Account_ID,
-            Email:     account.Email,
-            Username:  account.Username,
-            FirstName: account.FirstName,
-            LastName:  account.LastName,
-            Role:      account.Role,
-        },
-    })
+	return ctx.JSON(fiber.Map{
+		"profile": response.AdminProfileResponse{
+			ID:        account.Account_ID,
+			Email:     account.Email,
+			Username:  account.Username,
+			FirstName: account.FirstName,
+			LastName:  account.LastName,
+			Role:      account.Role,
+			Phone:     &adminDetails.Phone,
+		},
+	})
 }
 
-// helper functions
-func buildUpdatesMap(req *request.EditProfileRequest) map[string]interface{} {
-    updates := make(map[string]interface{})
-    
-    if req.FirstName != nil {
-        updates["first_name"] = req.FirstName
-    }
-    if req.LastName != nil {
-        updates["last_name"] = req.LastName
-    }
-    if req.Email != nil {
-        updates["email"] = req.Email
-    }
-    if req.Username != nil {
-        updates["username"] = req.Username
-    }
-    
-    return updates
+func getProviderProfile(ctx fiber.Ctx, account entity.Account) error {
+	var providerDetails entity.Provider
+	if err := database.DB.First(&providerDetails, "account_id = ?", account.Account_ID).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Provider details not found")
+	}
+
+	return ctx.JSON(fiber.Map{
+		"profile": response.ProviderProfileResponse{
+			ID:            account.Account_ID,
+			Email:         account.Email,
+			Username:      account.Username,
+			FirstName:     *account.FirstName,
+			LastName:      *account.LastName,
+			Role:          account.Role,
+			Company_Name:  providerDetails.Company_Name,
+			Phone:         providerDetails.Phone,
+			Address:       providerDetails.Address,
+			City:          providerDetails.City,
+			Country:       providerDetails.Country,
+			Postal_Code:   providerDetails.Postal_Code,
+		},
+	})
 }
 
-func updateProfile(account *entity.Account, updates map[string]interface{}) error {
-    result := database.DB.Model(account).Updates(updates)
-    if result.Error != nil {
-        log.Printf("Error updating profile: %v", result.Error)
-        return result.Error
-    }
-    
-    // ดึงข้อมูลล่าสุด
-    return database.DB.First(account, account.Account_ID).Error
+func getUserProfile(ctx fiber.Ctx, account entity.Account) error {
+	var userDetails entity.Account
+	if err := database.DB.First(&userDetails, "account_id = ?", account.Account_ID).Error; err != nil {
+		return utils.HandleError(ctx, 404, "User details not found")
+	}
+
+	return ctx.JSON(fiber.Map{
+		"profile": response.UserProfileResponse{
+			ID:          account.Account_ID,
+			Email:       account.Email,
+			Username:    account.Username,
+			FirstName:   account.FirstName,
+			LastName:    account.LastName,
+			Role:        account.Role,
+		},
+	})
 }
+

@@ -112,6 +112,8 @@ func CreateUser(ctx fiber.Ctx) error {
 	newUser := entity.Account{
 		Username: user.Username,
 		Email: user.Email,
+		FirstName: &user.FirstName,
+		LastName: &user.LastName,
 		Last_Login: nil,
 		Role: "user",
 	}
@@ -135,6 +137,8 @@ func CreateUser(ctx fiber.Ctx) error {
 		Account_ID: newUser.Account_ID,
 		Username: newUser.Username,
 		Email: newUser.Email,
+		FirstName: *newUser.FirstName,
+		LastName: *newUser.LastName,
 		Create_On: newUser.Create_On,
 		Last_Login: newUser.Last_Login,
 		Update_On: newUser.Update_On,

@@ -70,8 +70,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`otps` (
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `edugo`.`admins` (
   `admin_id` INT NOT NULL AUTO_INCREMENT,
-  `firstname` VARCHAR(50) NOT NULL,
-  `lastname` VARCHAR(50) NOT NULL,
+  `phone` VARCHAR(10) NOT NULL,
   `status` ENUM('Active', 'Inactive') NOT NULL,
   `account_id` INT NOT NULL,
   PRIMARY KEY (`admin_id`),
@@ -93,6 +92,9 @@ CREATE TABLE IF NOT EXISTS `edugo`.`providers` (
   `company_name` VARCHAR(50) NOT NULL,
   `url` VARCHAR(500) NOT NULL,
   `address` VARCHAR(100) NOT NULL,
+  `city` VARCHAR(50) NOT NULL,
+  `country` VARCHAR(50) NOT NULL,
+  `postal_code` VARCHAR(10) NOT NULL,
   `status` ENUM('Active', 'Inactive') NOT NULL,
   `phone` VARCHAR(10) NOT NULL,
   `verify` ENUM('Y', 'N') NOT NULL,
