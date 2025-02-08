@@ -14,6 +14,7 @@ import (
 	"github.com/tk-neng/demo-go-fiber/request"
 	"github.com/tk-neng/demo-go-fiber/response"
 	"github.com/tk-neng/demo-go-fiber/utils"
+	// "gorm.io/gorm"
 )
 
 func Login(ctx fiber.Ctx) error {
@@ -50,9 +51,9 @@ func Login(ctx fiber.Ctx) error {
 	} else {
 		expirationTime = time.Now().Add(time.Hour * 24) // 1 day
 	}
-
 	// Generate JWT Token
 	claims := jwt.MapClaims{}
+	claims["account_id"] = account.Account_ID // แก้จาก account.ID เป็น account.AccountID
 	claims["email"] = account.Email
 	claims["username"] = account.Username
 	claims["role"] = account.Role
@@ -159,7 +160,7 @@ func VerifyOTP(ctx fiber.Ctx) error {
 
 	// Update password and mark OTP as used
 	tx := database.DB.Begin()
-	
+
 	if err := tx.Model(&account).Update("password", hashedPassword).Error; err != nil {
 		tx.Rollback()
 		return utils.HandleError(ctx, 500, "Failed to update password")
@@ -180,85 +181,372 @@ func VerifyOTP(ctx fiber.Ctx) error {
 func GetProfile(ctx fiber.Ctx) error {
 	claims := middleware.GetTokenClaims(ctx)
 	var account entity.Account
-	if err := database.DB.First(&account, "email = ?", claims["email"]).Error; err != nil {
+	if err := database.DB.First(&account, "account_id = ?", claims["account_id"]).Error; err != nil {
 		return utils.HandleError(ctx, 404, "User not found")
 	}
 
-	// Response
-	profile := response.ProfileResponse{
-		ID:       account.Account_ID, // แก้จาก account.ID เป็น account.Account_ID
-		Email:    account.Email,
-		Username: account.Username,
-		Role:     account.Role,
+	switch account.Role {
+	case "admin":
+		return getAdminProfile(ctx, account)
+	case "provider":
+		return getProviderProfile(ctx, account)
+	case "user":
+		return getUserProfile(ctx, account)
+	default:
+		return utils.HandleError(ctx, 400, "Invalid role")
 	}
-	return ctx.JSON(profile)
 }
 
-func EditProfile(ctx fiber.Ctx) error {
-    // 1. รับและตรวจสอบ request
-    editRequest := new(request.EditProfileRequest)
-    if err := ctx.Bind().Body(editRequest); err != nil {
-        return utils.HandleError(ctx, 400, "Invalid request body")
-    }
+func getAdminProfile(ctx fiber.Ctx, account entity.Account) error {
+	// Change this line to use a pointer
+	var adminDetails *entity.Admin
+	// Use &adminDetails to pass the pointer
+	if err := database.DB.First(&adminDetails, "account_id = ?", account.Account_ID).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Admin details not found")
+	}
 
-    // 2. ดึงข้อมูล account จาก token
-    claims := middleware.GetTokenClaims(ctx)
-    var account entity.Account
-    if err := database.DB.First(&account, "email = ?", claims["email"]).Error; err != nil {
-        return utils.HandleError(ctx, 404, "User not found")
-    }
-
-    // 3. สร้าง map สำหรับเก็บข้อมูลที่จะอัพเดท
-    updates := buildUpdatesMap(editRequest)
-    
-    // 4. อัพเดทข้อมูลถ้ามีการเปลี่ยนแปลง
-    if len(updates) > 0 {
-        if err := updateProfile(&account, updates); err != nil {
-            return utils.HandleError(ctx, 500, "Failed to update profile")
-        }
-    }
-
-    // 5. ส่งข้อมูลกลับ
-    return ctx.JSON(fiber.Map{
-        "message": "Profile updated successfully",
-        "profile": response.ProfileResponse{
-            ID:        account.Account_ID,
-            Email:     account.Email,
-            Username:  account.Username,
-            FirstName: account.FirstName,
-            LastName:  account.LastName,
-            Role:      account.Role,
-        },
-    })
+	return ctx.JSON(fiber.Map{
+		"profile": response.AdminProfileResponse{
+			ID:        account.Account_ID,
+			Email:     account.Email,
+			Username:  account.Username,
+			FirstName: account.FirstName,
+			LastName:  account.LastName,
+			Role:      account.Role,
+			Phone:     &adminDetails.Phone,
+		},
+	})
 }
 
-// helper functions
-func buildUpdatesMap(req *request.EditProfileRequest) map[string]interface{} {
-    updates := make(map[string]interface{})
-    
-    if req.FirstName != nil {
-        updates["first_name"] = req.FirstName
-    }
-    if req.LastName != nil {
-        updates["last_name"] = req.LastName
-    }
-    if req.Email != nil {
-        updates["email"] = req.Email
-    }
-    if req.Username != nil {
-        updates["username"] = req.Username
-    }
-    
-    return updates
+func getProviderProfile(ctx fiber.Ctx, account entity.Account) error {
+	var providerDetails entity.Provider
+	if err := database.DB.First(&providerDetails, "account_id = ?", account.Account_ID).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Provider details not found")
+	}
+
+	return ctx.JSON(fiber.Map{
+		"profile": response.ProviderProfileResponse{
+			ID:           account.Account_ID,
+			Email:        account.Email,
+			Username:     account.Username,
+			FirstName:    *account.FirstName,
+			LastName:     *account.LastName,
+			Role:         account.Role,
+			Company_Name: providerDetails.Company_Name,
+			Phone:        providerDetails.Phone,
+			Address:      providerDetails.Address,
+			City:         providerDetails.City,
+			Country:      providerDetails.Country,
+			Postal_Code:  providerDetails.Postal_Code,
+		},
+	})
 }
 
-func updateProfile(account *entity.Account, updates map[string]interface{}) error {
-    result := database.DB.Model(account).Updates(updates)
-    if result.Error != nil {
-        log.Printf("Error updating profile: %v", result.Error)
-        return result.Error
-    }
-    
-    // ดึงข้อมูลล่าสุด
-    return database.DB.First(account, account.Account_ID).Error
+func getUserProfile(ctx fiber.Ctx, account entity.Account) error {
+	var userDetails entity.Account
+	if err := database.DB.First(&userDetails, "account_id = ?", account.Account_ID).Error; err != nil {
+		return utils.HandleError(ctx, 404, "User details not found")
+	}
+
+	return ctx.JSON(fiber.Map{
+		"profile": response.UserProfileResponse{
+			ID:        account.Account_ID,
+			Email:     account.Email,
+			Username:  account.Username,
+			FirstName: account.FirstName,
+			LastName:  account.LastName,
+			Role:      account.Role,
+		},
+	})
+}
+
+func UpdateProfile(ctx fiber.Ctx) error {
+	claims := middleware.GetTokenClaims(ctx)
+	var account entity.Account
+	if err := database.DB.First(&account, "account_id = ?", claims["account_id"]).Error; err != nil {
+		return utils.HandleError(ctx, 404, "User not found")
+	}
+
+	switch account.Role {
+	case "admin":
+		return updateAdminProfile(ctx, account)
+	case "provider":
+		return updateProviderProfile(ctx, account)
+	case "user":
+		return updateUserProfile(ctx, account)
+	default:
+		return utils.HandleError(ctx, 400, "Invalid role")
+	}
+}
+
+func updateAdminProfile(ctx fiber.Ctx, account entity.Account) error {
+	// Handle avatar upload first
+	if err := utils.HandleAvatarUpload(ctx, "avatar"); err != nil {
+		return utils.HandleError(ctx, 400, "Failed to upload avatar")
+	}
+
+	avatarBytes := ctx.Locals("avatarBytes")
+
+	updateRequest := new(request.AdminUpdateRequest)
+	if err := ctx.Bind().Body(updateRequest); err != nil {
+		return utils.HandleError(ctx, 400, "Invalid request body")
+	}
+
+	// Validate Request
+	if err := validate.Struct(updateRequest); err != nil {
+		return utils.HandleError(ctx, 400, "Validation failed")
+	}
+
+	// Start transaction
+	tx := database.DB.Begin()
+
+	// Build updates map with only provided fields
+	updates := make(map[string]interface{})
+	if updateRequest.Username != nil {
+		updates["username"] = *updateRequest.Username
+	}
+	if updateRequest.Email != nil {
+		updates["email"] = *updateRequest.Email
+	}
+	if updateRequest.FirstName != nil {
+		updates["first_name"] = *updateRequest.FirstName
+	}
+	if updateRequest.LastName != nil {
+		updates["last_name"] = *updateRequest.LastName
+	}
+
+	// Add avatar to updates if provided
+	if avatarBytes != nil {
+		updates["avatar"] = avatarBytes
+	}
+
+	// Update account information if there are changes
+	if len(updates) > 0 {
+		if err := tx.Model(&account).Updates(updates).Error; err != nil {
+			tx.Rollback()
+			return utils.HandleError(ctx, 500, "Failed to update account")
+		}
+	}
+
+	// Update admin phone if provided
+	if updateRequest.Phone != nil {
+		if err := tx.Model(&entity.Admin{}).Where("account_id = ?", account.Account_ID).
+			Update("phone", updateRequest.Phone).Error; err != nil {
+			tx.Rollback()
+			return utils.HandleError(ctx, 500, "Failed to update admin details")
+		}
+	}
+
+	tx.Commit()
+
+	// Fetch updated details for response
+	var adminDetails entity.Admin
+	if err := database.DB.Where("account_id = ?", account.Account_ID).First(&adminDetails).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Admin details not found")
+	}
+
+	return ctx.JSON(fiber.Map{
+		"message": "Profile updated successfully",
+		"profile": response.AdminProfileResponse{
+			ID:        account.Account_ID,
+			Email:     account.Email,
+			Username:  account.Username,
+			FirstName: account.FirstName,
+			LastName:  account.LastName,
+			Role:      account.Role,
+			Phone:     &adminDetails.Phone,
+		},
+	})
+}
+
+func updateProviderProfile(ctx fiber.Ctx, account entity.Account) error {
+	// Handle avatar upload first
+	if err := utils.HandleAvatarUpload(ctx, "avatar"); err != nil {
+		return utils.HandleError(ctx, 400, "Failed to upload avatar")
+	}
+
+	avatarBytes := ctx.Locals("avatarBytes")
+
+	updateRequest := new(request.ProviderUpdateRequest)
+	if err := ctx.Bind().Body(updateRequest); err != nil {
+		return utils.HandleError(ctx, 400, "Invalid request body")
+	}
+
+	// Validate Request
+	if err := validate.Struct(updateRequest); err != nil {
+		return utils.HandleError(ctx, 400, "Validation failed")
+	}
+
+	// Start transaction
+	tx := database.DB.Begin()
+
+	// Build account updates map with only provided fields
+	accountUpdates := make(map[string]interface{})
+	if updateRequest.Username != nil {
+		accountUpdates["username"] = *updateRequest.Username
+	}
+	if updateRequest.Email != nil {
+		accountUpdates["email"] = *updateRequest.Email
+	}
+	if updateRequest.FirstName != nil {
+		accountUpdates["first_name"] = *updateRequest.FirstName
+	}
+	if updateRequest.LastName != nil {
+		accountUpdates["last_name"] = *updateRequest.LastName
+	}
+
+	// Add avatar to account updates if provided
+	if avatarBytes != nil {
+		accountUpdates["avatar"] = avatarBytes
+	}
+
+	// Update account information if there are changes
+	if len(accountUpdates) > 0 {
+		if err := tx.Model(&account).Updates(accountUpdates).Error; err != nil {
+			tx.Rollback()
+			return utils.HandleError(ctx, 500, "Failed to update account")
+		}
+	}
+
+	// Build provider updates map with only provided fields
+	providerUpdates := make(map[string]interface{})
+	if updateRequest.CompanyName != nil {
+		providerUpdates["company_name"] = *updateRequest.CompanyName
+	}
+	if updateRequest.Phone != nil {
+		providerUpdates["phone"] = *updateRequest.Phone
+	}
+	if updateRequest.Address != nil {
+		providerUpdates["address"] = *updateRequest.Address
+	}
+	if updateRequest.City != nil {
+		providerUpdates["city"] = *updateRequest.City
+	}
+	if updateRequest.Country != nil {
+		providerUpdates["country"] = *updateRequest.Country
+	}
+	if updateRequest.PostalCode != nil {
+		providerUpdates["postal_code"] = *updateRequest.PostalCode
+	}
+
+	// Update provider details if there are changes
+	if len(providerUpdates) > 0 {
+		if err := tx.Model(&entity.Provider{}).Where("account_id = ?", account.Account_ID).
+			Updates(providerUpdates).Error; err != nil {
+			tx.Rollback()
+			return utils.HandleError(ctx, 500, "Failed to update provider details")
+		}
+	}
+
+	tx.Commit()
+
+	// Fetch updated provider details
+	var providerDetails entity.Provider
+	if err := database.DB.Where("account_id = ?", account.Account_ID).First(&providerDetails).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Provider details not found")
+	}
+
+	// Refresh account data after update
+	if err := database.DB.First(&account, "account_id = ?", account.Account_ID).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Account not found")
+	}
+
+	// Create response with null checks
+	response := response.ProviderProfileResponse{
+		ID:           account.Account_ID,
+		Email:        account.Email,
+		Username:     account.Username,
+		FirstName:    *account.FirstName,
+		LastName:     *account.LastName,
+		Role:         account.Role,
+		Company_Name: providerDetails.Company_Name,
+		Phone:        providerDetails.Phone,
+		Address:      providerDetails.Address,
+		City:         providerDetails.City,
+		Country:      providerDetails.Country,
+		Postal_Code:  providerDetails.Postal_Code,
+	}
+
+	return ctx.JSON(fiber.Map{
+		"message": "Profile updated successfully",
+		"profile": response,
+	})
+}
+
+func updateUserProfile(ctx fiber.Ctx, account entity.Account) error {
+	// Handle avatar upload first
+	if err := utils.HandleAvatarUpload(ctx, "avatar"); err != nil {
+		return utils.HandleError(ctx, 400, "Failed to upload avatar")
+	}
+
+	avatarBytes := ctx.Locals("avatarBytes")
+
+	updateRequest := new(request.UserUpdateRequest)
+	if err := ctx.Bind().Body(updateRequest); err != nil {
+		return utils.HandleError(ctx, 400, "Invalid request body")
+	}
+
+	// Validate Request
+	if err := validate.Struct(updateRequest); err != nil {
+		return utils.HandleError(ctx, 400, "Validation failed")
+	}
+
+	// Build updates map with only provided fields
+	updates := make(map[string]interface{})
+	if updateRequest.Username != nil {
+		updates["username"] = *updateRequest.Username
+	}
+	if updateRequest.Email != nil {
+		updates["email"] = *updateRequest.Email
+	}
+	if updateRequest.FirstName != nil {
+		updates["first_name"] = *updateRequest.FirstName
+	}
+	if updateRequest.LastName != nil {
+		updates["last_name"] = *updateRequest.LastName
+	}
+
+	// Add avatar to updates if provided
+	if avatarBytes != nil {
+		updates["avatar"] = avatarBytes
+	}
+
+	// Update account information if there are changes
+	if len(updates) > 0 {
+		if err := database.DB.Model(&account).Updates(updates).Error; err != nil {
+			return utils.HandleError(ctx, 500, "Failed to update profile")
+		}
+	}
+
+	return ctx.JSON(fiber.Map{
+		"profile": response.UserProfileResponse{
+			ID:        account.Account_ID,
+			Email:     account.Email,
+			Username:  account.Username,
+			FirstName: account.FirstName,
+			LastName:  account.LastName,
+			Role:      account.Role,
+		},
+	})
+}
+
+func GetAvatarImage(ctx fiber.Ctx) error {
+	claims := middleware.GetTokenClaims(ctx)
+
+	var account entity.Account
+	if err := database.DB.Select("avatar").First(&account, "account_id = ?", claims["account_id"]).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Avatar not found")
+	}
+
+	// If no avatar is stored
+	if len(account.Avatar) == 0 {
+		return utils.HandleError(ctx, 404, "No avatar image found")
+	}
+
+	// Set content type header for image
+	ctx.Set("Content-Type", "image/jpeg")             // You might want to store the content type in DB if you support multiple formats
+	ctx.Set("Cache-Control", "public, max-age=86400") // Cache for 24 hours
+
+	// Return the image bytes directly
+	return ctx.Send(account.Avatar)
 }

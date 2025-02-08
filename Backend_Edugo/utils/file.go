@@ -129,3 +129,55 @@ func HandleAttachUpload(ctx fiber.Ctx, fieldName string) error {
 
 	return nil // เปลี่ยนจาก ctx.Next() เป็น return nil
 }
+
+// เพิ่มฟังก์ชันใหม่ที่รับพารามิเตอร์ fieldName
+func HandleAvatarUpload(ctx fiber.Ctx, fieldName string) error {
+	// Handle panic recovery
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered from panic in HandleAvatarUpload: %v", r)
+			ctx.Locals("avatarBytes", nil)
+		}
+	}()
+
+	// Try to get the file from form
+	file, err := ctx.FormFile(fieldName)
+
+	// If no file is uploaded, set avatarBytes to nil and return nil
+	if err != nil {
+		ctx.Locals("avatarBytes", nil)
+		return nil
+	}
+
+	// If file exists, process it
+	if file != nil {
+		// Check file size (limit to 2MB for avatars)
+		if file.Size > (2 * 1024 * 1024) {
+			return errors.New("avatar file size exceeds 2MB")
+		}
+
+		// Check file type (only allow common image formats)
+		if err := checkContentTypeImage(file, "image/jpeg", "image/png", "image/jpg"); err != nil {
+			return err
+		}
+
+		fileContent, err := file.Open()
+		if err != nil {
+			ctx.Locals("avatarBytes", nil)
+			return err
+		}
+		defer fileContent.Close()
+
+		avatarBytes, err := io.ReadAll(fileContent)
+		if err != nil {
+			ctx.Locals("avatarBytes", nil)
+			return err
+		}
+
+		ctx.Locals("avatarBytes", avatarBytes)
+	} else {
+		ctx.Locals("avatarBytes", nil)
+	}
+
+	return nil
+}

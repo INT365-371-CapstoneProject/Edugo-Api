@@ -5,6 +5,9 @@ type Provider struct {
 	Company_Name string `json:"company_name"`
 	URL string `json:"url"`
 	Address string `json:"address"`
+	City string `json:"city"`
+	Country string `json:"country"`
+	Postal_Code string `json:"postal_code"`
 	Status string `json:"status"`
 	Phone string `json:"phone"`
 	Verify string `json:"verify"`

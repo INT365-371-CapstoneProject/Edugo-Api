@@ -7,16 +7,15 @@ VALUES
 (4, 'normal_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'user@example.com', NOW(), NOW(), NOW(), 'user');
 
 -- Insert into admins
-INSERT INTO `edugo`.`admins` (`admin_id`, `firstname`, `lastname`, `status`, `account_id`) 
+INSERT INTO `edugo`.`admins` (`admin_id`, `phone`, `status`, `account_id`) 
 VALUES 
-(1, 'John', 'Doe', 'Active', 1),
-(2, 'Jane', 'Doe', 'Active', 2);
+(1, '0987654678', 'Active', 1),
+(2, '9876567897', 'Active', 2);
 
 -- Insert into providers
-INSERT INTO `edugo`.`providers` (`provider_id`, `company_name`, `url`, `address`, `status`, `phone`, `verify`, `account_id`) 
+INSERT INTO `edugo`.`providers` (`provider_id`, `company_name`, `url`, `address`, `city`, `country`, `postal_code`, `status`, `phone`, `verify`, `account_id`) 
 VALUES 
-(1, 'Tech Solutions', 'www.techsolutions.com', '123 Main St', 'Active', '0123456789', 'Y', 3);
-
+(1, 'Tech Solutions', 'www.techsolutions.com', '123 Main St', 'Bangkok', 'Thailand', '10160', 'Active', '0123456789', 'Y', 3);
 
 -- Insert into posts
 INSERT INTO `edugo`.`posts` (`posts_id`, `description`, `image`, `publish_date`, `posts_type`, `account_id`) 

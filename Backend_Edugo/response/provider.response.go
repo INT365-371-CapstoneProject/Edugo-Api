@@ -5,10 +5,15 @@ import "time"
 type ProviderResponse struct {
 	Provider_ID  uint       `json:"id"`
 	Company_Name string     `json:"company_name"`
+	FirstName   string     `json:"first_name"`
+	LastName    string     `json:"last_name"`
 	Username     string     `json:"username"`
 	Email        string     `json:"email"`
 	URL          string     `json:"url"`
 	Address      string     `json:"address"`
+	City         string     `json:"city"`
+	Country      string     `json:"country"`
+	Postal_Code  string     `json:"postal_code"`
 	Phone        string     `json:"phone"`
 	Status       string     `json:"status"`
 	Verify       string     `json:"verify"`
