@@ -10,6 +10,7 @@ type Provider struct {
 	Postal_Code string `json:"postal_code"`
 	Status string `json:"status"`
 	Phone string `json:"phone"`
+	Phone_Person *string `json:"phone_person"`
 	Verify string `json:"verify"`
 	Account_ID uint `json:"account_id"`
 
