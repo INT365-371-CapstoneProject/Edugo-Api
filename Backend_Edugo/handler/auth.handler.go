@@ -440,15 +440,25 @@ func updateProviderProfile(ctx fiber.Ctx, account entity.Account) error {
 
 	tx.Commit()
 
+	// Refresh account data after update
+	if err := database.DB.First(&account, "account_id = ?", account.Account_ID).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Account not found")
+	}
+
 	// Fetch updated provider details
 	var providerDetails entity.Provider
 	if err := database.DB.Where("account_id = ?", account.Account_ID).First(&providerDetails).Error; err != nil {
 		return utils.HandleError(ctx, 404, "Provider details not found")
 	}
 
-	// Refresh account data after update
-	if err := database.DB.First(&account, "account_id = ?", account.Account_ID).Error; err != nil {
-		return utils.HandleError(ctx, 404, "Account not found")
+	// Create safe string values for FirstName and LastName
+	firstName := ""
+	lastName := ""
+	if account.FirstName != nil {
+		firstName = *account.FirstName
+	}
+	if account.LastName != nil {
+		lastName = *account.LastName
 	}
 
 	// Create response with null checks
@@ -456,8 +466,8 @@ func updateProviderProfile(ctx fiber.Ctx, account entity.Account) error {
 		ID:           account.Account_ID,
 		Email:        account.Email,
 		Username:     account.Username,
-		FirstName:    *account.FirstName,
-		LastName:     *account.LastName,
+		FirstName:    firstName, // ใช้ค่าที่ตรวจสอบแล้ว
+		LastName:     lastName,  // ใช้ค่าที่ตรวจสอบแล้ว
 		Role:         account.Role,
 		Company_Name: providerDetails.Company_Name,
 		Phone:        providerDetails.Phone,
