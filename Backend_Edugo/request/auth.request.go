@@ -26,23 +26,24 @@ type AdminUpdateRequest struct {
 }
 
 type ProviderUpdateRequest struct {
-	Username    *string `json:"username" validate:"omitempty,min=3,max=50"`
-	Email       *string `json:"email" validate:"omitempty,email"`
-	FirstName   *string `json:"first_name" validate:"omitempty,min=2"`
-	LastName    *string `json:"last_name" validate:"omitempty,min=2"`
-	CompanyName *string `json:"company_name" validate:"omitempty"`
-	Phone       *string `json:"phone" validate:"omitempty"`
-	Address     *string `json:"address" validate:"omitempty"`
-	City        *string `json:"city" validate:"omitempty"`
-	Country     *string `json:"country" validate:"omitempty"`
-	PostalCode  *string `json:"postal_code" validate:"omitempty"`
+	Username    *string         `json:"username" validate:"omitempty,min=3,max=50"`
+	Email       *string         `json:"email" validate:"omitempty,email"`
+	FirstName   *string         `json:"first_name" validate:"omitempty,min=2"`
+	LastName    *string         `json:"last_name" validate:"omitempty,min=2"`
+	CompanyName *string         `json:"company_name" validate:"omitempty"`
+	Phone       *string         `json:"phone" validate:"omitempty"`
+	PhonePerson *string         `json:"phone_person" validate:"omitempty"`
+	Address     *string         `json:"address" validate:"omitempty"`
+	City        *string         `json:"city" validate:"omitempty"`
+	Country     *string         `json:"country" validate:"omitempty"`
+	PostalCode  *string         `json:"postal_code" validate:"omitempty"`
 	Avatar      *multipart.File `json:"avatar" form:"avatar" validate:"omitempty"`
 }
 
 type UserUpdateRequest struct {
-	Username  *string `json:"username" validate:"omitempty,min=3,max=50"`
-	Email     *string `json:"email" validate:"omitempty,email"`
-	FirstName *string `json:"first_name" validate:"omitempty,min=2"`
-	LastName  *string `json:"last_name" validate:"omitempty,min=2"`
+	Username  *string         `json:"username" validate:"omitempty,min=3,max=50"`
+	Email     *string         `json:"email" validate:"omitempty,email"`
+	FirstName *string         `json:"first_name" validate:"omitempty,min=2"`
+	LastName  *string         `json:"last_name" validate:"omitempty,min=2"`
 	Avatar    *multipart.File `json:"avatar" form:"avatar" validate:"omitempty"`
 }

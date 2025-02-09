@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`providers` (
   `postal_code` VARCHAR(10) NOT NULL,
   `status` ENUM('Active', 'Inactive') NOT NULL,
   `phone` VARCHAR(10) NOT NULL,
+  `phone_person` VARCHAR(10) NULL DEFAULT NULL,
   `verify` ENUM('Y', 'N') NOT NULL,
   `account_id` INT NOT NULL,
   PRIMARY KEY (`provider_id`),

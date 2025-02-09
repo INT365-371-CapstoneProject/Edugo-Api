@@ -186,6 +186,8 @@ func GetProfile(ctx fiber.Ctx) error {
 	}
 
 	switch account.Role {
+	case "superadmin":
+		return getAdminProfile(ctx, account)
 	case "admin":
 		return getAdminProfile(ctx, account)
 	case "provider":
@@ -224,16 +226,33 @@ func getProviderProfile(ctx fiber.Ctx, account entity.Account) error {
 		return utils.HandleError(ctx, 404, "Provider details not found")
 	}
 
+	// สร้างตัวแปรเพื่อเก็บค่า default สำหรับ fields ที่อาจเป็น nil
+	firstName := ""
+	if account.FirstName != nil {
+		firstName = *account.FirstName
+	}
+
+	lastName := ""
+	if account.LastName != nil {
+		lastName = *account.LastName
+	}
+
+	phonePerson := ""
+	if providerDetails.Phone_Person != nil {
+		phonePerson = *providerDetails.Phone_Person
+	}
+
 	return ctx.JSON(fiber.Map{
 		"profile": response.ProviderProfileResponse{
 			ID:           account.Account_ID,
 			Email:        account.Email,
 			Username:     account.Username,
-			FirstName:    *account.FirstName,
-			LastName:     *account.LastName,
+			FirstName:    firstName,
+			LastName:     lastName,
 			Role:         account.Role,
 			Company_Name: providerDetails.Company_Name,
 			Phone:        providerDetails.Phone,
+			Phone_Person: phonePerson,
 			Address:      providerDetails.Address,
 			City:         providerDetails.City,
 			Country:      providerDetails.Country,
@@ -268,6 +287,8 @@ func UpdateProfile(ctx fiber.Ctx) error {
 	}
 
 	switch account.Role {
+	case "superadmin":
+		return updateAdminProfile(ctx, account)
 	case "admin":
 		return updateAdminProfile(ctx, account)
 	case "provider":
@@ -416,6 +437,9 @@ func updateProviderProfile(ctx fiber.Ctx, account entity.Account) error {
 	if updateRequest.Phone != nil {
 		providerUpdates["phone"] = *updateRequest.Phone
 	}
+	if updateRequest.PhonePerson != nil {
+		providerUpdates["phone_person"] = *updateRequest.PhonePerson
+	}
 	if updateRequest.Address != nil {
 		providerUpdates["address"] = *updateRequest.Address
 	}
@@ -461,6 +485,12 @@ func updateProviderProfile(ctx fiber.Ctx, account entity.Account) error {
 		lastName = *account.LastName
 	}
 
+	// สร้างค่า default สำหรับ Phone_Person
+	phonePerson := ""
+	if providerDetails.Phone_Person != nil {
+		phonePerson = *providerDetails.Phone_Person
+	}
+
 	// Create response with null checks
 	response := response.ProviderProfileResponse{
 		ID:           account.Account_ID,
@@ -471,6 +501,7 @@ func updateProviderProfile(ctx fiber.Ctx, account entity.Account) error {
 		Role:         account.Role,
 		Company_Name: providerDetails.Company_Name,
 		Phone:        providerDetails.Phone,
+		Phone_Person: phonePerson, // ใช้ค่าที่ตรวจสอบแล้ว
 		Address:      providerDetails.Address,
 		City:         providerDetails.City,
 		Country:      providerDetails.Country,
