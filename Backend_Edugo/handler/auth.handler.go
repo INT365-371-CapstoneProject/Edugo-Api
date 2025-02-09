@@ -586,7 +586,6 @@ func GetAvatarImage(ctx fiber.Ctx) error {
 
 	// Set content type header for image
 	ctx.Set("Content-Type", "image/jpeg")             // You might want to store the content type in DB if you support multiple formats
-	ctx.Set("Cache-Control", "public, max-age=86400") // Cache for 24 hours
 
 	// Return the image bytes directly
 	return ctx.Send(account.Avatar)
