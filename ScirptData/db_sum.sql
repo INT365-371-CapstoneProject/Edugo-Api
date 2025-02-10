@@ -135,7 +135,6 @@ CREATE TABLE IF NOT EXISTS `edugo`.`posts` (
   `posts_type` ENUM('Announce', 'Subject') NOT NULL,
   `account_id` INT NOT NULL,
   PRIMARY KEY (`posts_id`),
-  UNIQUE INDEX `unique_image` (`image`(255) ASC) VISIBLE,
   INDEX `fk_posts_accounts1_idx` (`account_id` ASC) VISIBLE,
   CONSTRAINT `fk_posts_accounts1`
     FOREIGN KEY (`account_id`)
