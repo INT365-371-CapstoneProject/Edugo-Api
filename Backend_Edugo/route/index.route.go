@@ -46,7 +46,9 @@ func RouteInit(r *fiber.App) {
 
 	// Search routes
 	searchGroup := public.Group("/search", middleware.AuthAny)
-	searchGroup.Get("/announce", handler.SearchAnnouncements)
+	searchGroup.Get("/announce-provider", handler.SearchAnnouncementsForProvider)
+	searchGroup.Get("/announce-admin", handler.SearchAnnouncementsForAdmin)
+	searchGroup.Get("/announce-user", handler.SearchAnnouncementsForUser)
 	searchGroup.Get("/subject", handler.SearchPosts)
 
 	// Announcement for user routes
@@ -58,6 +60,8 @@ func RouteInit(r *fiber.App) {
 	announceAdminGroup := public.Group("/announce-admin", middleware.AuthAdmin)
 	announceAdminGroup.Get("/", handler.GetAllAnnouncePostForAdmin)
 	announceAdminGroup.Get("/:id", handler.GetAnnouncePostByIDForAdmin)
+	announceAdminGroup.Get("/:id/image", handler.GetAnnounceImage)
+	announceAdminGroup.Get("/:id/attach", handler.GetAnnouncePostAttach)
 	announceAdminGroup.Delete("/:id", handler.DeleteAnnouncePostForAdmin)
 
 	// Subject for Admin routes
