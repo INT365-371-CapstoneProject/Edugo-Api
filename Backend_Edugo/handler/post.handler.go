@@ -90,8 +90,8 @@ func init() {
 		value := fl.Field().String()
 		validLevels := map[string]bool{
 			"Undergraduate": true,
-			"Master":       true,
-			"Doctorate":    true,
+			"Master":        true,
+			"Doctorate":     true,
 		}
 		return validLevels[value]
 	})
@@ -485,17 +485,17 @@ func GetAllAnnouncePostForProvider(ctx fiber.Ctx) error {
 	postsResponse := make([]response.AnnouncePostResponse, len(posts))
 	for i, post := range posts {
 		postsResponse[i] = response.AnnouncePostResponse{
-			Announce_ID:  post.Announce_ID,
-			Title:        post.Title,
-			Description:  post.Post.Description,
-			URL:          post.Url,
-			Attach_Name:  post.Attach_Name,
-			Posts_Type:   post.Post.Posts_Type,
-			Publish_Date: post.Post.Publish_Date,
-			Close_Date:   post.Close_Date,
-			Category:     post.Category.Name,
-			Country:      post.Country.Name,
-			Post_ID:      post.Post.Posts_ID,
+			Announce_ID:     post.Announce_ID,
+			Title:           post.Title,
+			Description:     post.Post.Description,
+			URL:             post.Url,
+			Attach_Name:     post.Attach_Name,
+			Posts_Type:      post.Post.Posts_Type,
+			Publish_Date:    post.Post.Publish_Date,
+			Close_Date:      post.Close_Date,
+			Category:        post.Category.Name,
+			Country:         post.Country.Name,
+			Post_ID:         post.Post.Posts_ID,
 			Education_Level: post.Education_Level,
 		}
 	}
@@ -545,17 +545,17 @@ func GetAnnouncePostByIDForProvider(ctx fiber.Ctx) error {
 	}
 
 	postsResponse := response.AnnouncePostResponse{
-		Announce_ID:  post[0].Announce_ID,
-		Title:        post[0].Title,
-		Description:  post[0].Post.Description,
-		URL:          post[0].Url,
-		Attach_Name:  post[0].Attach_Name,
-		Posts_Type:   post[0].Post.Posts_Type,
-		Publish_Date: post[0].Post.Publish_Date,
-		Close_Date:   post[0].Close_Date,
-		Category:     post[0].Category.Name,
-		Country:      post[0].Country.Name,
-		Post_ID:      post[0].Post.Posts_ID,
+		Announce_ID:     post[0].Announce_ID,
+		Title:           post[0].Title,
+		Description:     post[0].Post.Description,
+		URL:             post[0].Url,
+		Attach_Name:     post[0].Attach_Name,
+		Posts_Type:      post[0].Post.Posts_Type,
+		Publish_Date:    post[0].Post.Publish_Date,
+		Close_Date:      post[0].Close_Date,
+		Category:        post[0].Category.Name,
+		Country:         post[0].Country.Name,
+		Post_ID:         post[0].Post.Posts_ID,
 		Education_Level: post[0].Education_Level,
 	}
 	return ctx.Status(200).JSON(postsResponse)
@@ -588,25 +588,25 @@ func GetAnnouncePostAttach(ctx fiber.Ctx) error {
 
 // GetAnnounceImage - ดึงข้อมูลรูปภาพของประกาศ
 func GetAnnounceImage(ctx fiber.Ctx) error {
-    postId := ctx.Params("id")
-    
-    var announcePost entity.Announce_Post
-    result := database.DB.
-        Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-        Where("announce_posts.announce_id = ?", postId).
-        Preload("Post").
-        First(&announcePost)
-        
-    if result.Error != nil {
-        return handleError(ctx, 404, "Announcement not found")
-    }
+	postId := ctx.Params("id")
 
-    if announcePost.Post.Image == nil {
-        return handleError(ctx, 404, "Image not found")
-    }
+	var announcePost entity.Announce_Post
+	result := database.DB.
+		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+		Where("announce_posts.announce_id = ?", postId).
+		Preload("Post").
+		First(&announcePost)
 
-    ctx.Set("Content-Type", "image/jpeg")
-    return ctx.Send(announcePost.Post.Image)
+	if result.Error != nil {
+		return handleError(ctx, 404, "Announcement not found")
+	}
+
+	if announcePost.Post.Image == nil {
+		return handleError(ctx, 404, "Image not found")
+	}
+
+	ctx.Set("Content-Type", "image/jpeg")
+	return ctx.Send(announcePost.Post.Image)
 }
 
 // CreateAnnouncePost - สร้างประกาศใหม่
@@ -1242,174 +1242,316 @@ func DeletePostForAdmin(ctx fiber.Ctx) error {
 
 // SearchPosts - แก้ไขการใช้ ILIKE เป็น LIKE with LOWER()
 func SearchPosts(ctx fiber.Ctx) error {
-    // Get search parameters from query
-    search := ctx.Query("search")
-    dateFrom := ctx.Query("date_from")
-    dateTo := ctx.Query("date_to")
-    sortBy := ctx.Query("sort_by", "publish_date") // default sort by publish date
-    sortOrder := ctx.Query("sort_order", "desc")   // default descending order
+	// Get search parameters from query
+	search := ctx.Query("search")
+	dateFrom := ctx.Query("date_from")
+	dateTo := ctx.Query("date_to")
+	sortBy := ctx.Query("sort_by", "publish_date") // default sort by publish date
+	sortOrder := ctx.Query("sort_order", "desc")   // default descending order
 
-    // Get pagination parameters
-    page, limit, offset := getPaginationParams(ctx)
+	// Get pagination parameters
+	page, limit, offset := getPaginationParams(ctx)
 
-    // Initialize the base query
-    query := database.DB.Model(&entity.Post{}).Where("posts_type = ?", "Subject")
+	// Initialize the base query
+	query := database.DB.Model(&entity.Post{}).Where("posts_type = ?", "Subject")
 
-    // Apply search filter if provided
-    if search != "" {
-        query = query.Where("LOWER(description) LIKE LOWER(?)", "%"+search+"%")
-    }
+	// Apply search filter if provided
+	if search != "" {
+		query = query.Where("LOWER(description) LIKE LOWER(?)", "%"+search+"%")
+	}
 
-    // Apply date filters if provided
-    if dateFrom != "" {
-        if fromDate, err := time.Parse("2006-01-02", dateFrom); err == nil {
-            query = query.Where("publish_date >= ?", fromDate)
-        }
-    }
-    if dateTo != "" {
-        if toDate, err := time.Parse("2006-01-02", dateTo); err == nil {
-            query = query.Where("publish_date <= ?", toDate)
-        }
-    }
+	// Apply date filters if provided
+	if dateFrom != "" {
+		if fromDate, err := time.Parse("2006-01-02", dateFrom); err == nil {
+			query = query.Where("publish_date >= ?", fromDate)
+		}
+	}
+	if dateTo != "" {
+		if toDate, err := time.Parse("2006-01-02", dateTo); err == nil {
+			query = query.Where("publish_date <= ?", toDate)
+		}
+	}
 
-    // Apply sorting
-    if sortOrder != "asc" {
-        sortOrder = "desc"
-    }
-    query = query.Order(fmt.Sprintf("%s %s", sortBy, sortOrder))
+	// Apply sorting
+	if sortOrder != "asc" {
+		sortOrder = "desc"
+	}
+	query = query.Order(fmt.Sprintf("%s %s", sortBy, sortOrder))
 
-    // Count total records
-    var total int64
-    if err := query.Count(&total).Error; err != nil {
-        return handleError(ctx, 500, "Error counting records")
-    }
+	// Count total records
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return handleError(ctx, 500, "Error counting records")
+	}
 
-    // Get paginated results
-    var posts []entity.Post
-    if err := query.Offset(offset).Limit(limit).Find(&posts).Error; err != nil {
-        return handleError(ctx, 500, "Error fetching posts")
-    }
+	// Get paginated results
+	var posts []entity.Post
+	if err := query.Offset(offset).Limit(limit).Find(&posts).Error; err != nil {
+		return handleError(ctx, 500, "Error fetching posts")
+	}
 
-    // Transform to response format
-    var postsResponse []response.PostResponse
-    for _, post := range posts {
-        postsResponse = append(postsResponse, response.PostResponse{
-            Post_ID:      post.Posts_ID,
-            Description:  post.Description,
-            Publish_Date: post.Publish_Date,
-            Posts_Type:   post.Posts_Type,
-        })
-    }
+	// Transform to response format
+	var postsResponse []response.PostResponse
+	for _, post := range posts {
+		postsResponse = append(postsResponse, response.PostResponse{
+			Post_ID:      post.Posts_ID,
+			Description:  post.Description,
+			Publish_Date: post.Publish_Date,
+			Posts_Type:   post.Posts_Type,
+		})
+	}
 
-    // Calculate last page
-    lastPage := int(math.Ceil(float64(total) / float64(limit)))
+	// Calculate last page
+	lastPage := int(math.Ceil(float64(total) / float64(limit)))
 
-    return ctx.Status(200).JSON(response.PaginatedPostResponse{
-        Data:     postsResponse,
-        Total:    total,
-        Page:     page,
-        LastPage: lastPage,
-        PerPage:  limit,
-    })
+	return ctx.Status(200).JSON(response.PaginatedPostResponse{
+		Data:     postsResponse,
+		Total:    total,
+		Page:     page,
+		LastPage: lastPage,
+		PerPage:  limit,
+	})
 }
 
-// SearchAnnouncements - แก้ไขการใช้ ILIKE เป็น LIKE with LOWER()
-func SearchAnnouncements(ctx fiber.Ctx) error {
-    // Get search parameters from query
-    search := ctx.Query("search")
-    dateFrom := ctx.Query("date_from")
-    dateTo := ctx.Query("date_to")
-    category := ctx.Query("category")
-    country := ctx.Query("country")
-    sortBy := ctx.Query("sort_by", "publish_date") // default sort by publish date
-    sortOrder := ctx.Query("sort_order", "desc")   // default descending order
+// SearchAnnouncementsForProvider - ค้นหาประกาศสำหรับ Provider
+func SearchAnnouncementsForProvider(ctx fiber.Ctx) error {
+	// ตรวจสอบ role จาก JWT
+	claims := middleware.GetTokenClaims(ctx)
+	role := claims["role"].(string)
+	username := claims["username"].(string)
 
-    // Get pagination parameters
-    page, limit, offset := getPaginationParams(ctx)
+	// ตรวจสอบว่าเป็น provider เท่านั้น
+	if role != "provider" {
+		return handleError(ctx, fiber.StatusUnauthorized, "Unauthorized: requires provider role")
+	}
 
-    // Initialize the base query
-    query := database.DB.Model(&entity.Announce_Post{}).
-        Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-        Preload("Post").
-        Preload("Category").
-        Preload("Country")
+	// หา account จาก username
+	var account entity.Account
+	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+		return handleError(ctx, 404, "Account not found")
+	}
 
-    // Apply search filters if provided
-    if search != "" {
-        query = query.Where(
-            "LOWER(announce_posts.title) LIKE LOWER(?) OR LOWER(posts.description) LIKE LOWER(?)",
-            "%"+search+"%", "%"+search+"%",
-        )
-    }
+	// Get search parameters from query
+	search := ctx.Query("search")
+	dateFrom := ctx.Query("date_from")
+	dateTo := ctx.Query("date_to")
+	category := ctx.Query("category")
+	country := ctx.Query("country")
+	sortBy := ctx.Query("sort_by", "publish_date")
+	sortOrder := ctx.Query("sort_order", "desc")
 
-    // Apply date filters if provided
-    if dateFrom != "" {
-        if fromDate, err := time.Parse("2006-01-02", dateFrom); err == nil {
-            query = query.Where("posts.publish_date >= ?", fromDate)
-        }
-    }
-    if dateTo != "" {
-        if toDate, err := time.Parse("2006-01-02", dateTo); err == nil {
-            query = query.Where("posts.publish_date <= ?", toDate)
-        }
-    }
+	// Get pagination parameters
+	page, limit, offset := getPaginationParams(ctx)
 
-    // Apply category filter if provided
-    if category != "" {
-        query = query.Joins("JOIN categories ON announce_posts.category_id = categories.category_id").
-            Where("LOWER(categories.name) LIKE LOWER(?)", "%"+category+"%")
-    }
+	// Initialize the base query with provider's account ID filter
+	query := database.DB.Model(&entity.Announce_Post{}).
+		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+		Where("posts.account_id = ?", account.Account_ID).
+		Preload("Post").
+		Preload("Category").
+		Preload("Country")
 
-    // Apply country filter if provided
-    if country != "" {
-        query = query.Joins("JOIN countries ON announce_posts.country_id = countries.country_id").
-            Where("LOWER(countries.name) LIKE LOWER(?)", "%"+country+"%")
-    }
+	// ... (rest of the existing search query logic)
+	// Apply common search filters
+	if err := applySearchFilters(query, search, dateFrom, dateTo, category, country, sortBy, sortOrder); err != nil {
+		return handleError(ctx, 500, err.Error())
+	}
 
-    // Apply sorting
-    if sortOrder != "asc" {
-        sortOrder = "desc"
-    }
-    query = query.Order(fmt.Sprintf("posts.%s %s", sortBy, sortOrder))
+	// Count total records and get results
+	total, announcements, err := executeSearchQuery(query, offset, limit)
+	if err != nil {
+		return handleError(ctx, 500, err.Error())
+	}
 
-    // Count total records
-    var total int64
-    if err := query.Count(&total).Error; err != nil {
-        return handleError(ctx, 500, "Error counting records")
-    }
+	// Transform to response format
+	announcementsResponse := transformToResponse(announcements)
 
-    // Get paginated results
-    var announcements []entity.Announce_Post
-    if err := query.Offset(offset).Limit(limit).Find(&announcements).Error; err != nil {
-        return handleError(ctx, 500, "Error fetching announcements")
-    }
+	// Calculate last page
+	lastPage := int(math.Ceil(float64(total) / float64(limit)))
 
-    // Transform to response format
-    var announcementsResponse []response.AnnouncePostResponse
-    for _, announce := range announcements {
-        announcementsResponse = append(announcementsResponse, response.AnnouncePostResponse{
-            Announce_ID:  announce.Announce_ID,
-            Title:        announce.Title,
-            Description:  announce.Post.Description,
-            URL:          announce.Url,
-            Attach_Name:  announce.Attach_Name,
-            Posts_Type:   announce.Post.Posts_Type,
-            Publish_Date: announce.Post.Publish_Date,
-            Close_Date:   announce.Close_Date,
-            Category:     announce.Category.Name,
-            Country:      announce.Country.Name,
-            Post_ID:      announce.Post.Posts_ID,
-        })
-    }
+	return ctx.Status(200).JSON(response.PaginatedAnnouncePostResponse{
+		Data:     announcementsResponse,
+		Total:    total,
+		Page:     page,
+		LastPage: lastPage,
+		PerPage:  limit,
+	})
+}
 
-    // Calculate last page
-    lastPage := int(math.Ceil(float64(total) / float64(limit)))
+// SearchAnnouncementsForUser - ค้นหาประกาศสำหรับ User (เห็นเฉพาะที่ยังไม่หมดอายุ)
+func SearchAnnouncementsForUser(ctx fiber.Ctx) error {
+	// Get search parameters
+	search := ctx.Query("search")
+	dateFrom := ctx.Query("date_from")
+	dateTo := ctx.Query("date_to")
+	category := ctx.Query("category")
+	country := ctx.Query("country")
+	sortBy := ctx.Query("sort_by", "publish_date")
+	sortOrder := ctx.Query("sort_order", "desc")
 
-    return ctx.Status(200).JSON(response.PaginatedAnnouncePostResponse{
-        Data:     announcementsResponse,
-        Total:    total,
-        Page:     page,
-        LastPage: lastPage,
-        PerPage:  limit,
-    })
+	// Get pagination parameters
+	page, limit, offset := getPaginationParams(ctx)
+
+	// Initialize query for active announcements only
+	query := database.DB.Model(&entity.Announce_Post{}).
+		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+		Where("(announce_posts.close_date IS NULL OR announce_posts.close_date > ?)", time.Now()).
+		Preload("Post").
+		Preload("Category").
+		Preload("Country")
+
+	// Apply common search filters
+	if err := applySearchFilters(query, search, dateFrom, dateTo, category, country, sortBy, sortOrder); err != nil {
+		return handleError(ctx, 500, err.Error())
+	}
+
+	// Count total records and get results
+	total, announcements, err := executeSearchQuery(query, offset, limit)
+	if err != nil {
+		return handleError(ctx, 500, err.Error())
+	}
+
+	// Transform to response format
+	announcementsResponse := transformToResponse(announcements)
+
+	// Calculate last page
+	lastPage := int(math.Ceil(float64(total) / float64(limit)))
+
+	return ctx.Status(200).JSON(response.PaginatedAnnouncePostResponse{
+		Data:     announcementsResponse,
+		Total:    total,
+		Page:     page,
+		LastPage: lastPage,
+		PerPage:  limit,
+	})
+}
+
+// SearchAnnouncementsForAdmin - ค้นหาประกาศสำหรับ Admin และ SuperAdmin (เห็นทั้งหมด)
+func SearchAnnouncementsForAdmin(ctx fiber.Ctx) error {
+	// ตรวจสอบ role จาก JWT
+	claims := middleware.GetTokenClaims(ctx)
+	role := claims["role"].(string)
+
+	// ตรวจสอบว่าเป็น admin หรือ superadmin เท่านั้น
+	if role != "admin" && role != "superadmin" {
+		return handleError(ctx, fiber.StatusUnauthorized, "Unauthorized: requires admin or superadmin role")
+	}
+
+	// Get search parameters
+	search := ctx.Query("search")
+	dateFrom := ctx.Query("date_from")
+	dateTo := ctx.Query("date_to")
+	category := ctx.Query("category")
+	country := ctx.Query("country")
+	sortBy := ctx.Query("sort_by", "publish_date")
+	sortOrder := ctx.Query("sort_order", "desc")
+
+	// Get pagination parameters
+	page, limit, offset := getPaginationParams(ctx)
+
+	// Initialize query for all announcements
+	query := database.DB.Model(&entity.Announce_Post{}).
+		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
+		Preload("Post").
+		Preload("Category").
+		Preload("Country")
+
+	// Apply common search filters
+	if err := applySearchFilters(query, search, dateFrom, dateTo, category, country, sortBy, sortOrder); err != nil {
+		return handleError(ctx, 500, err.Error())
+	}
+
+	// Count total records and get results
+	total, announcements, err := executeSearchQuery(query, offset, limit)
+	if err != nil {
+		return handleError(ctx, 500, err.Error())
+	}
+
+	// Transform to response format
+	announcementsResponse := transformToResponse(announcements)
+
+	// Calculate last page
+	lastPage := int(math.Ceil(float64(total) / float64(limit)))
+
+	return ctx.Status(200).JSON(response.PaginatedAnnouncePostResponse{
+		Data:     announcementsResponse,
+		Total:    total,
+		Page:     page,
+		LastPage: lastPage,
+		PerPage:  limit,
+	})
+}
+
+// Helper functions to reduce code duplication
+
+func applySearchFilters(query *gorm.DB, search, dateFrom, dateTo, category, country, sortBy, sortOrder string) error {
+	if search != "" {
+		query.Where(
+			"LOWER(announce_posts.title) LIKE LOWER(?) OR LOWER(posts.description) LIKE LOWER(?)",
+			"%"+search+"%", "%"+search+"%",
+		)
+	}
+
+	if dateFrom != "" {
+		if fromDate, err := time.Parse("2006-01-02", dateFrom); err == nil {
+			query.Where("posts.publish_date >= ?", fromDate)
+		}
+	}
+
+	if dateTo != "" {
+		if toDate, err := time.Parse("2006-01-02", dateTo); err == nil {
+			query.Where("posts.publish_date <= ?", toDate)
+		}
+	}
+
+	if category != "" {
+		query.Joins("JOIN categories ON announce_posts.category_id = categories.category_id").
+			Where("LOWER(categories.name) LIKE LOWER(?)", "%"+category+"%")
+	}
+
+	if country != "" {
+		query.Joins("JOIN countries ON announce_posts.country_id = countries.country_id").
+			Where("LOWER(countries.name) LIKE LOWER(?)", "%"+country+"%")
+	}
+
+	if sortOrder != "asc" {
+		sortOrder = "desc"
+	}
+	query.Order(fmt.Sprintf("posts.%s %s", sortBy, sortOrder))
+
+	return nil
+}
+
+func executeSearchQuery(query *gorm.DB, offset, limit int) (int64, []entity.Announce_Post, error) {
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return 0, nil, err
+	}
+
+	var announcements []entity.Announce_Post
+	if err := query.Offset(offset).Limit(limit).Find(&announcements).Error; err != nil {
+		return 0, nil, err
+	}
+
+	return total, announcements, nil
+}
+
+func transformToResponse(announcements []entity.Announce_Post) []response.AnnouncePostResponse {
+	var announcementsResponse []response.AnnouncePostResponse
+	for _, announce := range announcements {
+		announcementsResponse = append(announcementsResponse, response.AnnouncePostResponse{
+			Announce_ID:  announce.Announce_ID,
+			Title:        announce.Title,
+			Description:  announce.Post.Description,
+			URL:          announce.Url,
+			Attach_Name:  announce.Attach_Name,
+			Posts_Type:   announce.Post.Posts_Type,
+			Publish_Date: announce.Post.Publish_Date,
+			Close_Date:   announce.Close_Date,
+			Category:     announce.Category.Name,
+			Country:      announce.Country.Name,
+			Post_ID:      announce.Post.Posts_ID,
+		})
+	}
+	return announcementsResponse
 }
