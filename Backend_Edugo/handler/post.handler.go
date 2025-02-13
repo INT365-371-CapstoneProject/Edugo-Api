@@ -1337,6 +1337,7 @@ func SearchAnnouncementsForProvider(ctx fiber.Ctx) error {
 	dateTo := ctx.Query("date_to")
 	category := ctx.Query("category")
 	country := ctx.Query("country")
+	educationLevel := ctx.Query("education_level") // เพิ่มการรับค่า education_level
 	sortBy := ctx.Query("sort_by", "publish_date")
 	sortOrder := ctx.Query("sort_order", "desc")
 
@@ -1351,9 +1352,8 @@ func SearchAnnouncementsForProvider(ctx fiber.Ctx) error {
 		Preload("Category").
 		Preload("Country")
 
-	// ... (rest of the existing search query logic)
-	// Apply common search filters
-	if err := applySearchFilters(query, search, dateFrom, dateTo, category, country, sortBy, sortOrder); err != nil {
+	// Apply filters including education_level
+	if err := applySearchFilters(query, search, dateFrom, dateTo, category, country, educationLevel, sortBy, sortOrder); err != nil {
 		return handleError(ctx, 500, err.Error())
 	}
 
@@ -1386,6 +1386,7 @@ func SearchAnnouncementsForUser(ctx fiber.Ctx) error {
 	dateTo := ctx.Query("date_to")
 	category := ctx.Query("category")
 	country := ctx.Query("country")
+	educationLevel := ctx.Query("education_level") // เพิ่มการรับค่า education_level
 	sortBy := ctx.Query("sort_by", "publish_date")
 	sortOrder := ctx.Query("sort_order", "desc")
 
@@ -1400,8 +1401,8 @@ func SearchAnnouncementsForUser(ctx fiber.Ctx) error {
 		Preload("Category").
 		Preload("Country")
 
-	// Apply common search filters
-	if err := applySearchFilters(query, search, dateFrom, dateTo, category, country, sortBy, sortOrder); err != nil {
+	// Apply filters including education_level
+	if err := applySearchFilters(query, search, dateFrom, dateTo, category, country, educationLevel, sortBy, sortOrder); err != nil {
 		return handleError(ctx, 500, err.Error())
 	}
 
@@ -1443,6 +1444,7 @@ func SearchAnnouncementsForAdmin(ctx fiber.Ctx) error {
 	dateTo := ctx.Query("date_to")
 	category := ctx.Query("category")
 	country := ctx.Query("country")
+	educationLevel := ctx.Query("education_level") // เพิ่มการรับค่า education_level
 	sortBy := ctx.Query("sort_by", "publish_date")
 	sortOrder := ctx.Query("sort_order", "desc")
 
@@ -1456,8 +1458,8 @@ func SearchAnnouncementsForAdmin(ctx fiber.Ctx) error {
 		Preload("Category").
 		Preload("Country")
 
-	// Apply common search filters
-	if err := applySearchFilters(query, search, dateFrom, dateTo, category, country, sortBy, sortOrder); err != nil {
+	// Apply filters including education_level
+	if err := applySearchFilters(query, search, dateFrom, dateTo, category, country, educationLevel, sortBy, sortOrder); err != nil {
 		return handleError(ctx, 500, err.Error())
 	}
 
@@ -1484,7 +1486,7 @@ func SearchAnnouncementsForAdmin(ctx fiber.Ctx) error {
 
 // Helper functions to reduce code duplication
 
-func applySearchFilters(query *gorm.DB, search, dateFrom, dateTo, category, country, sortBy, sortOrder string) error {
+func applySearchFilters(query *gorm.DB, search, dateFrom, dateTo, category, country, educationLevel, sortBy, sortOrder string) error {
 	if search != "" {
 		query.Where(
 			"LOWER(announce_posts.title) LIKE LOWER(?) OR LOWER(posts.description) LIKE LOWER(?)",
@@ -1504,14 +1506,24 @@ func applySearchFilters(query *gorm.DB, search, dateFrom, dateTo, category, coun
 		}
 	}
 
+	// Handle multiple categories
 	if category != "" {
+		categories := strings.Split(category, ",")
 		query.Joins("JOIN categories ON announce_posts.category_id = categories.category_id").
-			Where("LOWER(categories.name) LIKE LOWER(?)", "%"+category+"%")
+			Where("categories.name IN (?)", categories)
 	}
 
+	// Handle multiple countries
 	if country != "" {
+		countries := strings.Split(country, ",")
 		query.Joins("JOIN countries ON announce_posts.country_id = countries.country_id").
-			Where("LOWER(countries.name) LIKE LOWER(?)", "%"+country+"%")
+			Where("countries.name IN (?)", countries)
+	}
+
+	// Handle multiple education levels
+	if educationLevel != "" {
+		levels := strings.Split(educationLevel, ",")
+		query.Where("announce_posts.education_level IN (?)", levels)
 	}
 
 	if sortOrder != "asc" {
@@ -1540,17 +1552,18 @@ func transformToResponse(announcements []entity.Announce_Post) []response.Announ
 	var announcementsResponse []response.AnnouncePostResponse
 	for _, announce := range announcements {
 		announcementsResponse = append(announcementsResponse, response.AnnouncePostResponse{
-			Announce_ID:  announce.Announce_ID,
-			Title:        announce.Title,
-			Description:  announce.Post.Description,
-			URL:          announce.Url,
-			Attach_Name:  announce.Attach_Name,
-			Posts_Type:   announce.Post.Posts_Type,
-			Publish_Date: announce.Post.Publish_Date,
-			Close_Date:   announce.Close_Date,
-			Category:     announce.Category.Name,
-			Country:      announce.Country.Name,
-			Post_ID:      announce.Post.Posts_ID,
+			Announce_ID:     announce.Announce_ID,
+			Title:           announce.Title,
+			Description:     announce.Post.Description,
+			URL:             announce.Url,
+			Attach_Name:     announce.Attach_Name,
+			Posts_Type:      announce.Post.Posts_Type,
+			Publish_Date:    announce.Post.Publish_Date,
+			Close_Date:      announce.Close_Date,
+			Category:        announce.Category.Name,
+			Country:         announce.Country.Name,
+			Post_ID:         announce.Post.Posts_ID,
+			Education_Level: announce.Education_Level, // เพิ่มบรรทัดนี้
 		})
 	}
 	return announcementsResponse
