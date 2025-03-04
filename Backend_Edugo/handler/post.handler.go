@@ -172,10 +172,10 @@ func GetAllPost(ctx fiber.Ctx) error {
 	var total int64
 
 	// นับจำนวนข้อมูลทั้งหมด
-	database.DB.Model(&entity.Post{}).Where("posts_type = ?", "Subject").Count(&total)
+	database.DB.Model(&entity.Post{}).Count(&total)
 
 	// ดึงข้อมูลตาม pagination
-	result := database.DB.Where("posts_type = ?", "Subject").
+	result := database.DB.
 		Offset(offset).
 		Limit(limit).
 		Find(&posts)
@@ -191,7 +191,6 @@ func GetAllPost(ctx fiber.Ctx) error {
 			Post_ID:      post.Posts_ID,
 			Description:  post.Description,
 			Publish_Date: post.Publish_Date,
-			Posts_Type:   post.Posts_Type,
 		})
 	}
 
@@ -213,7 +212,7 @@ func GetPostByID(ctx fiber.Ctx) error {
 	postId := ctx.Params("id")
 	var post entity.Post
 
-	result := database.DB.Where("posts_id = ? AND posts_type = ?", postId, "Subject").First(&post)
+	result := database.DB.Where("posts_id = ?", postId).First(&post)
 	if result.Error != nil {
 		return handleError(ctx, 404, result.Error.Error())
 	}
@@ -222,7 +221,6 @@ func GetPostByID(ctx fiber.Ctx) error {
 		Post_ID:      post.Posts_ID,
 		Description:  post.Description,
 		Publish_Date: post.Publish_Date,
-		Posts_Type:   post.Posts_Type,
 	}
 	return ctx.Status(200).JSON(postResponse)
 }
@@ -283,7 +281,6 @@ func CreatePost(ctx fiber.Ctx) error {
 	// Create New Post with account ID from JWT
 	newPost := entity.Post{
 		Description:  post.Description,
-		Posts_Type:   "Subject",
 		Publish_Date: post.Publish_Date,
 		Account_ID:   account.Account_ID, // ใช้ Account_ID จาก JWT
 	}
@@ -315,7 +312,6 @@ func CreatePost(ctx fiber.Ctx) error {
 		Post_ID:      newPost.Posts_ID,
 		Description:  newPost.Description,
 		Publish_Date: newPost.Publish_Date,
-		Posts_Type:   newPost.Posts_Type,
 		Account_ID:   newPost.Account_ID,
 	}
 
@@ -343,10 +339,10 @@ func UpdatePost(ctx fiber.Ctx) error {
 	}
 
 	var post entity.Post
-	err := database.DB.Where("posts_id = ? AND posts_type = ? AND account_id = ?",
-		postId, "Subject", account.Account_ID).First(&post).Error
+	err := database.DB.Where("posts_id = ? AND account_id = ?",
+		postId, account.Account_ID).First(&post).Error
 	if err != nil {
-		return handleError(ctx, 404, "Post not found or unauthorized")
+		return handleError(ctx, 403, "Forbidden")
 	}
 
 	// Validate Request
@@ -399,7 +395,6 @@ func UpdatePost(ctx fiber.Ctx) error {
 		Post_ID:      post.Posts_ID,
 		Description:  post.Description,
 		Publish_Date: post.Publish_Date,
-		Posts_Type:   "Subject",
 		Account_ID:   post.Account_ID,
 	}
 	// Return the updated response
@@ -423,10 +418,10 @@ func DeletePost(ctx fiber.Ctx) error {
 	}
 
 	var post entity.Post
-	err := database.DB.Where("posts_id = ? AND posts_type = ? AND account_id = ?",
-		postId, "Subject", account.Account_ID).First(&post).Error
+	err := database.DB.Where("posts_id = ? AND account_id = ?",
+		postId, account.Account_ID).First(&post).Error
 	if err != nil {
-		return handleError(ctx, 404, "Post not found or unauthorized")
+		return handleError(ctx, 403, "Forbidden")
 	}
 	err = database.DB.Delete(&post).Error
 	if err != nil {
@@ -452,6 +447,12 @@ func GetAllAnnouncePostForProvider(ctx fiber.Ctx) error {
 		return handleError(ctx, 404, "Account not found")
 	}
 
+	// เพิ่มการหา provider
+	var provider entity.Provider
+	if err := database.DB.Where("account_id = ?", account.Account_ID).First(&provider).Error; err != nil {
+		return handleError(ctx, 404, "Provider not found")
+	}
+
 	// Get pagination parameters
 	page, limit, offset := getPaginationParams(ctx)
 
@@ -460,19 +461,14 @@ func GetAllAnnouncePostForProvider(ctx fiber.Ctx) error {
 
 	// Count total records
 	database.DB.Model(&entity.Announce_Post{}).
-		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Where("posts.account_id = ?", account.Account_ID).
+		Where("provider_id = ?", provider.Provider_ID).
 		Count(&total)
 
 	// Get paginated data
 	result := database.DB.
-		Preload("Post", func(db *gorm.DB) *gorm.DB {
-			return db.Where("account_id = ?", account.Account_ID)
-		}).
 		Preload("Category").
 		Preload("Country").
-		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Where("posts.account_id = ?", account.Account_ID).
+		Where("provider_id = ?", provider.Provider_ID).
 		Offset(offset).
 		Limit(limit).
 		Find(&posts)
@@ -487,16 +483,15 @@ func GetAllAnnouncePostForProvider(ctx fiber.Ctx) error {
 		postsResponse[i] = response.AnnouncePostResponse{
 			Announce_ID:     post.Announce_ID,
 			Title:           post.Title,
-			Description:     post.Post.Description,
+			Description:     post.Description,
 			URL:             post.Url,
 			Attach_Name:     post.Attach_Name,
-			Posts_Type:      post.Post.Posts_Type,
-			Publish_Date:    post.Post.Publish_Date,
+			Publish_Date:    post.Publish_Date,
 			Close_Date:      post.Close_Date,
 			Category:        post.Category.Name,
 			Country:         post.Country.Name,
-			Post_ID:         post.Post.Posts_ID,
 			Education_Level: post.Education_Level,
+			Provider_ID:     post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
 		}
 	}
 
@@ -533,12 +528,17 @@ func GetAnnouncePostByIDForProvider(ctx fiber.Ctx) error {
 		})
 	}
 
+	// เพิ่มการหา provider
+	var provider entity.Provider
+	if err := database.DB.Where("account_id = ?", account.Account_ID).First(&provider).Error; err != nil {
+		return handleError(ctx, 404, "Provider not found")
+	}
+
 	var post []entity.Announce_Post
-	result := database.DB.Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Where("announce_posts.announce_id = ? AND posts.account_id = ?", postId, account.Account_ID).
+	result := database.DB.
+		Where("announce_posts.announce_id = ? AND provider_id = ?", postId, provider.Provider_ID).
 		Preload("Category").
 		Preload("Country").
-		Preload("Post").
 		First(&post)
 	if result.Error != nil {
 		return handleError(ctx, 404, result.Error.Error())
@@ -547,16 +547,15 @@ func GetAnnouncePostByIDForProvider(ctx fiber.Ctx) error {
 	postsResponse := response.AnnouncePostResponse{
 		Announce_ID:     post[0].Announce_ID,
 		Title:           post[0].Title,
-		Description:     post[0].Post.Description,
+		Description:     post[0].Description,
 		URL:             post[0].Url,
 		Attach_Name:     post[0].Attach_Name,
-		Posts_Type:      post[0].Post.Posts_Type,
-		Publish_Date:    post[0].Post.Publish_Date,
+		Publish_Date:    post[0].Publish_Date,
 		Close_Date:      post[0].Close_Date,
 		Category:        post[0].Category.Name,
 		Country:         post[0].Country.Name,
-		Post_ID:         post[0].Post.Posts_ID,
 		Education_Level: post[0].Education_Level,
+		Provider_ID:     post[0].Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
 	}
 	return ctx.Status(200).JSON(postsResponse)
 }
@@ -592,21 +591,19 @@ func GetAnnounceImage(ctx fiber.Ctx) error {
 
 	var announcePost entity.Announce_Post
 	result := database.DB.
-		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
 		Where("announce_posts.announce_id = ?", postId).
-		Preload("Post").
 		First(&announcePost)
 
 	if result.Error != nil {
 		return handleError(ctx, 404, "Announcement not found")
 	}
 
-	if announcePost.Post.Image == nil {
+	if announcePost.Image == nil {
 		return handleError(ctx, 404, "Image not found")
 	}
 
 	ctx.Set("Content-Type", "image/jpeg")
-	return ctx.Send(announcePost.Post.Image)
+	return ctx.Send(announcePost.Image)
 }
 
 // CreateAnnouncePost - สร้างประกาศใหม่
@@ -625,6 +622,12 @@ func CreateAnnouncePostForProvider(ctx fiber.Ctx) error {
 	var account entity.Account
 	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
 		return handleError(ctx, 404, "Account not found")
+	}
+
+	// เพิ่มการหา provider
+	var provider entity.Provider
+	if err := database.DB.Where("account_id = ?", account.Account_ID).First(&provider).Error; err != nil {
+		return handleError(ctx, 404, "Provider not found")
 	}
 
 	post := new(request.AnnouncePostCreateRequest)
@@ -676,40 +679,23 @@ func CreateAnnouncePostForProvider(ctx fiber.Ctx) error {
 		return handleError(ctx, 409, "Failed to begin transaction")
 	}
 
-	// Create New Post with account ID from JWT
-	newPost := entity.Post{
-		Description:  post.Description,
-		Posts_Type:   "Announce",
-		Publish_Date: post.Publish_Date,
-		Account_ID:   account.Account_ID, // ใช้ Account_ID จาก JWT
-	}
-
-	// เพิ่มรูปภาพถ้ามีการอัพโหลด
-	if imageBytes := ctx.Locals("imageBytes"); imageBytes != nil {
-		newPost.Image = imageBytes.([]byte)
-	}
-
-	if err := tx.Create(&newPost).Error; err != nil {
-		tx.Rollback()
-		return handleError(ctx, 409, "Failed to create post")
-	}
-
-	// ตรวจสอบว่าได้ Posts_ID หลังจากการสร้าง post
-	if newPost.Posts_ID == 0 {
-		tx.Rollback()
-		return handleError(ctx, 409, "Failed to create post")
-	}
-
 	// Create New Announce Post
 	newAnnouncePost := entity.Announce_Post{
 		Title:           post.Title,
-		Posts_ID:        newPost.Posts_ID,
+		Description:     post.Description,
 		Url:             post.URL,
 		Attach_Name:     attachFileName,
+		Publish_Date:    post.Publish_Date,
 		Close_Date:      post.Close_Date,
 		Category_ID:     post.Category_ID,
 		Country_ID:      post.Country_ID,
 		Education_Level: post.Education_Level,
+		Provider_ID:     provider.Provider_ID,
+	}
+
+	// เพิ่มรูปภาพถ้ามีการอัพโหลด
+	if imageBytes := ctx.Locals("imageBytes"); imageBytes != nil {
+		newAnnouncePost.Image = imageBytes.([]byte)
 	}
 
 	// เพิ่มไฟล์แนบถ้ามีการอัพโหลด
@@ -717,34 +703,33 @@ func CreateAnnouncePostForProvider(ctx fiber.Ctx) error {
 		newAnnouncePost.Attach_File = attachBytes.([]byte)
 	}
 
+	// Save Announce Post
 	if err := tx.Create(&newAnnouncePost).Error; err != nil {
 		tx.Rollback()
 		return handleError(ctx, 409, "Failed to create announce post")
 	}
 
-	// ยืนยันการทำงานของ Transaction
+	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return handleError(ctx, 409, "Failed to commit transaction")
 	}
 
-	// สร้างตัวแปรแบบ AnnouncePostResponse
-	// และกำหนดค่าให้กับตัวแปรนี้
+	// Create response
 	postResponse := response.AnnouncePostResponseAdd{
 		Announce_ID:     newAnnouncePost.Announce_ID,
 		Title:           newAnnouncePost.Title,
-		Description:     newPost.Description,
+		Description:     newAnnouncePost.Description,
 		URL:             newAnnouncePost.Url,
 		Attach_Name:     newAnnouncePost.Attach_Name,
-		Posts_Type:      newPost.Posts_Type,
-		Publish_Date:    newPost.Publish_Date,
+		Publish_Date:    newAnnouncePost.Publish_Date,
 		Close_Date:      newAnnouncePost.Close_Date,
 		Category_ID:     newAnnouncePost.Category_ID,
 		Country_ID:      newAnnouncePost.Country_ID,
-		Account_ID:      newPost.Account_ID,
 		Education_Level: newAnnouncePost.Education_Level,
+		Provider_ID:     newAnnouncePost.Provider_ID,
 	}
-	// ส่งข้อมูลกลับไปในรูปแบบ JSON
+
 	return ctx.Status(201).JSON(postResponse)
 }
 
@@ -768,20 +753,27 @@ func UpdateAnnouncePostForProvider(ctx fiber.Ctx) error {
 		return handleError(ctx, 404, "Account not found")
 	}
 
+	// เพิ่มการหา provider หลังจากหา account
+	var provider entity.Provider
+	if err := database.DB.Where("account_id = ?", account.Account_ID).First(&provider).Error; err != nil {
+		return handleError(ctx, 404, "Provider not found")
+	}
+
 	// Bind the update request data
 	postRequest := new(request.AnnouncePostUpdateRequest)
 	if err := ctx.Bind().Body(postRequest); err != nil {
 		return handleError(ctx, 400, "Invalid request data")
 	}
-	// Find the existing announce post and preload the associated post
+
+	// แก้ไขส่วนการค้นหา Announce Post
 	var announcePost entity.Announce_Post
-	err := database.DB.Preload("Post").
-		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Where("announce_posts.announce_id = ? AND posts.account_id = ?", postId, account.Account_ID).
+	err := database.DB.
+		Where("announce_id = ? AND provider_id = ?", postId, provider.Provider_ID).
 		First(&announcePost).Error
 	if err != nil {
 		return handleError(ctx, 404, "Post not found")
 	}
+
 	// Validate Request
 	if err := validate.Struct(postRequest); err != nil {
 		return handleError(ctx, 400, err.(validator.ValidationErrors)[0].Translate(trans))
@@ -797,18 +789,18 @@ func UpdateAnnouncePostForProvider(ctx fiber.Ctx) error {
 		announcePost.Title = postRequest.Title
 	}
 	if postRequest.Description != "" {
-		announcePost.Post.Description = postRequest.Description
+		announcePost.Description = postRequest.Description
 	}
 	if postRequest.URL != nil {
 		announcePost.Url = postRequest.URL
 	}
 	if postRequest.Publish_Date != nil {
 		utcTime := postRequest.Publish_Date.UTC()
-		announcePost.Post.Publish_Date = &utcTime
+		announcePost.Publish_Date = &utcTime
 	}
 	if postRequest.Close_Date != nil {
 		utcTime := postRequest.Close_Date.UTC()
-		if utcTime.Before(*announcePost.Post.Publish_Date) {
+		if utcTime.Before(*announcePost.Publish_Date) {
 			return handleError(ctx, 400, "Close date cannot be before publish date")
 		}
 		announcePost.Close_Date = &utcTime
@@ -825,7 +817,7 @@ func UpdateAnnouncePostForProvider(ctx fiber.Ctx) error {
 	// Update File Image if provided
 	if err := utils.HandleImageUpload(ctx, "image"); err == nil {
 		if imageBytes := ctx.Locals("imageBytes"); imageBytes != nil {
-			announcePost.Post.Image = imageBytes.([]byte)
+			announcePost.Image = imageBytes.([]byte)
 		}
 	}
 
@@ -843,10 +835,10 @@ func UpdateAnnouncePostForProvider(ctx fiber.Ctx) error {
 	}
 
 	// Save updated Post record
-	if err := tx.Save(&announcePost.Post).Error; err != nil {
-		tx.Rollback()
-		return handleError(ctx, 409, "Failed to update post details")
-	}
+	// if err := tx.Save(&announcePost.Post).Error; err != nil {
+	// 	tx.Rollback()
+	// 	return handleError(ctx, 409, "Failed to update post details")
+	// }
 
 	// Save updated Announce_Post record
 	if err := tx.Save(&announcePost).Error; err != nil {
@@ -864,15 +856,14 @@ func UpdateAnnouncePostForProvider(ctx fiber.Ctx) error {
 	postResponse := response.AnnouncePostResponseAdd{
 		Announce_ID:     announcePost.Announce_ID,
 		Title:           announcePost.Title,
-		Description:     announcePost.Post.Description,
+		Description:     announcePost.Description,
 		URL:             announcePost.Url,
 		Attach_Name:     announcePost.Attach_Name,
-		Posts_Type:      announcePost.Post.Posts_Type,
-		Publish_Date:    announcePost.Post.Publish_Date,
+		Publish_Date:    announcePost.Publish_Date,
 		Close_Date:      announcePost.Close_Date,
 		Category_ID:     announcePost.Category_ID,
 		Country_ID:      announcePost.Country_ID,
-		Account_ID:      announcePost.Post.Account_ID,
+		Provider_ID:     announcePost.Provider_ID,
 		Education_Level: announcePost.Education_Level,
 	}
 	// Return the updated response
@@ -893,6 +884,12 @@ func DeleteAnnouncePostForProvider(ctx fiber.Ctx) error {
 		return handleError(ctx, 404, "Account not found")
 	}
 
+	// เพิ่มการหา provider
+	var provider entity.Provider
+	if err := database.DB.Where("account_id = ?", account.Account_ID).First(&provider).Error; err != nil {
+		return handleError(ctx, 404, "Provider not found")
+	}
+
 	postId := ctx.Params("id")
 
 	// Begin transaction
@@ -908,17 +905,16 @@ func DeleteAnnouncePostForProvider(ctx fiber.Ctx) error {
 
 	// Find and verify post ownership
 	var announcePost entity.Announce_Post
-	if err := tx.Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Where("announce_posts.announce_id = ? AND posts.account_id = ?", postId, account.Account_ID).
+	if err := tx.Where("announce_id = ? AND provider_id = ?", postId, provider.Provider_ID).
 		First(&announcePost).Error; err != nil {
 		tx.Rollback()
 		return handleError(ctx, 404, "announce post not found")
 	}
 
-	// Delete associated post
-	if err := tx.Delete(&entity.Post{}, "posts_id = ?", announcePost.Posts_ID).Error; err != nil {
+	// Delete announce post directly
+	if err := tx.Delete(&announcePost).Error; err != nil {
 		tx.Rollback()
-		return handleError(ctx, 409, "failed to delete post")
+		return handleError(ctx, 409, "failed to delete announce post")
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -955,20 +951,15 @@ func GetAllAnnouncePostForUser(ctx fiber.Ctx) error {
 
 	// Count total records for active announcements
 	database.DB.Model(&entity.Announce_Post{}).
-		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Where("posts.posts_type = ? AND (announce_posts.close_date IS NULL OR announce_posts.close_date > ?)",
-			"Announce", time.Now()).
+		Where("close_date IS NULL OR close_date > ?", time.Now()).
 		Count(&total)
 
 	// Get paginated data with preloaded relations
 	result := database.DB.
-		Preload("Post").
 		Preload("Category").
 		Preload("Country").
-		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Where("posts.posts_type = ? AND (announce_posts.close_date IS NULL OR announce_posts.close_date > ?)",
-			"Announce", time.Now()).
-		Order("posts.publish_date DESC").
+		Where("close_date IS NULL OR close_date > ?", time.Now()).
+		Order("publish_date DESC").
 		Offset(offset).
 		Limit(limit).
 		Find(&posts)
@@ -982,15 +973,14 @@ func GetAllAnnouncePostForUser(ctx fiber.Ctx) error {
 		postsResponse = append(postsResponse, response.AnnouncePostResponse{
 			Announce_ID:  post.Announce_ID,
 			Title:        post.Title,
-			Description:  post.Post.Description,
+			Description:  post.Description,
 			URL:          post.Url,
 			Attach_Name:  post.Attach_Name,
-			Posts_Type:   post.Post.Posts_Type,
-			Publish_Date: post.Post.Publish_Date,
+			Publish_Date: post.Publish_Date,
 			Close_Date:   post.Close_Date,
 			Category:     post.Category.Name,
 			Country:      post.Country.Name,
-			Post_ID:      post.Post.Posts_ID,
+			Provider_ID:  post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
 		})
 	}
 
@@ -1013,12 +1003,10 @@ func GetAnnouncePostByIDForUser(ctx fiber.Ctx) error {
 
 	var post entity.Announce_Post
 	result := database.DB.
-		Preload("Post").
 		Preload("Category").
 		Preload("Country").
-		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Where("announce_posts.announce_id = ? AND posts.posts_type = ? AND (announce_posts.close_date IS NULL OR announce_posts.close_date > ?)",
-			postId, "Announce", time.Now()).
+		Where("announce_posts.announce_id = ? AND (announce_posts.close_date IS NULL OR announce_posts.close_date > ?)",
+			postId, time.Now()).
 		First(&post)
 
 	if result.Error != nil {
@@ -1028,15 +1016,14 @@ func GetAnnouncePostByIDForUser(ctx fiber.Ctx) error {
 	postResponse := response.AnnouncePostResponse{
 		Announce_ID:  post.Announce_ID,
 		Title:        post.Title,
-		Description:  post.Post.Description,
+		Description:  post.Description,
 		URL:          post.Url,
 		Attach_Name:  post.Attach_Name,
-		Posts_Type:   post.Post.Posts_Type,
-		Publish_Date: post.Post.Publish_Date,
+		Publish_Date: post.Publish_Date,
 		Close_Date:   post.Close_Date,
 		Category:     post.Category.Name,
 		Country:      post.Country.Name,
-		Post_ID:      post.Post.Posts_ID,
+		Provider_ID:  post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
 	}
 
 	return ctx.Status(200).JSON(postResponse)
@@ -1075,17 +1062,12 @@ func GetAllAnnouncePostForAdmin(ctx fiber.Ctx) error {
 
 	// ... rest of the existing function code ...
 	database.DB.Model(&entity.Announce_Post{}).
-		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Where("posts.posts_type = ?", "Announce").
 		Count(&total)
 
 	result := database.DB.
-		Preload("Post").
 		Preload("Category").
 		Preload("Country").
-		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Where("posts.posts_type = ?", "Announce").
-		Order("posts.publish_date DESC").
+		Order("publish_date DESC").
 		Offset(offset).
 		Limit(limit).
 		Find(&posts)
@@ -1100,15 +1082,14 @@ func GetAllAnnouncePostForAdmin(ctx fiber.Ctx) error {
 		postsResponse = append(postsResponse, response.AnnouncePostResponse{
 			Announce_ID:  post.Announce_ID,
 			Title:        post.Title,
-			Description:  post.Post.Description,
+			Description:  post.Description,
 			URL:          post.Url,
 			Attach_Name:  post.Attach_Name,
-			Posts_Type:   post.Post.Posts_Type,
-			Publish_Date: post.Post.Publish_Date,
+			Publish_Date: post.Publish_Date,
 			Close_Date:   post.Close_Date,
 			Category:     post.Category.Name,
 			Country:      post.Country.Name,
-			Post_ID:      post.Post.Posts_ID,
+			Provider_ID:  post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
 		})
 	}
 
@@ -1138,11 +1119,9 @@ func GetAnnouncePostByIDForAdmin(ctx fiber.Ctx) error {
 
 	var post entity.Announce_Post
 	result := database.DB.
-		Preload("Post").
 		Preload("Category").
 		Preload("Country").
-		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Where("announce_posts.announce_id = ? AND posts.posts_type = ?", postId, "Announce").
+		Where("announce_posts.announce_id = ?", postId).
 		First(&post)
 
 	if result.Error != nil {
@@ -1152,15 +1131,14 @@ func GetAnnouncePostByIDForAdmin(ctx fiber.Ctx) error {
 	postResponse := response.AnnouncePostResponse{
 		Announce_ID:  post.Announce_ID,
 		Title:        post.Title,
-		Description:  post.Post.Description,
+		Description:  post.Description,
 		URL:          post.Url,
 		Attach_Name:  post.Attach_Name,
-		Posts_Type:   post.Post.Posts_Type,
-		Publish_Date: post.Post.Publish_Date,
+		Publish_Date: post.Publish_Date,
 		Close_Date:   post.Close_Date,
 		Category:     post.Category.Name,
 		Country:      post.Country.Name,
-		Post_ID:      post.Post.Posts_ID,
+		Provider_ID:  post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
 	}
 
 	return ctx.Status(200).JSON(postResponse)
@@ -1187,18 +1165,17 @@ func DeleteAnnouncePostForAdmin(ctx fiber.Ctx) error {
 
 	// Find announce post
 	var announcePost entity.Announce_Post
-	if err := tx.Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Where("announce_posts.announce_id = ?", postId).
+	if err := tx.Where("announce_posts.announce_id = ?", postId).
 		First(&announcePost).Error; err != nil {
 		tx.Rollback()
 		return handleError(ctx, 404, "announce post not found")
 	}
 
 	// Delete associated post
-	if err := tx.Delete(&entity.Post{}, "posts_id = ?", announcePost.Posts_ID).Error; err != nil {
-		tx.Rollback()
-		return handleError(ctx, 409, "failed to delete post")
-	}
+	// if err := tx.Delete(&entity.Post{}, "posts_id = ?", announcePost.Posts_ID).Error; err != nil {
+	// 	tx.Rollback()
+	// 	return handleError(ctx, 409, "failed to delete post")
+	// }
 
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
@@ -1225,7 +1202,7 @@ func DeletePostForAdmin(ctx fiber.Ctx) error {
 	postId := ctx.Params("id")
 
 	var post entity.Post
-	err := database.DB.Where("posts_id = ? AND posts_type = ?", postId, "Subject").First(&post).Error
+	err := database.DB.Where("posts_id = ?", postId).First(&post).Error
 	if err != nil {
 		return handleError(ctx, 404, "Post not found")
 	}
@@ -1253,7 +1230,7 @@ func SearchPosts(ctx fiber.Ctx) error {
 	page, limit, offset := getPaginationParams(ctx)
 
 	// Initialize the base query
-	query := database.DB.Model(&entity.Post{}).Where("posts_type = ?", "Subject")
+	query := database.DB.Model(&entity.Post{})
 
 	// Apply search filter if provided
 	if search != "" {
@@ -1297,7 +1274,6 @@ func SearchPosts(ctx fiber.Ctx) error {
 			Post_ID:      post.Posts_ID,
 			Description:  post.Description,
 			Publish_Date: post.Publish_Date,
-			Posts_Type:   post.Posts_Type,
 		})
 	}
 
@@ -1331,6 +1307,12 @@ func SearchAnnouncementsForProvider(ctx fiber.Ctx) error {
 		return handleError(ctx, 404, "Account not found")
 	}
 
+	// เพิ่มการตรวจสอบ Provider
+	var provider entity.Provider
+	if err := database.DB.Where("account_id = ?", account.Account_ID).First(&provider).Error; err != nil {
+		return handleError(ctx, 404, "Provider not found")
+	}
+
 	// Get search parameters from query
 	search := ctx.Query("search")
 	dateFrom := ctx.Query("date_from")
@@ -1346,9 +1328,7 @@ func SearchAnnouncementsForProvider(ctx fiber.Ctx) error {
 
 	// Initialize the base query with provider's account ID filter
 	query := database.DB.Model(&entity.Announce_Post{}).
-		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Where("posts.account_id = ?", account.Account_ID).
-		Preload("Post").
+		Where("announce_posts.provider_id = ?", provider.Provider_ID).
 		Preload("Category").
 		Preload("Country")
 
@@ -1395,9 +1375,7 @@ func SearchAnnouncementsForUser(ctx fiber.Ctx) error {
 
 	// Initialize query for active announcements only
 	query := database.DB.Model(&entity.Announce_Post{}).
-		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
 		Where("(announce_posts.close_date IS NULL OR announce_posts.close_date > ?)", time.Now()).
-		Preload("Post").
 		Preload("Category").
 		Preload("Country")
 
@@ -1453,8 +1431,6 @@ func SearchAnnouncementsForAdmin(ctx fiber.Ctx) error {
 
 	// Initialize query for all announcements
 	query := database.DB.Model(&entity.Announce_Post{}).
-		Joins("JOIN posts ON announce_posts.posts_id = posts.posts_id").
-		Preload("Post").
 		Preload("Category").
 		Preload("Country")
 
@@ -1489,20 +1465,20 @@ func SearchAnnouncementsForAdmin(ctx fiber.Ctx) error {
 func applySearchFilters(query *gorm.DB, search, dateFrom, dateTo, category, country, educationLevel, sortBy, sortOrder string) error {
 	if search != "" {
 		query.Where(
-			"LOWER(announce_posts.title) LIKE LOWER(?) OR LOWER(posts.description) LIKE LOWER(?)",
+			"LOWER(announce_posts.title) LIKE LOWER(?) OR LOWER(announce_posts.description) LIKE LOWER(?)",
 			"%"+search+"%", "%"+search+"%",
 		)
 	}
 
 	if dateFrom != "" {
 		if fromDate, err := time.Parse("2006-01-02", dateFrom); err == nil {
-			query.Where("posts.publish_date >= ?", fromDate)
+			query.Where("announce_posts.publish_date >= ?", fromDate)
 		}
 	}
 
 	if dateTo != "" {
 		if toDate, err := time.Parse("2006-01-02", dateTo); err == nil {
-			query.Where("posts.publish_date <= ?", toDate)
+			query.Where("announce_posts.publish_date <= ?", toDate)
 		}
 	}
 
@@ -1529,7 +1505,7 @@ func applySearchFilters(query *gorm.DB, search, dateFrom, dateTo, category, coun
 	if sortOrder != "asc" {
 		sortOrder = "desc"
 	}
-	query.Order(fmt.Sprintf("posts.%s %s", sortBy, sortOrder))
+	query.Order(fmt.Sprintf("announce_posts.%s %s", sortBy, sortOrder))
 
 	return nil
 }
@@ -1554,16 +1530,15 @@ func transformToResponse(announcements []entity.Announce_Post) []response.Announ
 		announcementsResponse = append(announcementsResponse, response.AnnouncePostResponse{
 			Announce_ID:     announce.Announce_ID,
 			Title:           announce.Title,
-			Description:     announce.Post.Description,
+			Description:     announce.Description,
 			URL:             announce.Url,
 			Attach_Name:     announce.Attach_Name,
-			Posts_Type:      announce.Post.Posts_Type,
-			Publish_Date:    announce.Post.Publish_Date,
+			Publish_Date:    announce.Publish_Date,
 			Close_Date:      announce.Close_Date,
 			Category:        announce.Category.Name,
 			Country:         announce.Country.Name,
-			Post_ID:         announce.Post.Posts_ID,
-			Education_Level: announce.Education_Level, // เพิ่มบรรทัดนี้
+			Education_Level: announce.Education_Level,
+			Provider_ID:     announce.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
 		})
 	}
 	return announcementsResponse
