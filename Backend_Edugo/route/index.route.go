@@ -23,15 +23,17 @@ func RouteInit(r *fiber.App) {
 
 	// User routes
 	userGroup := public.Group("/user", middleware.PermissionCreate)
-	userGroup.Get("/", handler.GetAllUser)
-	userGroup.Get("/:id", handler.GetUserByID)
+	// userGroup.Get("/", handler.GetAllUser)
+	// userGroup.Get("/:id", handler.GetUserByID)
 	userGroup.Post("/", handler.CreateUser)
 
 	// Provider routes
 	providerGroup := public.Group("/provider", middleware.PermissionCreate)
-	providerGroup.Get("/", handler.GetAllProvider)
-	providerGroup.Get("/:id", handler.GetIDProvider)
+	// providerGroup.Get("/", handler.GetAllProvider)
+	// providerGroup.Get("/:id", handler.GetIDProvider)
 	providerGroup.Post("/", handler.CreateProvider)
+
+
 
 	// Metadata routes (country and category)
 	metadataGroup := public.Group("", middleware.AuthAny)
@@ -67,6 +69,10 @@ func RouteInit(r *fiber.App) {
 	// Subject for Admin routes
 	subjectAdminGroup := public.Group("/subject-admin", middleware.AuthAdmin)
 	subjectAdminGroup.Delete("/:id", handler.DeletePostForAdmin)
+
+	// Create Admin for SuperAdmin
+	adminGroup := public.Group("/admin", middleware.AuthSuperAdmin)
+	adminGroup.Post("/", handler.CreateAdminForSuperadmin)
 
 	// Announcement routes
 	announceGroup := public.Group("/announce", middleware.AuthProvider)
