@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`accounts` (
   `first_name` VARCHAR(50) NULL DEFAULT NULL,
   `last_name` VARCHAR(50) NULL DEFAULT NULL,
   `avatar` LONGBLOB NULL DEFAULT NULL,
+  `status` ENUM('Active', 'Suspended') NOT NULL,
   `create_on` DATETIME NOT NULL,
   `last_login` DATETIME NULL DEFAULT NULL,
   `update_on` DATETIME NOT NULL,
@@ -47,7 +48,6 @@ COLLATE = utf8mb4_0900_ai_ci;
 CREATE TABLE IF NOT EXISTS `edugo`.`admins` (
   `admin_id` INT NOT NULL AUTO_INCREMENT,
   `phone` VARCHAR(10) NOT NULL,
-  `status` ENUM('Active', 'Inactive') NOT NULL,
   `account_id` INT NOT NULL,
   PRIMARY KEY (`admin_id`),
   INDEX `fk_admins_accounts1_idx` (`account_id` ASC) VISIBLE,
@@ -99,10 +99,9 @@ CREATE TABLE IF NOT EXISTS `edugo`.`providers` (
   `city` VARCHAR(50) NOT NULL,
   `country` VARCHAR(50) NOT NULL,
   `postal_code` VARCHAR(10) NOT NULL,
-  `status` ENUM('Active', 'Inactive') NOT NULL,
   `phone` VARCHAR(10) NOT NULL,
   `phone_person` VARCHAR(10) NULL DEFAULT NULL,
-  `verify` ENUM('Y', 'N') NOT NULL,
+  `verify` ENUM('Yes', 'No', 'Waiting') NOT NULL,
   `account_id` INT NOT NULL,
   PRIMARY KEY (`provider_id`),
   INDEX `fk_providers_accounts1_idx` (`account_id` ASC) VISIBLE,
@@ -227,6 +226,54 @@ AUTO_INCREMENT = 3
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
+-- -----------------------------------------------------
+-- Table `edugo`.`bookmarks`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `edugo`.`bookmarks` (
+  `bookmark_id` INT NOT NULL AUTO_INCREMENT,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `account_id` INT NOT NULL,
+  `announce_id` INT NOT NULL,
+  PRIMARY KEY (`bookmark_id`),
+  INDEX `fk_bookmarks_accounts1_idx` (`account_id` ASC) VISIBLE,
+  INDEX `fk_bookmarks_announce_posts1_idx` (`announce_id` ASC) VISIBLE,
+  CONSTRAINT `fk_bookmarks_accounts1`
+    FOREIGN KEY (`account_id`)
+    REFERENCES `edugo`.`accounts` (`account_id`)
+    ON DELETE CASCADE,
+  CONSTRAINT `fk_bookmarks_announce_posts1`
+    FOREIGN KEY (`announce_id`)
+    REFERENCES `edugo`.`announce_posts` (`announce_id`)
+    ON DELETE CASCADE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+-- -----------------------------------------------------
+-- Table `edugo`.`notifications`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `edugo`.`notifications` (
+  `notification_id` INT NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(100) NOT NULL,
+  `message` VARCHAR(500) NOT NULL,
+  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `account_id` INT NOT NULL,
+  `announce_id` INT NULL,
+  PRIMARY KEY (`notification_id`),
+  INDEX `fk_notifications_accounts1_idx` (`account_id` ASC) VISIBLE,
+  INDEX `fk_notifications_announce_posts1_idx` (`announce_id` ASC) VISIBLE,
+  CONSTRAINT `fk_notifications_accounts1`
+    FOREIGN KEY (`account_id`)
+    REFERENCES `edugo`.`accounts` (`account_id`)
+    ON DELETE CASCADE,
+  CONSTRAINT `fk_notifications_announce_posts1`
+    FOREIGN KEY (`announce_id`)
+    REFERENCES `edugo`.`announce_posts` (`announce_id`)
+    ON DELETE SET NULL)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

@@ -8,7 +8,6 @@ type Provider struct {
 	City         string  `json:"city"`
 	Country      string  `json:"country"`
 	Postal_Code  string  `json:"postal_code"`
-	Status       string  `json:"status"`
 	Phone        string  `json:"phone"`
 	Phone_Person *string `json:"phone_person"`
 	Verify       string  `json:"verify"`

@@ -12,4 +12,5 @@ type UserResponse struct {
 	Last_Login *time.Time `json:"last_login"`
 	Update_On  time.Time `json:"update_on"`
 	Role       string `json:"role"`
+	Status     string `json:"status"`
 }

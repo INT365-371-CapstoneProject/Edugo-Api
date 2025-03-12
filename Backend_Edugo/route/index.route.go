@@ -71,8 +71,14 @@ func RouteInit(r *fiber.App) {
 	subjectAdminGroup.Delete("/:id", handler.DeletePostForAdmin)
 
 	// Create Admin for SuperAdmin
-	adminGroup := public.Group("/admin", middleware.AuthSuperAdmin)
+	adminGroup := public.Group("/superadmin", middleware.AuthSuperAdmin)
 	adminGroup.Post("/", handler.CreateAdminForSuperadmin)
+
+	// Admin routes
+	adminManageGroup := public.Group("/admin", middleware.AuthAdmin)
+	adminManageGroup.Get("/provider", handler.GetAllProviderForAdmin)
+	adminManageGroup.Get("/provider/:id", handler.GetIDProviderForAdmin)
+	adminManageGroup.Put("/verify/:id", handler.VerifyProviderForAdmin)
 
 	// Announcement routes
 	announceGroup := public.Group("/announce", middleware.AuthProvider)

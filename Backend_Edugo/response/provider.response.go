@@ -5,8 +5,8 @@ import "time"
 type ProviderResponse struct {
 	Provider_ID  uint       `json:"id"`
 	Company_Name string     `json:"company_name"`
-	FirstName   string     `json:"first_name"`
-	LastName    string     `json:"last_name"`
+	FirstName   *string     `json:"first_name"`
+	LastName    *string     `json:"last_name"`
 	Username     string     `json:"username"`
 	Email        string     `json:"email"`
 	URL          string     `json:"url"`

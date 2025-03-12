@@ -7,4 +7,5 @@ type AdminResponse struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Phone     string `json:"phone"`
+	Status    string `json:"status"`
 }
