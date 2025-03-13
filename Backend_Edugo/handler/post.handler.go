@@ -1165,17 +1165,17 @@ func DeleteAnnouncePostForAdmin(ctx fiber.Ctx) error {
 
 	// Find announce post
 	var announcePost entity.Announce_Post
-	if err := tx.Where("announce_posts.announce_id = ?", postId).
+	if err := tx.Where("announce_id = ?", postId).
 		First(&announcePost).Error; err != nil {
 		tx.Rollback()
 		return handleError(ctx, 404, "announce post not found")
 	}
 
-	// Delete associated post
-	// if err := tx.Delete(&entity.Post{}, "posts_id = ?", announcePost.Posts_ID).Error; err != nil {
-	// 	tx.Rollback()
-	// 	return handleError(ctx, 409, "failed to delete post")
-	// }
+	// Delete announce post
+	if err := tx.Delete(&announcePost).Error; err != nil {
+		tx.Rollback()
+		return handleError(ctx, 409, "failed to delete post")
+	}
 
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
