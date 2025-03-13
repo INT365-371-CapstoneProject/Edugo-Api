@@ -19,7 +19,7 @@ type AdminProfileResponse struct {
 	LastName  *string `json:"last_name"`
 	Role      string  `json:"role"`
 	Phone     *string `json:"phone_number"`
-	Status       string `json:"status"`
+	Status    string  `json:"status"`
 }
 
 // ProviderProfileResponse struct
@@ -38,6 +38,7 @@ type ProviderProfileResponse struct {
 	Country      string `json:"country"`
 	Postal_Code  string `json:"postal_code"`
 	Status       string `json:"status"`
+	Verify       string `json:"verify"`
 }
 
 // UserProfileResponse struct
@@ -48,5 +49,5 @@ type UserProfileResponse struct {
 	FirstName *string `json:"first_name"`
 	LastName  *string `json:"last_name"`
 	Role      string  `json:"role"`
-	Status       string `json:"status"`
+	Status    string  `json:"status"`
 }

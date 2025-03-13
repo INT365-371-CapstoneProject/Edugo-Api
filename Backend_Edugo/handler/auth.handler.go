@@ -259,6 +259,7 @@ func getProviderProfile(ctx fiber.Ctx, account entity.Account) error {
 			Country:      providerDetails.Country,
 			Postal_Code:  providerDetails.Postal_Code,
 			Status:       account.Status,
+			Verify:       providerDetails.Verify,
 		},
 	})
 }
