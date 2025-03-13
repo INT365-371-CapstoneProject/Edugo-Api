@@ -4,6 +4,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
+	"github.com/tk-neng/demo-go-fiber/middleware"
 	"github.com/tk-neng/demo-go-fiber/model/entity"
 	"github.com/tk-neng/demo-go-fiber/request"
 	"github.com/tk-neng/demo-go-fiber/response"
@@ -102,7 +103,7 @@ func CreateAdminForSuperadmin(ctx fiber.Ctx) error {
 
 	// Create response
 	providerResponse := response.AdminResponse{
-		ID:        newAccount.Account_ID,
+		Admin_ID:  newAccount.Account_ID,
 		Username:  newAccount.Username,
 		Email:     newAccount.Email,
 		FirstName: *newAccount.FirstName,
@@ -229,3 +230,229 @@ func VerifyProviderForAdmin(ctx fiber.Ctx) error {
 	})
 }
 
+func GetAllUser(ctx fiber.Ctx) error {
+	// ตรวจสอบ role จาก JWT
+	claims := middleware.GetTokenClaims(ctx)
+	role := claims["role"].(string)
+	username := claims["username"].(string)
+
+	// เตรียมตัวแปรสำหรับเก็บข้อมูลผู้ใช้
+	var users []entity.Account
+	var userResponse []response.UserResponse
+
+	// เงื่อนไขการดึงข้อมูลตาม role
+	if role == "superadmin" {
+		// ถ้าเป็น superadmin ดึงข้อมูล user, provider และ admin
+		if err := database.DB.Where("role IN ?", []string{"user", "provider", "admin"}).Find(&users).Error; err != nil {
+			return ctx.Status(409).JSON(fiber.Map{
+				"message": "Failed to fetch users: " + err.Error(),
+			})
+		}
+	} else if role == "admin" {
+		// ถ้าเป็น admin ดึงข้อมูลเฉพาะ user และ provider
+		if err := database.DB.Where("role IN ?", []string{"user", "provider"}).Find(&users).Error; err != nil {
+			return ctx.Status(409).JSON(fiber.Map{
+				"message": "Failed to fetch users: " + err.Error(),
+			})
+		}
+	} else {
+		// ถ้าไม่ใช่ admin หรือ superadmin จะไม่มีสิทธิ์เข้าถึง
+		return ctx.Status(403).JSON(fiber.Map{
+			"message": "Access denied: Insufficient permissions",
+		})
+	}
+
+	// แปลงข้อมูลเป็น response format
+	for _, user := range users {
+		var firstName, lastName string
+		if user.FirstName != nil {
+			firstName = *user.FirstName
+		}
+		if user.LastName != nil {
+			lastName = *user.LastName
+		}
+
+		// สร้าง response object แต่ละ user
+		userResp := response.UserResponse{
+			Account_ID: user.Account_ID,
+			Username:   user.Username,
+			Email:      user.Email,
+			FirstName:  &firstName,
+			LastName:   &lastName,
+			Status:     user.Status,
+			Role:       user.Role,
+			Create_On:  user.Create_On,
+			Last_Login: user.Last_Login,
+			Update_On:  user.Update_On,
+		}
+
+		// เพิ่มข้อมูลเพิ่มเติมตาม role
+		if user.Role == "provider" {
+			var provider entity.Provider
+			if err := database.DB.Where("account_id = ?", user.Account_ID).First(&provider).Error; err == nil {
+				// ถ้าเป็น provider เพิ่มข้อมูลเฉพาะของ provider
+				userResp.ProviderDetails = &response.ProviderDetails{
+					Provider_ID:  provider.Provider_ID,
+					Company_Name: provider.Company_Name,
+					URL:          provider.URL,
+					Address:      provider.Address,
+					City:         provider.City,
+					Country:      provider.Country,
+					Postal_Code:  provider.Postal_Code,
+					Phone:        provider.Phone,
+					Phone_Person: provider.Phone_Person,
+					Verify:       provider.Verify,
+				}
+			}
+		} else if user.Role == "admin" {
+			var admin entity.Admin
+			if err := database.DB.Where("account_id = ?", user.Account_ID).First(&admin).Error; err == nil {
+				// ถ้าเป็น admin เพิ่มข้อมูลเฉพาะของ admin
+				userResp.AdminDetails = &response.AdminDetails{
+					Admin_ID: admin.Admin_ID,
+					Phone:    admin.Phone,
+				}
+			}
+		}
+
+		userResponse = append(userResponse, userResp)
+	}
+
+	// ส่งข้อมูลผู้ใช้ทั้งหมดกลับไป
+	return ctx.Status(200).JSON(fiber.Map{
+		"users":    userResponse,
+		"count":    len(userResponse),
+		"role":     role,
+		"username": username,
+	})
+}
+
+func ManageAllUser(ctx fiber.Ctx) error {
+	// ตรวจสอบสิทธิ์จาก JWT token
+	claims := middleware.GetTokenClaims(ctx)
+	adminRole := claims["role"].(string)
+	adminUsername := claims["username"].(string)
+
+	// ตรวจสอบว่ามีสิทธิ์เข้าถึงฟังก์ชันนี้หรือไม่
+	if adminRole != "superadmin" && adminRole != "admin" {
+		return ctx.Status(403).JSON(fiber.Map{
+			"message": "ไม่มีสิทธิ์เข้าถึงฟังก์ชันนี้",
+		})
+	}
+
+	// รับข้อมูลจาก request body
+	request := struct {
+		Account_ID uint  `json:"account_id" validate:"required"`
+		Action    string `json:"action" validate:"required,oneof=change_status delete"`
+		Status    string `json:"status" validate:"omitempty,oneof=Active Suspended"`
+	}{}
+
+	if err := ctx.Bind().Body(&request); err != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"message": "ข้อมูลคำขอไม่ถูกต้อง: " + err.Error(),
+		})
+	}
+
+	// ตรวจสอบความถูกต้องของข้อมูล
+	if err := validate.Struct(request); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		return utils.HandleError(ctx, 400, validationErrors[0].Translate(trans))
+	}
+
+	// หาบัญชีผู้ใช้ที่ต้องการจัดการ
+	var targetAccount entity.Account
+	if err := database.DB.First(&targetAccount, request.Account_ID).Error; err != nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"message": "ไม่พบบัญชีผู้ใช้ที่ต้องการจัดการ",
+		})
+	}
+
+	// ตรวจสอบสิทธิ์ในการจัดการบัญชี
+	if adminRole == "admin" {
+		// Admin สามารถจัดการได้เฉพาะ user และ provider
+		if targetAccount.Role == "admin" || targetAccount.Role == "superadmin" {
+			return ctx.Status(403).JSON(fiber.Map{
+				"message": "ไม่มีสิทธิ์จัดการบัญชีผู้ดูแลระบบหรือผู้ดูแลระบบสูงสุด",
+			})
+		}
+	}
+
+	// ดำเนินการตามคำสั่ง
+	if request.Action == "change_status" {
+		if request.Status == "" {
+			return ctx.Status(400).JSON(fiber.Map{
+				"message": "ต้องระบุสถานะที่ต้องการเปลี่ยน",
+			})
+		}
+
+		// เปลี่ยนสถานะผู้ใช้
+		if err := database.DB.Model(&targetAccount).Update("status", request.Status).Error; err != nil {
+			return ctx.Status(409).JSON(fiber.Map{
+				"message": "เกิดข้อผิดพลาดในการเปลี่ยนสถานะบัญชี: " + err.Error(),
+			})
+		}
+
+		return ctx.Status(200).JSON(fiber.Map{
+			"message":    "เปลี่ยนสถานะบัญชีผู้ใช้เรียบร้อยแล้ว",
+			"account_id": targetAccount.Account_ID,
+			"username":   targetAccount.Username,
+			"status":     request.Status,
+			"managed_by": adminUsername,
+		})
+
+	} else if request.Action == "delete" {
+		// เริ่ม Transaction เพื่อลบข้อมูลที่เกี่ยวข้อง
+		tx := database.DB.Begin()
+		if tx.Error != nil {
+			return ctx.Status(409).JSON(fiber.Map{
+				"message": "ไม่สามารถเริ่ม Transaction ได้",
+			})
+		}
+
+		// ลบข้อมูลตาม Role ของผู้ใช้
+		if targetAccount.Role == "provider" {
+			// ลบข้อมูล Provider
+			if err := tx.Where("account_id = ?", targetAccount.Account_ID).Delete(&entity.Provider{}).Error; err != nil {
+				tx.Rollback()
+				return ctx.Status(409).JSON(fiber.Map{
+					"message": "ไม่สามารถลบข้อมูล Provider ได้: " + err.Error(),
+				})
+			}
+		} else if targetAccount.Role == "admin" {
+			// ลบข้อมูล Admin
+			if err := tx.Where("account_id = ?", targetAccount.Account_ID).Delete(&entity.Admin{}).Error; err != nil {
+				tx.Rollback()
+				return ctx.Status(409).JSON(fiber.Map{
+					"message": "ไม่สามารถลบข้อมูล Admin ได้: " + err.Error(),
+				})
+			}
+		}
+
+		// ลบบัญชีผู้ใช้หลัก
+		if err := tx.Delete(&targetAccount).Error; err != nil {
+			tx.Rollback()
+			return ctx.Status(409).JSON(fiber.Map{
+				"message": "ไม่สามารถลบบัญชีผู้ใช้ได้: " + err.Error(),
+			})
+		}
+
+		// Commit Transaction
+		if err := tx.Commit().Error; err != nil {
+			return ctx.Status(409).JSON(fiber.Map{
+				"message": "เกิดข้อผิดพลาดในการลบบัญชีผู้ใช้: " + err.Error(),
+			})
+		}
+
+		return ctx.Status(200).JSON(fiber.Map{
+			"message":            "ลบบัญชีผู้ใช้เรียบร้อยแล้ว",
+			"deleted_account_id": request.Account_ID,
+			"deleted_username":   targetAccount.Username,
+			"deleted_role":       targetAccount.Role,
+			"managed_by":         adminUsername,
+		})
+	}
+
+	return ctx.Status(400).JSON(fiber.Map{
+		"message": "การดำเนินการไม่ถูกต้อง",
+	})
+}

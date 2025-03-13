@@ -33,8 +33,6 @@ func RouteInit(r *fiber.App) {
 	// providerGroup.Get("/:id", handler.GetIDProvider)
 	providerGroup.Post("/", handler.CreateProvider)
 
-
-
 	// Metadata routes (country and category)
 	metadataGroup := public.Group("", middleware.AuthAny)
 	metadataGroup.Get("/country", handler.GatAllCountry)
@@ -76,9 +74,11 @@ func RouteInit(r *fiber.App) {
 
 	// Admin routes
 	adminManageGroup := public.Group("/admin", middleware.AuthAdmin)
+	adminManageGroup.Get("/user", handler.GetAllUser)
 	adminManageGroup.Get("/provider", handler.GetAllProviderForAdmin)
 	adminManageGroup.Get("/provider/:id", handler.GetIDProviderForAdmin)
 	adminManageGroup.Put("/verify/:id", handler.VerifyProviderForAdmin)
+	adminManageGroup.Post("/manage-user", handler.ManageAllUser) // เพิ่ม route สำหรับจัดการบัญชีผู้ใช้
 
 	// Announcement routes
 	announceGroup := public.Group("/announce", middleware.AuthProvider)
