@@ -1089,6 +1089,7 @@ func GetAllAnnouncePostForAdmin(ctx fiber.Ctx) error {
 			Close_Date:   post.Close_Date,
 			Category:     post.Category.Name,
 			Country:      post.Country.Name,
+			Education_Level: post.Education_Level,
 			Provider_ID:  post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
 		})
 	}
