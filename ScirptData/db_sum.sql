@@ -133,7 +133,6 @@ CREATE TABLE IF NOT EXISTS `edugo`.`announce_posts` (
   `country_id` INT NOT NULL,
   `provider_id` INT NOT NULL,
   PRIMARY KEY (`announce_id`),
-  UNIQUE INDEX `unique_attach_file` (`attach_file`(255) ASC) VISIBLE,
   INDEX `fk_announce_posts_categories1_idx` (`category_id` ASC) VISIBLE,
   INDEX `fk_announce_posts_countries1_idx` (`country_id` ASC) VISIBLE,
   INDEX `fk_announce_posts_providers1_idx` (`provider_id` ASC) VISIBLE,

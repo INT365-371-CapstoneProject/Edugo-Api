@@ -75,6 +75,7 @@ func RouteInit(r *fiber.App) {
 	// Admin routes
 	adminManageGroup := public.Group("/admin", middleware.AuthAdmin)
 	adminManageGroup.Get("/user", handler.GetAllUser)
+	adminManageGroup.Get("/user/:id", handler.GetIDUser)
 	adminManageGroup.Get("/provider", handler.GetAllProviderForAdmin)
 	adminManageGroup.Get("/provider/:id", handler.GetIDProviderForAdmin)
 	adminManageGroup.Put("/verify/:id", handler.VerifyProviderForAdmin)

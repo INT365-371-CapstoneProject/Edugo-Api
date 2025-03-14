@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"math"
+	"strconv"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
@@ -116,13 +119,33 @@ func CreateAdminForSuperadmin(ctx fiber.Ctx) error {
 }
 
 func GetAllProviderForAdmin(ctx fiber.Ctx) error {
+	// รับค่า query parameter สำหรับ pagination
+	page, _ := strconv.Atoi(ctx.Query("page", "1"))
+	limit, _ := strconv.Atoi(ctx.Query("limit", "10"))
+
+	// คำนวณ offset
+	offset := (page - 1) * limit
+
+	// นับจำนวน provider ทั้งหมด
+	var totalCount int64
+	database.DB.Model(&entity.Provider{}).Count(&totalCount)
+
+	// คำนวณจำนวนหน้าทั้งหมด
+	totalPages := math.Ceil(float64(totalCount) / float64(limit))
+
+	// ดึงข้อมูล provider ตาม pagination
 	var providers []entity.Provider
-	result := database.DB.Preload("Account", "role = ?", "provider").Find(&providers)
+	result := database.DB.Preload("Account", "role = ?", "provider").
+		Offset(offset).
+		Limit(limit).
+		Find(&providers)
+
 	if result.Error != nil {
 		return ctx.Status(404).JSON(fiber.Map{
 			"message": result.Error.Error(),
 		})
 	}
+
 	var providerResponse []response.ProviderResponse
 	for _, provider := range providers {
 		providerResponse = append(providerResponse, response.ProviderResponse{
@@ -146,7 +169,17 @@ func GetAllProviderForAdmin(ctx fiber.Ctx) error {
 			Role:         provider.Account.Role,
 		})
 	}
-	return ctx.Status(200).JSON(providerResponse)
+
+	// ส่งข้อมูล pagination กลับไปพร้อมกับข้อมูล provider
+	return ctx.Status(200).JSON(fiber.Map{
+		"providers": providerResponse,
+		"pagination": fiber.Map{
+			"total":      totalCount,
+			"page":       page,
+			"limit":      limit,
+			"total_page": totalPages,
+		},
+	})
 }
 
 func GetIDProviderForAdmin(ctx fiber.Ctx) error {
@@ -236,21 +269,43 @@ func GetAllUser(ctx fiber.Ctx) error {
 	role := claims["role"].(string)
 	username := claims["username"].(string)
 
+	// รับค่า query parameter สำหรับ pagination
+	page, _ := strconv.Atoi(ctx.Query("page", "1"))
+	limit, _ := strconv.Atoi(ctx.Query("limit", "10"))
+
+	// คำนวณ offset
+	offset := (page - 1) * limit
+
 	// เตรียมตัวแปรสำหรับเก็บข้อมูลผู้ใช้
 	var users []entity.Account
+	var totalCount int64
 	var userResponse []response.UserResponse
 
 	// เงื่อนไขการดึงข้อมูลตาม role
 	if role == "superadmin" {
 		// ถ้าเป็น superadmin ดึงข้อมูล user, provider และ admin
-		if err := database.DB.Where("role IN ?", []string{"user", "provider", "admin"}).Find(&users).Error; err != nil {
+		// นับจำนวนข้อมูลทั้งหมด
+		database.DB.Model(&entity.Account{}).Where("role IN ?", []string{"user", "provider", "admin"}).Count(&totalCount)
+
+		// ดึงข้อมูลตาม pagination
+		if err := database.DB.Where("role IN ?", []string{"user", "provider", "admin"}).
+			Offset(offset).
+			Limit(limit).
+			Find(&users).Error; err != nil {
 			return ctx.Status(409).JSON(fiber.Map{
 				"message": "Failed to fetch users: " + err.Error(),
 			})
 		}
 	} else if role == "admin" {
 		// ถ้าเป็น admin ดึงข้อมูลเฉพาะ user และ provider
-		if err := database.DB.Where("role IN ?", []string{"user", "provider"}).Find(&users).Error; err != nil {
+		// นับจำนวนข้อมูลทั้งหมด
+		database.DB.Model(&entity.Account{}).Where("role IN ?", []string{"user", "provider"}).Count(&totalCount)
+
+		// ดึงข้อมูลตาม pagination
+		if err := database.DB.Where("role IN ?", []string{"user", "provider"}).
+			Offset(offset).
+			Limit(limit).
+			Find(&users).Error; err != nil {
 			return ctx.Status(409).JSON(fiber.Map{
 				"message": "Failed to fetch users: " + err.Error(),
 			})
@@ -261,6 +316,9 @@ func GetAllUser(ctx fiber.Ctx) error {
 			"message": "Access denied: Insufficient permissions",
 		})
 	}
+
+	// คำนวณจำนวนหน้าทั้งหมด
+	totalPages := math.Ceil(float64(totalCount) / float64(limit))
 
 	// แปลงข้อมูลเป็น response format
 	for _, user := range users {
@@ -318,13 +376,105 @@ func GetAllUser(ctx fiber.Ctx) error {
 		userResponse = append(userResponse, userResp)
 	}
 
-	// ส่งข้อมูลผู้ใช้ทั้งหมดกลับไป
+	// ส่งข้อมูลผู้ใช้ทั้งหมดกลับไปพร้อมข้อมูล pagination
 	return ctx.Status(200).JSON(fiber.Map{
 		"users":    userResponse,
 		"count":    len(userResponse),
 		"role":     role,
 		"username": username,
+		"pagination": fiber.Map{
+			"total":      totalCount,
+			"page":       page,
+			"limit":      limit,
+			"total_page": totalPages,
+		},
 	})
+}
+
+// GetIDUser - ฟังก์ชันสำหรับดึงข้อมูลผู้ใช้จากไอดี
+func GetIDUser(ctx fiber.Ctx) error {
+	// ตรวจสอบสิทธิ์จาก JWT token
+	claims := middleware.GetTokenClaims(ctx)
+	role := claims["role"].(string)
+
+	// ตรวจสอบว่ามีสิทธิ์เข้าถึงหรือไม่
+	if role != "superadmin" && role != "admin" {
+		return ctx.Status(403).JSON(fiber.Map{
+			"message": "ไม่มีสิทธิ์เข้าถึงข้อมูลนี้",
+		})
+	}
+
+	// รับค่า ID จาก parameter
+	userID := ctx.Params("id")
+
+	// ค้นหาข้อมูลบัญชีผู้ใช้
+	var user entity.Account
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"message": "ไม่พบข้อมูลผู้ใช้",
+		})
+	}
+
+	// ตรวจสอบสิทธิ์ในการเข้าถึงข้อมูล
+	if role == "admin" && (user.Role == "admin" || user.Role == "superadmin") {
+		return ctx.Status(403).JSON(fiber.Map{
+			"message": "ไม่มีสิทธิ์เข้าถึงข้อมูลของแอดมินหรือซูเปอร์แอดมิน",
+		})
+	}
+
+	// สร้าง response
+	var firstName, lastName string
+	if user.FirstName != nil {
+		firstName = *user.FirstName
+	}
+	if user.LastName != nil {
+		lastName = *user.LastName
+	}
+
+	userResp := response.UserResponse{
+		Account_ID: user.Account_ID,
+		Username:   user.Username,
+		Email:      user.Email,
+		FirstName:  &firstName,
+		LastName:   &lastName,
+		Status:     user.Status,
+		Role:       user.Role,
+		Create_On:  user.Create_On,
+		Last_Login: user.Last_Login,
+		Update_On:  user.Update_On,
+	}
+
+	// เพิ่มข้อมูลเพิ่มเติมตาม role
+	if user.Role == "provider" {
+		var provider entity.Provider
+		if err := database.DB.Where("account_id = ?", user.Account_ID).First(&provider).Error; err == nil {
+			// ถ้าเป็น provider เพิ่มข้อมูลเฉพาะของ provider
+			userResp.ProviderDetails = &response.ProviderDetails{
+				Provider_ID:  provider.Provider_ID,
+				Company_Name: provider.Company_Name,
+				URL:          provider.URL,
+				Address:      provider.Address,
+				City:         provider.City,
+				Country:      provider.Country,
+				Postal_Code:  provider.Postal_Code,
+				Phone:        provider.Phone,
+				Phone_Person: provider.Phone_Person,
+				Verify:       provider.Verify,
+			}
+		}
+	} else if user.Role == "admin" {
+		var admin entity.Admin
+		if err := database.DB.Where("account_id = ?", user.Account_ID).First(&admin).Error; err == nil {
+			// ถ้าเป็น admin เพิ่มข้อมูลเฉพาะของ admin
+			userResp.AdminDetails = &response.AdminDetails{
+				Admin_ID: admin.Admin_ID,
+				Phone:    admin.Phone,
+			}
+		}
+	}
+
+	// ส่งข้อมูลกลับไป
+	return ctx.Status(200).JSON(userResp)
 }
 
 func ManageAllUser(ctx fiber.Ctx) error {
@@ -342,9 +492,9 @@ func ManageAllUser(ctx fiber.Ctx) error {
 
 	// รับข้อมูลจาก request body
 	request := struct {
-		Account_ID uint  `json:"account_id" validate:"required"`
-		Action    string `json:"action" validate:"required,oneof=change_status delete"`
-		Status    string `json:"status" validate:"omitempty,oneof=Active Suspended"`
+		Account_ID uint   `json:"account_id" validate:"required"`
+		Action     string `json:"action" validate:"required,oneof=change_status delete"`
+		Status     string `json:"status" validate:"omitempty,oneof=Active Suspended"`
 	}{}
 
 	if err := ctx.Bind().Body(&request); err != nil {
