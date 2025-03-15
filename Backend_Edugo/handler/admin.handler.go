@@ -287,8 +287,13 @@ func GetAllUser(ctx fiber.Ctx) error {
 		// นับจำนวนข้อมูลทั้งหมด
 		database.DB.Model(&entity.Account{}).Where("role IN ?", []string{"user", "provider", "admin"}).Count(&totalCount)
 
-		// ดึงข้อมูลตาม pagination
+		// ดึงข้อมูลตาม pagination และเรียงตาม role
 		if err := database.DB.Where("role IN ?", []string{"user", "provider", "admin"}).
+			Order("CASE " +
+				"WHEN role = 'admin' THEN 1 " +
+				"WHEN role = 'provider' THEN 2 " +
+				"WHEN role = 'user' THEN 3 " +
+				"ELSE 4 END").
 			Offset(offset).
 			Limit(limit).
 			Find(&users).Error; err != nil {
@@ -301,8 +306,12 @@ func GetAllUser(ctx fiber.Ctx) error {
 		// นับจำนวนข้อมูลทั้งหมด
 		database.DB.Model(&entity.Account{}).Where("role IN ?", []string{"user", "provider"}).Count(&totalCount)
 
-		// ดึงข้อมูลตาม pagination
+		// ดึงข้อมูลตาม pagination และเรียงตาม role
 		if err := database.DB.Where("role IN ?", []string{"user", "provider"}).
+			Order("CASE " +
+				"WHEN role = 'provider' THEN 1 " +
+				"WHEN role = 'user' THEN 2 " +
+				"ELSE 3 END").
 			Offset(offset).
 			Limit(limit).
 			Find(&users).Error; err != nil {
