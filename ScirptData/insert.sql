@@ -1,28 +1,29 @@
 -- Insert into accounts
-INSERT INTO `edugo`.`accounts` (`account_id`, `username`, `password`, `email`, `create_on`, `last_login`, `update_on`, `role`) 
+INSERT INTO `edugo`.`accounts` (`account_id`, `username`, `password`, `email`, `status`, `create_on`, `last_login`, `update_on`, `role`) 
 VALUES 
-(1, 'superadmin', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC','superadmin@example.com', NOW(), NOW(), NOW(), 'superadmin'),
-(2, 'admin_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'admin@example.com',NOW(), NOW(), NOW(), 'admin'),
-(3, 'provider_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'provider@example.com', NOW(), NOW(), NOW(), 'provider'),
-(4, 'normal_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'user@example.com', NOW(), NOW(), NOW(), 'user');
+(1, 'superadmin', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'superadmin@example.com', 'Active', NOW(), NOW(), NOW(), 'superadmin'),
+(2, 'admin_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'admin@example.com', 'Active', NOW(), NOW(), NOW(), 'admin'),
+(3, 'provider_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'provider@example.com', 'Active', NOW(), NOW(), NOW(), 'provider'),
+(4, 'normal_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'user@example.com', 'Active', NOW(), NOW(), NOW(), 'user');
 
 -- Insert into admins
-INSERT INTO `edugo`.`admins` (`admin_id`, `phone`, `status`, `account_id`) 
+INSERT INTO `edugo`.`admins` (`admin_id`, `phone`, `account_id`) 
 VALUES 
-(1, '0987654678', 'Active', 1),
-(2, '9876567897', 'Active', 2);
+(1, '0987654678', 1),
+(2, '9876567897', 2);
 
 -- Insert into providers
-INSERT INTO `edugo`.`providers` (`provider_id`, `company_name`, `url`, `address`, `city`, `country`, `postal_code`, `status`, `phone`, `verify`, `account_id`) 
+INSERT INTO `edugo`.`providers` (`provider_id`, `company_name`, `url`, `address`, `city`, `country`, `postal_code`, `phone`, `verify`, `account_id`) 
 VALUES 
-(1, 'Tech Solutions', 'https://www.youtube.com', '123 Main St', 'Bangkok', 'Thailand', '10160', 'Active', '0123456789', 'Y', 3);
+(1, 'Tech Solutions', 'https://www.youtube.com', '123 Main St', 'Bangkok', 'Thailand', '10160', '0123456789', 'Yes', 3);
+
 
 -- Insert into posts
-INSERT INTO `edugo`.`posts` (`posts_id`, `description`, `image`, `publish_date`, `posts_type`, `account_id`) 
+INSERT INTO `edugo`.`posts` (`posts_id`, `description`, `image`, `publish_date`, `account_id`) 
 VALUES 
-(1, 'Welcome to our new platform!', NULL, NOW(), 'Announce', 3),
-(2, 'New subject added to the curriculum.', NULL, NOW(), 'Announce', 3),
-(3, 'New feature added to the platform.', NULL, NOW(), 'Subject', 4);
+(1, 'Welcome to our new platform!', NULL, NOW(), 3),
+(2, 'New subject added to the curriculum.', NULL, NOW(), 3),
+(3, 'New feature added to the platform.', NULL, NOW(), 4);
 
 -- Insert into comments
 INSERT INTO `edugo`.`comments` (`comments_id`, `comments_text`, `comments_image`, `publish_date`, `posts_id`, `account_id`) 
@@ -244,7 +245,22 @@ VALUES
 ('654321', true, DATE_ADD(NOW(), INTERVAL 15 MINUTE), 2);
 
 -- Insert into announce_posts
-INSERT INTO `edugo`.`announce_posts` (`announce_id`, `title`, `url`, `attach_file`, `education_level`, `close_date`, `posts_id`, `category_id`, `country_id`) 
+INSERT INTO `edugo`.`announce_posts` (`announce_id`, `title`, `url`, `description`, `attach_file`, `close_date`, `provider_id`, `category_id`, `country_id`) 
 VALUES 
-(1, 'Scholarship Announcement', NULL, NULL, 'Undergraduate', '2025-12-31 23:59:59', 1, 1, 1),
-(2, 'New Online Course', 'www.onlinecourse.com', NULL, 'Undergraduate', '2025-06-30 23:59:59', 2, 1, 2);
+(1, 'Scholarship Announcement', NULL, 'Hello For New Scholarship Announcement', NULL, '2025-12-31 23:59:59', 1, 1, 1),
+(2, 'New Online Course', 'www.onlinecourse.com', 'New Online Course Announcement', NULL, '2025-06-30 23:59:59', 1, 1, 2);
+
+-- Insert into bookmarks
+INSERT INTO `edugo`.`bookmarks` (`bookmark_id`, `created_at`, `account_id`, `announce_id`) 
+VALUES 
+(1, NOW(), 4, 1),
+(2, NOW(), 3, 2),
+(3, NOW(), 4, 2);
+
+-- Insert into notifications
+INSERT INTO `edugo`.`notifications` (`notification_id`, `title`, `message`, `is_read`, `created_at`, `account_id`, `announce_id`) 
+VALUES 
+(1, 'New Scholarship Available', 'A new scholarship that matches your bookmarks is now available!', 0, NOW(), 4, 1),
+(2, 'Application Deadline Reminder', 'The application deadline for your bookmarked scholarship is approaching.', 0, NOW(), 3, 2),
+(3, 'Scholarship Updated', 'A scholarship you bookmarked has been updated with new information.', 1, NOW(), 4, 2),
+(4, 'System Notification', 'Welcome to Edugo platform! Start exploring scholarships.', 0, NOW(), 4, NULL);

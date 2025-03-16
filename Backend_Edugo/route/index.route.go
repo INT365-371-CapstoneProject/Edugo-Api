@@ -23,14 +23,14 @@ func RouteInit(r *fiber.App) {
 
 	// User routes
 	userGroup := public.Group("/user", middleware.PermissionCreate)
-	userGroup.Get("/", handler.GetAllUser)
-	userGroup.Get("/:id", handler.GetUserByID)
+	// userGroup.Get("/", handler.GetAllUser)
+	// userGroup.Get("/:id", handler.GetUserByID)
 	userGroup.Post("/", handler.CreateUser)
 
 	// Provider routes
 	providerGroup := public.Group("/provider", middleware.PermissionCreate)
-	providerGroup.Get("/", handler.GetAllProvider)
-	providerGroup.Get("/:id", handler.GetIDProvider)
+	// providerGroup.Get("/", handler.GetAllProvider)
+	// providerGroup.Get("/:id", handler.GetIDProvider)
 	providerGroup.Post("/", handler.CreateProvider)
 
 	// Metadata routes (country and category)
@@ -67,6 +67,19 @@ func RouteInit(r *fiber.App) {
 	// Subject for Admin routes
 	subjectAdminGroup := public.Group("/subject-admin", middleware.AuthAdmin)
 	subjectAdminGroup.Delete("/:id", handler.DeletePostForAdmin)
+
+	// Create Admin for SuperAdmin
+	adminGroup := public.Group("/superadmin", middleware.AuthSuperAdmin)
+	adminGroup.Post("/", handler.CreateAdminForSuperadmin)
+
+	// Admin routes
+	adminManageGroup := public.Group("/admin", middleware.AuthAdmin)
+	adminManageGroup.Get("/user", handler.GetAllUser)
+	adminManageGroup.Get("/user/:id", handler.GetIDUser)
+	adminManageGroup.Get("/provider", handler.GetAllProviderForAdmin)
+	adminManageGroup.Get("/provider/:id", handler.GetIDProviderForAdmin)
+	adminManageGroup.Put("/verify/:id", handler.VerifyProviderForAdmin)
+	adminManageGroup.Post("/manage-user", handler.ManageAllUser) // เพิ่ม route สำหรับจัดการบัญชีผู้ใช้
 
 	// Announcement routes
 	announceGroup := public.Group("/announce", middleware.AuthProvider)

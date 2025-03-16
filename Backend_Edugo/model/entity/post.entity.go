@@ -6,7 +6,6 @@ type Post struct {
 	Posts_ID     uint       `json:"id" gorm:"primaryKey"`
 	Description  string     `json:"description"`
 	Image        []byte     `gorm:"type:longblob" json:"image"`
-	Posts_Type   string     `json:"post_type"`
 	Publish_Date *time.Time `json:"published_date"`
 	Account_ID   uint       `json:"account_id"`
 

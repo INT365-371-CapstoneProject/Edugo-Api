@@ -43,6 +43,27 @@ func AuthAdmin(ctx fiber.Ctx) error {
 	return ctx.Next()
 }
 
+func AuthSuperAdmin(ctx fiber.Ctx) error {
+	claims, err := extractAndDecodeToken(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Unauthorized",
+		})
+	}
+
+	// ตรวจสอบบทบาทของผู้ใช้
+	role := claims["role"].(string)
+	if role != "superadmin" {
+		return ctx.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"message": "Forbidden access",
+		})
+	}
+
+	// ดำเนินการต่อกับ middleware ถัดไป
+	ctx.Locals("user", claims)
+	return ctx.Next()
+}
+
 // AuthProvider ใช้ตรวจสอบการยืนยันตัวตนของผู้ใช้ผ่าน JWT
 func AuthProvider(ctx fiber.Ctx) error {
 	claims, err := extractAndDecodeToken(ctx)

@@ -216,6 +216,7 @@ func getAdminProfile(ctx fiber.Ctx, account entity.Account) error {
 			LastName:  account.LastName,
 			Role:      account.Role,
 			Phone:     &adminDetails.Phone,
+			Status:   account.Status,
 		},
 	})
 }
@@ -257,6 +258,8 @@ func getProviderProfile(ctx fiber.Ctx, account entity.Account) error {
 			City:         providerDetails.City,
 			Country:      providerDetails.Country,
 			Postal_Code:  providerDetails.Postal_Code,
+			Status:       account.Status,
+			Verify:       providerDetails.Verify,
 		},
 	})
 }
@@ -275,6 +278,7 @@ func getUserProfile(ctx fiber.Ctx, account entity.Account) error {
 			FirstName: account.FirstName,
 			LastName:  account.LastName,
 			Role:      account.Role,
+			Status:    account.Status,
 		},
 	})
 }

@@ -11,78 +11,78 @@ import (
 	"github.com/tk-neng/demo-go-fiber/utils"
 )
 
-func GetAllProvider(ctx fiber.Ctx) error {
-	var providers []entity.Provider
-	result := database.DB.Preload("Account", "role = ?", "provider").Find(&providers)
-	if result.Error != nil {
-		return ctx.Status(404).JSON(fiber.Map{
-			"message": result.Error.Error(),
-		})
-	}
-	var providerResponse []response.ProviderResponse
-	for _, provider := range providers {
-		providerResponse = append(providerResponse, response.ProviderResponse{
-            Provider_ID:  provider.Provider_ID,
-            Company_Name: provider.Company_Name,
-            FirstName:   *provider.Account.FirstName,
-            LastName:    *provider.Account.LastName,
-            Username:     provider.Account.Username,
-            Email:        provider.Account.Email,
-            URL:         provider.URL,
-            Address:     provider.Address,
-            City:        provider.City,
-            Country:     provider.Country,
-            Postal_Code: provider.Postal_Code,
-            Phone:       provider.Phone,
-            Status:      provider.Status,
-            Verify:      provider.Verify,
-            Create_On:   provider.Account.Create_On,
-            Last_Login:  provider.Account.Last_Login,
-            Update_On:   provider.Account.Update_On,
-            Role:        provider.Account.Role,
+// func GetAllProvider(ctx fiber.Ctx) error {
+// 	var providers []entity.Provider
+// 	result := database.DB.Preload("Account", "role = ?", "provider").Find(&providers)
+// 	if result.Error != nil {
+// 		return ctx.Status(404).JSON(fiber.Map{
+// 			"message": result.Error.Error(),
+// 		})
+// 	}
+// 	var providerResponse []response.ProviderResponse
+// 	for _, provider := range providers {
+// 		providerResponse = append(providerResponse, response.ProviderResponse{
+//             Provider_ID:  provider.Provider_ID,
+//             Company_Name: provider.Company_Name,
+//             FirstName:   provider.Account.FirstName,
+//             LastName:    provider.Account.LastName,
+//             Username:     provider.Account.Username,
+//             Email:        provider.Account.Email,
+//             URL:         provider.URL,
+//             Address:     provider.Address,
+//             City:        provider.City,
+//             Country:     provider.Country,
+//             Postal_Code: provider.Postal_Code,
+//             Phone:       provider.Phone,
+//             Status:      provider.Account.Status,
+//             Verify:      provider.Verify,
+//             Create_On:   provider.Account.Create_On,
+//             Last_Login:  provider.Account.Last_Login,
+//             Update_On:   provider.Account.Update_On,
+//             Role:        provider.Account.Role,
 
-		})
-	}
-	return ctx.Status(200).JSON(providerResponse)
-}
+// 		})
+// 	}
+// 	return ctx.Status(200).JSON(providerResponse)
+// }
 
-func GetIDProvider(ctx fiber.Ctx) error {
-    // Get provider ID from params
-    providerID := ctx.Params("id")
+// func GetIDProvider(ctx fiber.Ctx) error {
+//     // Get provider ID from params
+//     providerID := ctx.Params("id")
 
-    // Find provider in database with Account preloaded
-    var provider entity.Provider
-    result := database.DB.Preload("Account", "role = ?", "provider").First(&provider, providerID)
-    if result.Error != nil {
-        return ctx.Status(404).JSON(fiber.Map{
-            "message": "Provider not found",
-        })
-    }
+//     // Find provider in database with Account preloaded
+//     var provider entity.Provider
+//     result := database.DB.Preload("Account", "role = ?", "provider").First(&provider, providerID)
+//     if result.Error != nil {
+//         return ctx.Status(404).JSON(fiber.Map{
+//             "message": "Provider not found",
+//         })
+//     }
 
-    // Create response
-    providerResponse := response.ProviderResponse{
-        Provider_ID:  provider.Provider_ID,
-        Company_Name: provider.Company_Name,
-        FirstName:   *provider.Account.FirstName,
-        LastName:    *provider.Account.LastName,
-        Username:     provider.Account.Username,
-        Email:        provider.Account.Email,
-        URL:         provider.URL,
-        Address:     provider.Address,
-        City:        provider.City,
-        Country:     provider.Country,
-        Postal_Code: provider.Postal_Code,
-        Phone:       provider.Phone,
-        Status:      provider.Status,
-        Verify:      provider.Verify,
-        Create_On:   provider.Account.Create_On,
-        Last_Login:  provider.Account.Last_Login,
-        Update_On:   provider.Account.Update_On,
-        Role:        provider.Account.Role,
-    }
+//     // Create response
+//     providerResponse := response.ProviderResponse{
+//         Provider_ID:  provider.Provider_ID,
+//         Company_Name: provider.Company_Name,
+//         FirstName:   provider.Account.FirstName,
+//         LastName:    provider.Account.LastName,
+//         Username:     provider.Account.Username,
+//         Email:        provider.Account.Email,
+//         URL:         provider.URL,
+//         Address:     provider.Address,
+//         City:        provider.City,
+//         Country:     provider.Country,
+//         Postal_Code: provider.Postal_Code,
+//         Phone:       provider.Phone,
+//         Status:      provider.Account.Status,
+//         Verify:      provider.Verify,
+//         Create_On:   provider.Account.Create_On,
+//         Last_Login:  provider.Account.Last_Login,
+//         Update_On:   provider.Account.Update_On,
+//         Role:        provider.Account.Role,
+//     }
 
-    return ctx.Status(200).JSON(providerResponse)
-}
+//     return ctx.Status(200).JSON(providerResponse)
+// }
 
 func CreateProvider(ctx fiber.Ctx) error {
     provider := new(request.ProviderCreateRequest)
@@ -129,6 +129,7 @@ func CreateProvider(ctx fiber.Ctx) error {
         Email:       provider.Email,
         FirstName:   &provider.FirstName,
         LastName:    &provider.LastName,
+        Status:     "Active",
         Last_Login:  nil,
         Role:        "provider",
     }
@@ -159,9 +160,8 @@ func CreateProvider(ctx fiber.Ctx) error {
         City:        provider.City,
         Country:     provider.Country,
         Postal_Code: provider.Postal_code,
-        Status:      "Active",
         Phone:       provider.Phone,
-        Verify:      "Y",
+        Verify:      "Waiting",
         Account_ID:  newAccount.Account_ID,
     }
 
@@ -185,8 +185,8 @@ func CreateProvider(ctx fiber.Ctx) error {
     providerResponse := response.ProviderResponse{
         Provider_ID:  newProvider.Provider_ID,
         Company_Name: newProvider.Company_Name,
-        FirstName:   *newAccount.FirstName,
-        LastName:    *newAccount.LastName,
+        FirstName:   newAccount.FirstName,
+        LastName:    newAccount.LastName,
         Username:     newAccount.Username,
         Email:        newAccount.Email,
         URL:         newProvider.URL,
@@ -195,7 +195,7 @@ func CreateProvider(ctx fiber.Ctx) error {
         Country:     newProvider.Country,
         Postal_Code: newProvider.Postal_Code,
         Phone:       newProvider.Phone,
-        Status:      newProvider.Status,
+        Status:      newAccount.Status,
         Verify:      newProvider.Verify,
         Create_On:   newAccount.Create_On,
         Last_Login:  newAccount.Last_Login,
