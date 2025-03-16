@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`admins` (
   `phone` VARCHAR(10) NOT NULL,
   `account_id` INT NOT NULL,
   PRIMARY KEY (`admin_id`),
+  UNIQUE INDEX `account_id_UNIQUE` (`account_id` ASC) VISIBLE,
   INDEX `fk_admins_accounts1_idx` (`account_id` ASC) VISIBLE,
   CONSTRAINT `fk_admins_accounts1`
     FOREIGN KEY (`account_id`)
@@ -104,6 +105,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`providers` (
   `verify` ENUM('Yes', 'No', 'Waiting') NOT NULL,
   `account_id` INT NOT NULL,
   PRIMARY KEY (`provider_id`),
+  UNIQUE INDEX `account_id_UNIQUE` (`account_id` ASC) VISIBLE,
   INDEX `fk_providers_accounts1_idx` (`account_id` ASC) VISIBLE,
   CONSTRAINT `fk_providers_accounts1`
     FOREIGN KEY (`account_id`)
@@ -270,6 +272,68 @@ CREATE TABLE IF NOT EXISTS `edugo`.`notifications` (
     FOREIGN KEY (`announce_id`)
     REFERENCES `edugo`.`announce_posts` (`announce_id`)
     ON DELETE SET NULL)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+-- -----------------------------------------------------
+-- Table `edugo`.`users`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `edugo`.`users` (
+  `user_id` INT NOT NULL AUTO_INCREMENT,
+  `education_level` ENUM('Undergraduate', 'Master', 'Doctorate') NULL DEFAULT NULL,
+  `account_id` INT NOT NULL,
+  PRIMARY KEY (`user_id`),
+  UNIQUE INDEX `account_id_UNIQUE` (`account_id` ASC) VISIBLE,
+  INDEX `fk_users_accounts1_idx` (`account_id` ASC) VISIBLE,
+  CONSTRAINT `fk_users_accounts1`
+    FOREIGN KEY (`account_id`)
+    REFERENCES `edugo`.`accounts` (`account_id`)
+    ON DELETE CASCADE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+-- -----------------------------------------------------
+-- Table `edugo`.`answer_countries`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `edugo`.`answer_countries` (
+  `answer_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,
+  `country_id` INT NOT NULL,
+  PRIMARY KEY (`answer_id`),
+  INDEX `fk_answer_countries_users1_idx` (`user_id` ASC) VISIBLE,
+  INDEX `fk_answer_countries_countries1_idx` (`country_id` ASC) VISIBLE,
+  CONSTRAINT `fk_answer_countries_users1`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `edugo`.`users` (`user_id`)
+    ON DELETE CASCADE,
+  CONSTRAINT `fk_answer_countries_countries1`
+    FOREIGN KEY (`country_id`)
+    REFERENCES `edugo`.`countries` (`country_id`)
+    ON DELETE CASCADE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+-- -----------------------------------------------------
+-- Table `edugo`.`answer_categories`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `edugo`.`answer_categories` (
+  `answer_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,
+  `category_id` INT NOT NULL,
+  PRIMARY KEY (`answer_id`),
+  INDEX `fk_answer_categories_users1_idx` (`user_id` ASC) VISIBLE,
+  INDEX `fk_answer_categories_categories1_idx` (`category_id` ASC) VISIBLE,
+  CONSTRAINT `fk_answer_categories_users1`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `edugo`.`users` (`user_id`)
+    ON DELETE CASCADE,
+  CONSTRAINT `fk_answer_categories_categories1`
+    FOREIGN KEY (`category_id`)
+    REFERENCES `edugo`.`categories` (`category_id`)
+    ON DELETE CASCADE)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;

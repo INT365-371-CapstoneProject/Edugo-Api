@@ -17,7 +17,6 @@ INSERT INTO `edugo`.`providers` (`provider_id`, `company_name`, `url`, `address`
 VALUES 
 (1, 'Tech Solutions', 'https://www.youtube.com', '123 Main St', 'Bangkok', 'Thailand', '10160', '0123456789', 'Yes', 3);
 
-
 -- Insert into posts
 INSERT INTO `edugo`.`posts` (`posts_id`, `description`, `image`, `publish_date`, `account_id`) 
 VALUES 
@@ -264,3 +263,22 @@ VALUES
 (2, 'Application Deadline Reminder', 'The application deadline for your bookmarked scholarship is approaching.', 0, NOW(), 3, 2),
 (3, 'Scholarship Updated', 'A scholarship you bookmarked has been updated with new information.', 1, NOW(), 4, 2),
 (4, 'System Notification', 'Welcome to Edugo platform! Start exploring scholarships.', 0, NOW(), 4, NULL);
+
+-- Insert sample data for users
+INSERT INTO `edugo`.`users` (`user_id`, `education_level`, `account_id`) 
+VALUES 
+(1, 'Undergraduate', 4);
+
+-- Insert sample data for answer_countries
+INSERT INTO `edugo`.`answer_countries` (`answer_id`, `user_id`, `country_id`) 
+VALUES 
+(1, 1, 173),  -- Thailand
+(2, 1, 36),   -- China
+(3, 1, 84);   -- Japan
+
+-- Insert sample data for answer_categories
+INSERT INTO `edugo`.`answer_categories` (`answer_id`, `user_id`, `category_id`) 
+VALUES 
+(1, 1, 1),  -- Full Scholarships
+(2, 1, 3),  -- Merit-Based Scholarships
+(3, 1, 5);  -- Research and Special Project Scholarships

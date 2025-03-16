@@ -107,4 +107,10 @@ func RouteInit(r *fiber.App) {
 	commentGroup := public.Group("/comment", middleware.AuthAny)
 	commentGroup.Get("/:id/image", handler.GetCommentImage)
 	commentGroup.Post("/", handler.CreateComment)
+
+	// Answer routes
+	answerGroup := public.Group("/answer", middleware.AuthAny)
+	answerGroup.Get("/", handler.GetUserQuestions)
+	answerGroup.Post("/", handler.CreateUserQuestion)
+	answerGroup.Put("/", handler.UpdateUserQuestion)
 }
