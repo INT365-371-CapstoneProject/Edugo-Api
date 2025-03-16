@@ -21,6 +21,7 @@ func RouteInit(r *fiber.App) {
 	public.Post("/auth/forgot-password", handler.ForgotPassword)
 	public.Post("/auth/verify-otp", handler.VerifyOTP)
 
+
 	// User routes
 	userGroup := public.Group("/user", middleware.PermissionCreate)
 	// userGroup.Get("/", handler.GetAllUser)
@@ -43,6 +44,7 @@ func RouteInit(r *fiber.App) {
 	profileGroup.Get("/", handler.GetProfile)
 	profileGroup.Get("/avatar", handler.GetAvatarImage)
 	profileGroup.Put("/", handler.UpdateProfile)
+	profileGroup.Post("/change-password", handler.ChangePassword)
 
 	// Search routes
 	searchGroup := public.Group("/search", middleware.AuthAny)
@@ -79,7 +81,8 @@ func RouteInit(r *fiber.App) {
 	adminManageGroup.Get("/provider", handler.GetAllProviderForAdmin)
 	adminManageGroup.Get("/provider/:id", handler.GetIDProviderForAdmin)
 	adminManageGroup.Put("/verify/:id", handler.VerifyProviderForAdmin)
-	adminManageGroup.Post("/manage-user", handler.ManageAllUser) // เพิ่ม route สำหรับจัดการบัญชีผู้ใช้
+	adminManageGroup.Post("/manage-user", handler.ManageAllUser)
+	adminManageGroup.Post("/edit", handler.EditAllUserForAdmin)
 
 	// Announcement routes
 	announceGroup := public.Group("/announce", middleware.AuthProvider)

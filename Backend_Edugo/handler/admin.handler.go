@@ -615,3 +615,120 @@ func ManageAllUser(ctx fiber.Ctx) error {
 		"message": "การดำเนินการไม่ถูกต้อง",
 	})
 }
+
+func EditAllUserForAdmin(ctx fiber.Ctx) error {
+	// ตรวจสอบสิทธิ์จาก JWT token
+	claims := middleware.GetTokenClaims(ctx)
+	adminRole := claims["role"].(string)
+
+	// ตรวจสอบว่ามีสิทธิ์เข้าถึงฟังก์ชันนี้หรือไม่
+	if adminRole != "superadmin" && adminRole != "admin" {
+		return ctx.Status(403).JSON(fiber.Map{
+			"message": "ไม่มีสิทธิ์เข้าถึงฟังก์ชันนี้",
+		})
+	}
+
+	// รับข้อมูลจาก request body
+	request := struct {
+		Account_ID uint   `json:"account_id" validate:"required"`
+		Username   string `json:"username" validate:"omitempty,min=4,max=20"`
+		Email      string `json:"email" validate:"omitempty,email"`
+		Password   string `json:"password" validate:"omitempty,min=6"`
+	}{}
+
+	if err := ctx.Bind().Body(&request); err != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"message": "ข้อมูลคำขอไม่ถูกต้อง: " + err.Error(),
+		})
+	}
+
+	// ตรวจสอบความถูกต้องของข้อมูล
+	if err := validate.Struct(request); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		return utils.HandleError(ctx, 400, validationErrors[0].Translate(trans))
+	}
+
+	// หาบัญชีผู้ใช้ที่ต้องการแก้ไข
+	var targetAccount entity.Account
+	if err := database.DB.First(&targetAccount, request.Account_ID).Error; err != nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"message": "ไม่พบบัญชีผู้ใช้ที่ต้องการแก้ไข",
+		})
+	}
+
+	// ตรวจสอบสิทธิ์ในการแก้ไขบัญชี
+	if adminRole == "admin" && (targetAccount.Role == "admin" || targetAccount.Role == "superadmin") {
+		return ctx.Status(403).JSON(fiber.Map{
+			"message": "ไม่มีสิทธิ์แก้ไขข้อมูลของแอดมินหรือซูเปอร์แอดมิน",
+		})
+	}
+
+	// ตรวจสอบ Username ซ้ำ
+	if request.Username != "" && request.Username != targetAccount.Username {
+		var existingAccount entity.Account
+		if result := database.DB.Where("username = ?", request.Username).First(&existingAccount); result.RowsAffected > 0 {
+			return ctx.Status(400).JSON(fiber.Map{
+				"message": "Username นี้มีผู้ใช้งานแล้ว",
+			})
+		}
+	}
+
+	// ตรวจสอบ Email ซ้ำ
+	if request.Email != "" && request.Email != targetAccount.Email {
+		var existingAccount entity.Account
+		if result := database.DB.Where("email = ?", request.Email).First(&existingAccount); result.RowsAffected > 0 {
+			return ctx.Status(400).JSON(fiber.Map{
+				"message": "Email นี้มีผู้ใช้งานแล้ว",
+			})
+		}
+	}
+
+	// เริ่ม Transaction
+	tx := database.DB.Begin()
+	if tx.Error != nil {
+		return ctx.Status(409).JSON(fiber.Map{
+			"message": "ไม่สามารถเริ่ม Transaction ได้",
+		})
+	}
+
+	// อัปเดตข้อมูล
+	updates := make(map[string]interface{})
+	if request.Username != "" {
+		updates["username"] = request.Username
+	}
+	if request.Email != "" {
+		updates["email"] = request.Email
+	}
+	if request.Password != "" {
+		hashedPassword, err := utils.HashingPassword(request.Password)
+		if err != nil {
+			tx.Rollback()
+			return ctx.Status(409).JSON(fiber.Map{
+				"message": "ไม่สามารถเข้ารหัสรหัสผ่านได้",
+			})
+		}
+		updates["password"] = hashedPassword
+	}
+
+	// อัปเดตข้อมูลในฐานข้อมูล
+	if err := tx.Model(&targetAccount).Updates(updates).Error; err != nil {
+		tx.Rollback()
+		return ctx.Status(409).JSON(fiber.Map{
+			"message": "ไม่สามารถอัปเดตข้อมูลได้: " + err.Error(),
+		})
+	}
+
+	// Commit Transaction
+	if err := tx.Commit().Error; err != nil {
+		return ctx.Status(409).JSON(fiber.Map{
+			"message": "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + err.Error(),
+		})
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{
+		"message":    "อัปเดตข้อมูลเรียบร้อยแล้ว",
+		"account_id": targetAccount.Account_ID,
+		"username":   targetAccount.Username,
+		"email":      targetAccount.Email,
+	})
+}

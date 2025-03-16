@@ -216,7 +216,7 @@ func getAdminProfile(ctx fiber.Ctx, account entity.Account) error {
 			LastName:  account.LastName,
 			Role:      account.Role,
 			Phone:     &adminDetails.Phone,
-			Status:   account.Status,
+			Status:    account.Status,
 		},
 	})
 }
@@ -589,8 +589,52 @@ func GetAvatarImage(ctx fiber.Ctx) error {
 	}
 
 	// Set content type header for image
-	ctx.Set("Content-Type", "image/jpeg")             // You might want to store the content type in DB if you support multiple formats
+	ctx.Set("Content-Type", "image/jpeg") // You might want to store the content type in DB if you support multiple formats
 
 	// Return the image bytes directly
 	return ctx.Send(account.Avatar)
+}
+
+func ChangePassword(ctx fiber.Ctx) error {
+	// Get user claims from token
+	claims := middleware.GetTokenClaims(ctx)
+
+	// Get password change request
+	changeRequest := new(request.ChangePasswordRequest)
+	if err := ctx.Bind().Body(changeRequest); err != nil {
+		return utils.HandleError(ctx, 400, "Invalid request body")
+	}
+
+	// Validate request
+	if errValidate := validate.Struct(changeRequest); errValidate != nil {
+		for _, err := range errValidate.(validator.ValidationErrors) {
+			return utils.HandleError(ctx, 400, err.Translate(trans))
+		}
+	}
+
+	// Get user account
+	var account entity.Account
+	if err := database.DB.First(&account, "account_id = ?", claims["account_id"]).Error; err != nil {
+		return utils.HandleError(ctx, 404, "User not found")
+	}
+
+	// Verify current password
+	if !utils.CheckPasswordHash(changeRequest.CurrentPassword, account.Password) {
+		return utils.HandleError(ctx, 400, "Current password is incorrect")
+	}
+
+	// Hash new password
+	hashedPassword, err := utils.HashingPassword(changeRequest.NewPassword)
+	if err != nil {
+		return utils.HandleError(ctx, 409, "Failed to hash new password")
+	}
+
+	// Update password
+	if err := database.DB.Model(&account).Update("password", hashedPassword).Error; err != nil {
+		return utils.HandleError(ctx, 409, "Failed to update password")
+	}
+
+	return ctx.JSON(fiber.Map{
+		"message": "Password changed successfully",
+	})
 }

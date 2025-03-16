@@ -47,3 +47,8 @@ type UserUpdateRequest struct {
 	LastName  *string         `json:"last_name" validate:"omitempty,min=2"`
 	Avatar    *multipart.File `json:"avatar" form:"avatar" validate:"omitempty"`
 }
+
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" validate:"required,min=6"`
+	NewPassword     string `json:"new_password" validate:"required,min=6"`
+}
