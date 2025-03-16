@@ -81,7 +81,8 @@ func RouteInit(r *fiber.App) {
 	adminManageGroup.Get("/provider", handler.GetAllProviderForAdmin)
 	adminManageGroup.Get("/provider/:id", handler.GetIDProviderForAdmin)
 	adminManageGroup.Put("/verify/:id", handler.VerifyProviderForAdmin)
-	adminManageGroup.Post("/manage-user", handler.ManageAllUser) // เพิ่ม route สำหรับจัดการบัญชีผู้ใช้
+	adminManageGroup.Post("/manage-user", handler.ManageAllUser)
+	adminManageGroup.Post("/edit", handler.EditAllUserForAdmin)
 
 	// Announcement routes
 	announceGroup := public.Group("/announce", middleware.AuthProvider)
