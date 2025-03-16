@@ -7,10 +7,12 @@ import (
 	enTranslations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
+	"github.com/tk-neng/demo-go-fiber/middleware"
 	"github.com/tk-neng/demo-go-fiber/model/entity"
 	"github.com/tk-neng/demo-go-fiber/request"
 	"github.com/tk-neng/demo-go-fiber/response"
 	"github.com/tk-neng/demo-go-fiber/utils"
+	"gorm.io/gorm"
 )
 
 // กำหนดค่าเริ่มต้นสำหรับการตรวจสอบและแปลภาษา
@@ -36,52 +38,6 @@ func init() {
 		return t
 	})
 }
-
-// func GetAllUser(ctx fiber.Ctx) error {
-// 	var users []entity.Account
-// 	result := database.DB.Where("role = ?", "user").Find(&users)
-// 	if result.Error != nil {
-// 		return utils.HandleError(ctx, 404, result.Error.Error())
-// 	}
-	
-// 	var userResponse []response.UserResponse
-// 	for _, user := range users {
-// 		userResponse = append(userResponse, response.UserResponse{
-// 			Account_ID: user.Account_ID,
-// 			Username: user.Username,
-// 			Email: user.Email,
-// 			FirstName: user.FirstName,
-// 			LastName: user.LastName,
-// 			Create_On: user.Create_On,
-// 			Last_Login: user.Last_Login,
-// 			Update_On: user.Update_On,
-// 			Role: user.Role,
-// 		})
-// 	}
-// 	return ctx.Status(200).JSON(userResponse)
-// }
-
-// func GetUserByID(ctx fiber.Ctx) error {
-// 	// Get parameter value
-// 	accountId := ctx.Params("id")
-// 	var user entity.Account
-// 	result := database.DB.Where("account_id = ? AND role = ?", accountId, "user").First(&user)
-// 	if result.Error != nil {
-// 		return utils.HandleError(ctx, 404, "User not found")
-// 	}
-
-// 	userResponse := response.UserResponse{
-// 		Account_ID: user.Account_ID,
-// 		Username: user.Username,
-// 		Email: user.Email,
-// 		Create_On: user.Create_On,
-// 		Last_Login: user.Last_Login,
-// 		Update_On: user.Update_On,
-// 		Role: user.Role,
-// 	}
-
-// 	return ctx.Status(200).JSON(userResponse)
-// }
 
 func CreateUser(ctx fiber.Ctx) error {
 	user := new(request.UserRequest)
@@ -110,45 +66,266 @@ func CreateUser(ctx fiber.Ctx) error {
 		return utils.HandleError(ctx, 400, "Username already exists")
 	}
 
-	// create new user
+	// Begin transaction
+	tx := database.DB.Begin()
+
+	// create new user account
 	newUser := entity.Account{
-		Username: user.Username,
-		Email: user.Email,
-		FirstName: &user.FirstName,
-		LastName: &user.LastName,
+		Username:   user.Username,
+		Email:      user.Email,
+		FirstName:  &user.FirstName,
+		LastName:   &user.LastName,
 		Last_Login: nil,
-		Role: "user",
-		Status: "Active",
+		Role:       "user",
+		Status:     "Active",
 	}
 
 	// Hashing password
 	hashedPassword, err := utils.HashingPassword(user.Password)
 	if err != nil {
+		tx.Rollback()
 		return utils.HandleError(ctx, 500, err.Error())
 	}
 	newUser.Password = hashedPassword
 
-	// Insert to database
-	errCreateUser := database.DB.Create(&newUser).Error
-	if errCreateUser != nil {
-		return utils.HandleError(ctx, 500, errCreateUser.Error())
+	// Insert account
+	if err := tx.Create(&newUser).Error; err != nil {
+		tx.Rollback()
+		return utils.HandleError(ctx, 500, err.Error())
 	}
 
+	// Create initial user record
+	userRecord := entity.Users{
+		Account_ID:      newUser.Account_ID,
+		Education_level: nil, // กำหนดให้เป็น nil เพื่อให้เป็น NULL ในฐานข้อมูล
+	}
+
+	if err := tx.Create(&userRecord).Error; err != nil {
+		tx.Rollback()
+		return utils.HandleError(ctx, 500, err.Error())
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return utils.HandleError(ctx, 500, err.Error())
+	}
 
 	// สร้างข้อมูล Response
 	userResponse := response.UserResponse{
 		Account_ID: newUser.Account_ID,
-		Username: newUser.Username,
-		Email: newUser.Email,
-		FirstName: newUser.FirstName,
-		LastName: newUser.LastName,
-		Create_On: newUser.Create_On,
+		Username:   newUser.Username,
+		Email:      newUser.Email,
+		FirstName:  newUser.FirstName,
+		LastName:   newUser.LastName,
+		Create_On:  newUser.Create_On,
 		Last_Login: newUser.Last_Login,
-		Update_On: newUser.Update_On,
-		Role: newUser.Role,
-		Status: newUser.Status,
+		Update_On:  newUser.Update_On,
+		Role:       newUser.Role,
+		Status:     newUser.Status,
 	}
 
 	return ctx.Status(201).JSON(userResponse)
 }
 
+func CreateUserQuestion(ctx fiber.Ctx) error {
+	// Get account_id from JWT token
+	claims := middleware.GetTokenClaims(ctx)
+	accountID := uint(claims["account_id"].(float64))
+
+	// Check if user already answered questions
+	var existingUser entity.Users
+	if err := database.DB.Where("account_id = ? AND education_level IS NOT NULL", accountID).First(&existingUser).Error; err == nil {
+		return utils.HandleError(ctx, 400, "User has already answered questions. Please use update endpoint instead.")
+	} else if err != gorm.ErrRecordNotFound {
+		return utils.HandleError(ctx, 500, err.Error())
+	}
+
+	question := new(request.QuestionRequest)
+	if err := ctx.Bind().Body(question); err != nil {
+		return utils.HandleError(ctx, 400, err.Error())
+	}
+
+	// Validate request
+	if err := validate.Struct(question); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		return utils.HandleError(ctx, 400, validationErrors[0].Translate(trans))
+	}
+
+	// Begin transaction
+	tx := database.DB.Begin()
+
+	// Get existing user record (should exist from CreateUser)
+	var user entity.Users
+	if err := tx.Where("account_id = ?", accountID).First(&user).Error; err != nil {
+		tx.Rollback()
+		return utils.HandleError(ctx, 404, "User record not found")
+	}
+
+	// Update user with education level
+	user.Education_level = &question.Education_Level
+	if err := tx.Save(&user).Error; err != nil {
+		tx.Rollback()
+		return utils.HandleError(ctx, 500, err.Error())
+	}
+
+	// Create answer_countries records
+	for _, countryID := range question.Countries {
+		answer := entity.AnswerCountries{
+			User_ID:    user.User_ID,
+			Country_ID: countryID,
+		}
+		if err := tx.Create(&answer).Error; err != nil {
+			tx.Rollback()
+			return utils.HandleError(ctx, 500, err.Error())
+		}
+	}
+
+	// Create answer_categories records
+	for _, categoryID := range question.Categories {
+		answer := entity.AnswerCategories{
+			User_ID:     user.User_ID,
+			Category_ID: categoryID,
+		}
+		if err := tx.Create(&answer).Error; err != nil {
+			tx.Rollback()
+			return utils.HandleError(ctx, 500, err.Error())
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return utils.HandleError(ctx, 500, err.Error())
+	}
+
+	return ctx.Status(201).JSON(fiber.Map{
+		"message": "User questions saved successfully",
+	})
+}
+
+func UpdateUserQuestion(ctx fiber.Ctx) error {
+	// Get account_id from JWT token
+	claims := middleware.GetTokenClaims(ctx)
+	accountID := uint(claims["account_id"].(float64))
+
+	// Parse request body
+	question := new(request.QuestionRequest)
+	if err := ctx.Bind().Body(question); err != nil {
+		return utils.HandleError(ctx, 400, err.Error())
+	}
+
+	// Validate request
+	if err := validate.Struct(question); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		return utils.HandleError(ctx, 400, validationErrors[0].Translate(trans))
+	}
+
+	// Begin transaction
+	tx := database.DB.Begin()
+
+	// Get user record
+	var user entity.Users
+	if err := tx.Where("account_id = ?", accountID).First(&user).Error; err != nil {
+		tx.Rollback()
+		if err == gorm.ErrRecordNotFound {
+			return utils.HandleError(ctx, 404, "User not found")
+		}
+		return utils.HandleError(ctx, 409, err.Error())
+	}
+
+	// Update education level
+	user.Education_level = &question.Education_Level
+	if err := tx.Save(&user).Error; err != nil {
+		tx.Rollback()
+		return utils.HandleError(ctx, 409, err.Error())
+	}
+
+	// Delete existing answer_countries
+	if err := tx.Where("user_id = ?", user.User_ID).Delete(&entity.AnswerCountries{}).Error; err != nil {
+		tx.Rollback()
+		return utils.HandleError(ctx, 409, err.Error())
+	}
+	if err := tx.Where("user_id = ?", user.User_ID).Delete(&entity.AnswerCategories{}).Error; err != nil {
+		tx.Rollback()
+		return utils.HandleError(ctx, 409, err.Error())
+	}
+
+	// Create new answer_countries records
+	for _, countryID := range question.Countries {
+		answer := entity.AnswerCountries{
+			User_ID:    user.User_ID,
+			Country_ID: countryID,
+		}
+		if err := tx.Create(&answer).Error; err != nil {
+			tx.Rollback()
+			return utils.HandleError(ctx, 409, err.Error())
+		}
+	}
+
+	// Create new answer_categories records
+	for _, categoryID := range question.Categories {
+		answer := entity.AnswerCategories{
+			User_ID:     user.User_ID,
+			Category_ID: categoryID,
+		}
+		if err := tx.Create(&answer).Error; err != nil {
+			tx.Rollback()
+			return utils.HandleError(ctx, 409, err.Error())
+		}
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return utils.HandleError(ctx, 409, err.Error())
+	}
+
+	return ctx.JSON(fiber.Map{
+		"message": "User questions updated successfully",
+	})
+}
+
+func GetUserQuestions(ctx fiber.Ctx) error {
+	// Get account_id from JWT token
+	claims := middleware.GetTokenClaims(ctx)
+	accountID := uint(claims["account_id"].(float64))
+
+	var user entity.Users
+	if err := database.DB.Where("account_id = ?", accountID).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return utils.HandleError(ctx, 404, "User questions not found")
+		}
+		return utils.HandleError(ctx, 409, err.Error())
+	}
+
+	var answers []entity.AnswerCountries
+	if err := database.DB.Preload("Country").Where("user_id = ?", user.User_ID).Find(&answers).Error; err != nil {
+		return utils.HandleError(ctx, 409, err.Error())
+	}
+
+	var categoryAnswers []entity.AnswerCategories
+	if err := database.DB.Preload("Category").Where("user_id = ?", user.User_ID).Find(&categoryAnswers).Error; err != nil {
+		return utils.HandleError(ctx, 409, err.Error())
+	}
+
+	// Create response
+	countries := make([]map[string]interface{}, len(answers))
+	for i, answer := range answers {
+		countries[i] = map[string]interface{}{
+			"country_id": answer.Country_ID,
+			"name":       answer.Country.Name,
+		}
+	}
+
+	categories := make([]map[string]interface{}, len(categoryAnswers))
+	for i, answer := range categoryAnswers {
+		categories[i] = map[string]interface{}{
+			"category_id": answer.Category_ID,
+			"name":        answer.Category.Name,
+		}
+	}
+
+	return ctx.JSON(fiber.Map{
+		"education_level": user.Education_level,
+		"countries":       countries,
+		"categories":      categories,
+	})
+}
