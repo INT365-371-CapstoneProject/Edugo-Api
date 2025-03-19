@@ -191,6 +191,7 @@ func GetAllPost(ctx fiber.Ctx) error {
 			Post_ID:      post.Posts_ID,
 			Description:  post.Description,
 			Publish_Date: post.Publish_Date,
+			Account_ID:   post.Account_ID,
 		})
 	}
 
@@ -1080,17 +1081,17 @@ func GetAllAnnouncePostForAdmin(ctx fiber.Ctx) error {
 	var postsResponse []response.AnnouncePostResponse
 	for _, post := range posts {
 		postsResponse = append(postsResponse, response.AnnouncePostResponse{
-			Announce_ID:  post.Announce_ID,
-			Title:        post.Title,
-			Description:  post.Description,
-			URL:          post.Url,
-			Attach_Name:  post.Attach_Name,
-			Publish_Date: post.Publish_Date,
-			Close_Date:   post.Close_Date,
-			Category:     post.Category.Name,
-			Country:      post.Country.Name,
+			Announce_ID:     post.Announce_ID,
+			Title:           post.Title,
+			Description:     post.Description,
+			URL:             post.Url,
+			Attach_Name:     post.Attach_Name,
+			Publish_Date:    post.Publish_Date,
+			Close_Date:      post.Close_Date,
+			Category:        post.Category.Name,
+			Country:         post.Country.Name,
 			Education_Level: post.Education_Level,
-			Provider_ID:  post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
+			Provider_ID:     post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
 		})
 	}
 
