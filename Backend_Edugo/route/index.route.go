@@ -21,7 +21,6 @@ func RouteInit(r *fiber.App) {
 	public.Post("/auth/forgot-password", handler.ForgotPassword)
 	public.Post("/auth/verify-otp", handler.VerifyOTP)
 
-
 	// User routes
 	userGroup := public.Group("/user", middleware.PermissionCreate)
 	// userGroup.Get("/", handler.GetAllUser)
@@ -105,6 +104,7 @@ func RouteInit(r *fiber.App) {
 
 	// Comment routes
 	commentGroup := public.Group("/comment", middleware.AuthAny)
+	commentGroup.Get("/", handler.GetAllComment)
 	commentGroup.Get("/:id/image", handler.GetCommentImage)
 	commentGroup.Post("/", handler.CreateComment)
 

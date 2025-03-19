@@ -62,28 +62,51 @@ func CreateComment(ctx fiber.Ctx) error {
 
 	// Return response
 	commentResponse := response.CommentResponse{
-		Comments_ID:     newComment.Comments_ID,
-		Comments_Text:  newComment.Comments_Text,
-		Publish_Date:   newComment.Publish_Date,
-		Posts_ID:       newComment.Posts_ID,
-		Account_ID:     newComment.Account_ID,
+		Comments_ID:   newComment.Comments_ID,
+		Comments_Text: newComment.Comments_Text,
+		Publish_Date:  newComment.Publish_Date,
+		Posts_ID:      newComment.Posts_ID,
+		Account_ID:    newComment.Account_ID,
 	}
 
 	return ctx.Status(201).JSON(commentResponse)
 }
 
+func GetAllComment(ctx fiber.Ctx) error {
+	var comments []entity.Comment
+
+	// ดึงข้อมูลทั้งหมดจากตาราง comment
+	if err := database.DB.Find(&comments).Error; err != nil {
+		return utils.HandleError(ctx, 500, "Error retrieving comments: "+err.Error())
+	}
+
+	// สร้าง response list
+	var commentResponses []response.CommentResponse
+	for _, comment := range comments {
+		commentResponses = append(commentResponses, response.CommentResponse{
+			Comments_ID:   comment.Comments_ID,
+			Comments_Text: comment.Comments_Text,
+			Publish_Date:  comment.Publish_Date,
+			Posts_ID:      comment.Posts_ID,
+			Account_ID:    comment.Account_ID,
+		})
+	}
+
+	return ctx.Status(200).JSON(commentResponses)
+}
+
 func GetCommentImage(ctx fiber.Ctx) error {
-    commentID := ctx.Params("id")
-    var comment entity.Comment
+	commentID := ctx.Params("id")
+	var comment entity.Comment
 
-    if err := database.DB.Where("comments_id = ?", commentID).First(&comment).Error; err != nil {
-        return utils.HandleError(ctx, 404, "Comment not found")
-    }
+	if err := database.DB.Where("comments_id = ?", commentID).First(&comment).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Comment not found")
+	}
 
-    if comment.Comments_Image == nil {
-        return utils.HandleError(ctx, 404, "No image found for this comment")
-    }
+	if comment.Comments_Image == nil {
+		return utils.HandleError(ctx, 404, "No image found for this comment")
+	}
 
-    ctx.Set("Content-Type", "image/jpeg") // เปลี่ยนเป็นประเภทภาพที่ถูกต้อง
-    return ctx.Send(comment.Comments_Image)
+	ctx.Set("Content-Type", "image/jpeg") // เปลี่ยนเป็นประเภทภาพที่ถูกต้อง
+	return ctx.Send(comment.Comments_Image)
 }
