@@ -95,6 +95,34 @@ func GetAllComment(ctx fiber.Ctx) error {
 	return ctx.Status(200).JSON(commentResponses)
 }
 
+func GetCommentByPostID(ctx fiber.Ctx) error {
+	postID := ctx.Params("post_id")
+	var comments []entity.Comment
+
+	// ค้นหาความคิดเห็นที่มี post_id ตรงกับค่าที่ระบุ
+	if err := database.DB.Where("posts_id = ?", postID).Find(&comments).Error; err != nil {
+		return utils.HandleError(ctx, 500, "Error retrieving comments: "+err.Error())
+	}
+
+	if len(comments) == 0 {
+		return utils.HandleError(ctx, 404, "No comments found for this post")
+	}
+
+	// สร้าง response list
+	var commentResponses []response.CommentResponse
+	for _, comment := range comments {
+		commentResponses = append(commentResponses, response.CommentResponse{
+			Comments_ID:   comment.Comments_ID,
+			Comments_Text: comment.Comments_Text,
+			Publish_Date:  comment.Publish_Date,
+			Posts_ID:      comment.Posts_ID,
+			Account_ID:    comment.Account_ID,
+		})
+	}
+
+	return ctx.Status(200).JSON(commentResponses)
+}
+
 func GetCommentImage(ctx fiber.Ctx) error {
 	commentID := ctx.Params("id")
 	var comment entity.Comment

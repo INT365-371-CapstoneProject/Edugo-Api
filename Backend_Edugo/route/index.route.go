@@ -105,6 +105,7 @@ func RouteInit(r *fiber.App) {
 	// Comment routes
 	commentGroup := public.Group("/comment", middleware.AuthAny)
 	commentGroup.Get("/", handler.GetAllComment)
+	commentGroup.Get("/post/:post_id", handler.GetCommentByPostID)
 	commentGroup.Get("/:id/image", handler.GetCommentImage)
 	commentGroup.Post("/", handler.CreateComment)
 
