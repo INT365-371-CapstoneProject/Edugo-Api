@@ -4,6 +4,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
+	"github.com/tk-neng/demo-go-fiber/middleware"
 	"github.com/tk-neng/demo-go-fiber/model/entity"
 	"github.com/tk-neng/demo-go-fiber/request"
 	"github.com/tk-neng/demo-go-fiber/response"
@@ -11,6 +12,16 @@ import (
 )
 
 func CreateComment(ctx fiber.Ctx) error {
+
+	claims := middleware.GetTokenClaims(ctx)
+	username := claims["username"].(string)
+
+	// หา account จาก username
+	var account entity.Account
+	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+		return handleError(ctx, 404, "Account not found")
+	}
+
 	comment := new(request.CreateCommentRequest)
 	if err := ctx.Bind().Body(comment); err != nil {
 		return ctx.Status(400).JSON(fiber.Map{
@@ -31,13 +42,6 @@ func CreateComment(ctx fiber.Ctx) error {
 		return utils.HandleError(ctx, 400, "Post not found")
 	}
 
-	// check available account
-	var account entity.Account
-	result = database.DB.Where("account_id = ?", comment.Account_ID).First(&account)
-	if result.RowsAffected == 0 {
-		return utils.HandleError(ctx, 400, "Account not found")
-	}
-
 	// ใช้ฟังก์ชัน HandleImageUpload แทนการจัดการไฟล์โดยตรง
 	if err := utils.HandleImageUpload(ctx, "comments_image"); err != nil {
 		return utils.HandleError(ctx, 400, "Error handling image upload: "+err.Error())
@@ -47,7 +51,7 @@ func CreateComment(ctx fiber.Ctx) error {
 	newComment := entity.Comment{
 		Comments_Text: comment.Comments_Text,
 		Posts_ID:      comment.Posts_ID,
-		Account_ID:    comment.Account_ID,
+		Account_ID:    account.Account_ID,
 	}
 
 	// ตรวจสอบว่ามีรูปภาพถูกอัพโหลดหรือไม่
