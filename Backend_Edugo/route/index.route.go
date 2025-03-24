@@ -112,6 +112,8 @@ func RouteInit(r *fiber.App) {
 	// Bookmark routes
 	bookmarkGroup := public.Group("/bookmark", middleware.AuthAny)
 	bookmarkGroup.Get("/", handler.GetAllBookmark)
+	bookmarkGroup.Post("/", handler.CreateBookmark)
+	bookmarkGroup.Get("acc/:acc_id", handler.GetBookmarkByAccountID)
 
 	// Answer routes
 	answerGroup := public.Group("/answer", middleware.AuthAny)
