@@ -6,7 +6,7 @@ import (
 
 type Bookmark struct {
 	Bookmark_ID uint      `gorm:"primaryKey;autoIncrement" json:"bookmark_id"`
-	CreatedAt   time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
+	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
 	Account_ID  uint      `gorm:"not null" json:"account_id"`
 	Announce_ID uint      `gorm:"not null" json:"announce_id"`
 
