@@ -43,3 +43,7 @@ type PostUpdateRequest struct {
 	Image        *multipart.File `json:"image"`
 	Publish_Date *time.Time      `json:"publish_date"`
 }
+
+type PostAnnounceBookmarkRequest struct {
+	Announce_ID []uint `json:"announce_id"` // ใช้ Announce_IDs เพื่อรับ array ของ announce_id
+}

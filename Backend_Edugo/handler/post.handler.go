@@ -1030,6 +1030,82 @@ func GetAnnouncePostByIDForUser(ctx fiber.Ctx) error {
 	return ctx.Status(200).JSON(postResponse)
 }
 
+func GetAnnouncePostByBookmark(ctx fiber.Ctx) error {
+	// รับค่าจาก Body
+	post := new(request.PostAnnounceBookmarkRequest)
+	if err := ctx.Bind().Body(post); err != nil {
+		return handleError(ctx, 400, "Invalid request data")
+	}
+
+	// ตรวจสอบความถูกต้องของข้อมูล
+	if err := validate.Struct(post); err != nil {
+		return handleError(ctx, 400, err.(validator.ValidationErrors)[0].Translate(trans))
+	}
+
+	page := 1
+	if pageStr := ctx.Query("page"); pageStr != "" {
+		if pageNum, err := strconv.Atoi(pageStr); err == nil && pageNum > 0 {
+			page = pageNum
+		}
+	}
+
+	limit := 10
+	if limitStr := ctx.Query("limit"); limitStr != "" {
+		if limitNum, err := strconv.Atoi(limitStr); err == nil && limitNum > 0 {
+			limit = limitNum
+		}
+	}
+
+	// Calculate offset
+	offset := (page - 1) * limit
+	var total int64
+
+	// Count total records
+	database.DB.Model(&entity.Announce_Post{}).
+		Where("announce_id IN (?) AND (close_date IS NULL OR close_date > ?)", post.Announce_ID, time.Now()).
+		Count(&total)
+
+	// Query ข้อมูลจากฐานข้อมูลโดยใช้ announce_id
+	var announcePosts []entity.Announce_Post
+	if err := database.DB.Preload("Category").
+		Preload("Country").
+		Where("announce_id IN (?) AND (close_date IS NULL OR close_date > ?)", post.Announce_ID, time.Now()).
+		Offset(offset).
+		Limit(limit).
+		Find(&announcePosts).Error; err != nil {
+		return handleError(ctx, 500, "Database query error")
+	}
+
+	// Map ข้อมูลเป็น Response
+	var postsResponse []response.AnnouncePostResponse
+	for _, post := range announcePosts {
+		postsResponse = append(postsResponse, response.AnnouncePostResponse{
+			Announce_ID:  post.Announce_ID,
+			Title:        post.Title,
+			Description:  post.Description,
+			URL:          post.Url,
+			Attach_Name:  post.Attach_Name,
+			Publish_Date: post.Publish_Date,
+			Close_Date:   post.Close_Date,
+			Category:     post.Category.Name,
+			Country:      post.Country.Name,
+			Provider_ID:  post.Provider_ID,
+		})
+	}
+
+	// Calculate last page
+	lastPage := int(math.Ceil(float64(total) / float64(limit)))
+
+	// Create paginated response
+	return ctx.Status(200).JSON(response.PaginatedAnnouncePostResponse{
+		Data:     postsResponse,
+		Total:    total,
+		Page:     page,
+		LastPage: lastPage,
+		PerPage:  limit,
+	})
+}
+
 // GetAllAnnouncePostForAdminAndSuperAdmin - ดึงข้อมูลประกาศทั้งหมดสำหรับ Admin และ SuperAdmin
 func GetAllAnnouncePostForAdmin(ctx fiber.Ctx) error {
 	// ตรวจสอบ role จาก JWT
