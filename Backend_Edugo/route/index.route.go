@@ -56,7 +56,7 @@ func RouteInit(r *fiber.App) {
 	announceUserGroup := public.Group("/announce-user", middleware.AuthAny)
 	announceUserGroup.Get("/", handler.GetAllAnnouncePostForUser)
 	announceUserGroup.Get("/:id", handler.GetAnnouncePostByIDForUser)
-
+	announceUserGroup.Post("/bookmark", handler.GetAnnouncePostByBookmark)
 	// Announcement for Admin routes
 	announceAdminGroup := public.Group("/announce-admin", middleware.AuthAdmin)
 	announceAdminGroup.Get("/", handler.GetAllAnnouncePostForAdmin)
