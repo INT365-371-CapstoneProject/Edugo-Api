@@ -38,10 +38,10 @@ func CreateBookmark(ctx fiber.Ctx) error {
 	}
 
 	// check available post
-	var annouce entity.Announce_Post
-	result := database.DB.Where("announce_id = ?", bookmark.Announce_ID).First(&annouce)
+	var announce entity.Announce_Post
+	result := database.DB.Where("announce_id = ?", bookmark.Announce_ID).First(&announce)
 	if result.RowsAffected == 0 {
-		return utils.HandleError(ctx, 400, "Annouce not found")
+		return utils.HandleError(ctx, 400, "Announce not found")
 	}
 
 	// Create bookmark
