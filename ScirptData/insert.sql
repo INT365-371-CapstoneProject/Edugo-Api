@@ -282,3 +282,8 @@ VALUES
 (1, 1, 1),  -- Full Scholarships
 (2, 1, 3),  -- Merit-Based Scholarships
 (3, 1, 5);  -- Research and Special Project Scholarships
+
+-- Insert sample data for fcm_tokens
+INSERT INTO `edugo`.`fcm_tokens` (`account_id`, `fcm_token`)
+VALUES 
+(4, 'fS9QwEF4QIiaGnnShMnyjr:APA91bGM08C0DvVCl4TbasvKdVMI_icEim-NmUV8_-Z29p-iLjWKLbsr6hMkahhYl7J9y0Psn31oqIFECV8vhEwxdlc1CHZg44sPxryItelr_A3F1JiM_K8');

@@ -13,17 +13,16 @@ import (
 func InitCronJob(db *gorm.DB) {
 	c := cron.New()
 
-	// ตั้งให้รันทุกๆ 10 วินาที
-	c.AddFunc("@every 30m", func() {
+	c.AddFunc("@every 1m", func() {
 		// fmt.Println("Running scheduled check for announcements...")
 
 		// คำนวณเวลาปัจจุบันและอีก 1 ชั่วโมงข้างหน้า
 		now := time.Now()
-		oneHourLater := now.Add(1 * time.Hour)
+		oneDayLater := now.Add(24 * time.Hour)
 
 		// ค้นหาประกาศที่จะหมดอายุในอีก 1 ชั่วโมง
 		var closingAnnouncements []entity.Announce_Post
-		closingResult := db.Where("close_date BETWEEN ? AND ?", now, oneHourLater).Find(&closingAnnouncements)
+		closingResult := db.Where("close_date BETWEEN ? AND ?", now, oneDayLater).Find(&closingAnnouncements)
 
 		if closingResult.Error != nil {
 			// fmt.Println("Error fetching announcements closing soon:", closingResult.Error)
@@ -81,8 +80,8 @@ func InitCronJob(db *gorm.DB) {
 						newNotification := entity.Notification{
 							Title:       announcement.Title,
 							Message:     "Add New Noti",
-							IsRead:      0,
-							CreatedAt:   time.Now(),
+							Is_Read:     0,
+							Created_At:  time.Now(),
 							Account_ID:  bookmark.Account_ID,
 							Announce_ID: bookmark.Announce_ID,
 						}
