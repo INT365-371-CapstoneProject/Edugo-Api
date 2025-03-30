@@ -22,11 +22,11 @@ func GetAllNotification(ctx fiber.Ctx) error {
 	var notificationResponse []response.NotificationResponse
 	for _, notification := range notifications {
 		notificationResponse = append(notificationResponse, response.NotificationResponse{
-			Notification_ID: notification.NotificationID,
+			Notification_ID: notification.Notification_ID,
 			Title:           notification.Title,
 			Message:         notification.Message,
-			CreatedAt:       notification.CreatedAt,
-			IsRead:          notification.IsRead,
+			Created_At:      notification.Created_At,
+			Is_Read:         notification.Is_Read,
 			Announce_ID:     notification.Announce_ID,
 			Account_ID:      notification.Account_ID,
 		})
@@ -53,11 +53,11 @@ func GetNotificationByAccountID(ctx fiber.Ctx) error {
 	var notificationResponse []response.NotificationResponse
 	for _, notification := range notifications {
 		notificationResponse = append(notificationResponse, response.NotificationResponse{
-			Notification_ID: notification.NotificationID,
+			Notification_ID: notification.Notification_ID,
 			Title:           notification.Title,
 			Message:         notification.Message,
-			CreatedAt:       notification.CreatedAt,
-			IsRead:          notification.IsRead,
+			Created_At:      notification.Created_At,
+			Is_Read:         notification.Is_Read,
 			Announce_ID:     notification.Announce_ID,
 			Account_ID:      notification.Account_ID,
 		})
