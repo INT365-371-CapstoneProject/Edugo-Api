@@ -120,4 +120,9 @@ func RouteInit(r *fiber.App) {
 	answerGroup.Get("/", handler.GetUserQuestions)
 	answerGroup.Post("/", handler.CreateUserQuestion)
 	answerGroup.Put("/", handler.UpdateUserQuestion)
+
+	// Notification routes
+	notificationGroup := public.Group("/notification")
+	notificationGroup.Get("/", handler.GetAllNotification)
+	notificationGroup.Get("acc/:acc_id", handler.GetNotificationByAccountID)
 }

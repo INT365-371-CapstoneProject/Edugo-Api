@@ -8,12 +8,13 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/joho/godotenv"
 	"github.com/tk-neng/demo-go-fiber/database"
+	"github.com/tk-neng/demo-go-fiber/job"
 	"github.com/tk-neng/demo-go-fiber/route"
 )
 
 func main() {
 	// Iinitial database
-	database.DatabaseInit()
+	db := database.DatabaseInit() // รับค่าฐานข้อมูลจากฟังก์ชันนี้
 
 	app := fiber.New(fiber.Config{
 		// 50MB
@@ -42,6 +43,11 @@ func main() {
 
 	// Initial route
 	route.RouteInit(app)
+
+	// เรียกใช้ Cron Job พร้อมกับส่ง db
+	job.InitCronJob(db)
+
+	// Start server
 	port := os.Getenv("PORT")
 	app.Listen(":" + port)
 }
