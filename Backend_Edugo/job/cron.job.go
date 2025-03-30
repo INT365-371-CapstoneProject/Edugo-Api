@@ -14,8 +14,8 @@ func InitCronJob(db *gorm.DB) {
 	c := cron.New()
 
 	// ตั้งให้รันทุกๆ 10 วินาที
-	c.AddFunc("@every 10s", func() {
-		fmt.Println("Running scheduled check for announcements...")
+	c.AddFunc("@every 30m", func() {
+		// fmt.Println("Running scheduled check for announcements...")
 
 		// คำนวณเวลาปัจจุบันและอีก 1 ชั่วโมงข้างหน้า
 		now := time.Now()
@@ -26,19 +26,19 @@ func InitCronJob(db *gorm.DB) {
 		closingResult := db.Where("close_date BETWEEN ? AND ?", now, oneHourLater).Find(&closingAnnouncements)
 
 		if closingResult.Error != nil {
-			fmt.Println("Error fetching announcements closing soon:", closingResult.Error)
+			// fmt.Println("Error fetching announcements closing soon:", closingResult.Error)
 			return
 		}
 
 		if len(closingAnnouncements) == 0 {
-			fmt.Println("No announcements closing in 1 hour")
+			// fmt.Println("No announcements closing in 1 hour")
 		} else {
-			fmt.Printf("Found %d announcements closing in 1 hour:\n", len(closingAnnouncements))
+			// fmt.Printf("Found %d announcements closing in 1 hour:\n", len(closingAnnouncements))
 			announceIDs := make([]int, 0) // เก็บ ID ของประกาศที่กำลังจะปิด
 
 			for _, announcement := range closingAnnouncements {
-				fmt.Printf("ID: %d, Title: %s, Close Date: %s\n",
-					announcement.Announce_ID, announcement.Title, announcement.Close_Date)
+				// fmt.Printf("ID: %d, Title: %s, Close Date: %s\n",
+				// 	announcement.Announce_ID, announcement.Title, announcement.Close_Date)
 				announceIDs = append(announceIDs, int(announcement.Announce_ID))
 			}
 
@@ -51,17 +51,17 @@ func InitCronJob(db *gorm.DB) {
 				Find(&bookmarks)
 
 			if bookmarkResult.Error != nil {
-				fmt.Println("Error fetching bookmarks related to closing announcements:", bookmarkResult.Error)
+				// fmt.Println("Error fetching bookmarks related to closing announcements:", bookmarkResult.Error)
 				return
 			}
 
 			if len(bookmarks) == 0 {
-				fmt.Println("No bookmarks found for closing announcements")
+				// fmt.Println("No bookmarks found for closing announcements")
 			} else {
-				fmt.Printf("Found %d bookmarks for closing announcements:\n", len(bookmarks))
+				// fmt.Printf("Found %d bookmarks for closing announcements:\n", len(bookmarks))
 				for _, bookmark := range bookmarks {
-					fmt.Printf("Bookmark ID: %d, Account ID: %d, Announce ID: %d\n",
-						bookmark.Bookmark_ID, bookmark.Account_ID, bookmark.Announce_ID)
+					// fmt.Printf("Bookmark ID: %d, Account ID: %d, Announce ID: %d\n",
+					// 	bookmark.Bookmark_ID, bookmark.Account_ID, bookmark.Announce_ID)
 
 					// เช็คว่าใน notification มีที่ตรงกับ bookmark หรือไม่
 					var existingNotification entity.Notification
@@ -73,7 +73,7 @@ func InitCronJob(db *gorm.DB) {
 						var announcement entity.Announce_Post
 						announceResult := db.Where("announce_id = ?", bookmark.Announce_ID).First(&announcement)
 						if announceResult.Error != nil {
-							fmt.Println("Error fetching announcement:", announceResult.Error)
+							// fmt.Println("Error fetching announcement:", announceResult.Error)
 							continue
 						}
 
@@ -92,10 +92,10 @@ func InitCronJob(db *gorm.DB) {
 						if createResult.Error != nil {
 							fmt.Println("Error creating new notification:", createResult.Error)
 						} else {
-							fmt.Printf("Created new notification for Account ID: %d, Announce ID: %d\n", bookmark.Account_ID, bookmark.Announce_ID)
+							// fmt.Printf("Created new notification for Account ID: %d, Announce ID: %d\n", bookmark.Account_ID, bookmark.Announce_ID)
 						}
 					} else {
-						fmt.Printf("Notification already exists for Account ID: %d, Announce ID: %d\n", bookmark.Account_ID, bookmark.Announce_ID)
+						// fmt.Printf("Notification already exists for Account ID: %d, Announce ID: %d\n", bookmark.Account_ID, bookmark.Announce_ID)
 					}
 				}
 			}
@@ -106,18 +106,18 @@ func InitCronJob(db *gorm.DB) {
 		notificationResult := db.Find(&notificationList)
 
 		if notificationResult.Error != nil {
-			fmt.Println("Error fetching notifications:", notificationResult.Error)
+			// fmt.Println("Error fetching notifications:", notificationResult.Error)
 			return
 		}
 
 		if len(notificationList) == 0 {
-			fmt.Println("No notifications found")
+			// fmt.Println("No notifications found")
 		} else {
-			fmt.Printf("Found %d notifications\n", len(notificationList))
-			for _, notification := range notificationList {
-				fmt.Printf("Notification ID: %d, Account ID: %d, Announce ID: %d\n",
-					notification.NotificationID, notification.Account_ID, notification.Announce_ID)
-			}
+			// fmt.Printf("Found %d notifications\n", len(notificationList))
+			// for _, notification := range notificationList {
+			// 	fmt.Printf("Notification ID: %d, Account ID: %d, Announce ID: %d\n",
+			// 		notification.NotificationID, notification.Account_ID, notification.Announce_ID)
+			// }
 		}
 	})
 
