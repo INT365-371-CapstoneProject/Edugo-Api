@@ -338,6 +338,24 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
+-- -----------------------------------------------------
+-- Table `edugo`.`fcm_tokens`
+-- -----------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `edugo`.`fcm_tokens` (
+  `token_id` INT NOT NULL AUTO_INCREMENT,
+  `account_id` INT NOT NULL,
+  `fcm_token` VARCHAR(255) NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`token_id`),
+  FOREIGN KEY (`account_id`) REFERENCES `accounts`(`account_id`) ON DELETE CASCADE
+) ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+SET GLOBAL time_zone = '+00:00';
+SET time_zone = '+00:00';
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
