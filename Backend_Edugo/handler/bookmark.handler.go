@@ -134,3 +134,32 @@ func DeleteBookmark(ctx fiber.Ctx) error {
 		"message": "Bookmark deleted successfully",
 	})
 }
+
+func DeleteBookmarkByAnnounceID(ctx fiber.Ctx) error {
+
+	claims := middleware.GetTokenClaims(ctx)
+	username := claims["username"].(string)
+
+	// หา account จาก username
+	var account entity.Account
+	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+		return handleError(ctx, 404, "Account not found")
+	}
+
+	annId := ctx.Params("id")
+
+	var bookmark entity.Bookmark
+	err := database.DB.Where("announce_id = ? And account_id = ?", annId, account.Account_ID).First(&bookmark).Error
+	if err != nil {
+		return handleError(ctx, 404, "Bookmark not found")
+	}
+
+	err = database.DB.Delete(&bookmark).Error
+	if err != nil {
+		return handleError(ctx, 400, "Failed to delete bookmark")
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{
+		"message": "Bookmark deleted successfully",
+	})
+}
