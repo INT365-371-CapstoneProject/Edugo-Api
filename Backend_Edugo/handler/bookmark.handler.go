@@ -115,3 +115,22 @@ func GetBookmarkByAccountID(ctx fiber.Ctx) error {
 
 	return ctx.Status(200).JSON(bookmarkResponses)
 }
+
+func DeleteBookmark(ctx fiber.Ctx) error {
+	bookmarkId := ctx.Params("id")
+
+	var bookmark entity.Bookmark
+	err := database.DB.Where("bookmark_id = ?", bookmarkId).First(&bookmark).Error
+	if err != nil {
+		return handleError(ctx, 404, "Bookmark not found")
+	}
+
+	err = database.DB.Delete(&bookmark).Error
+	if err != nil {
+		return handleError(ctx, 400, "Failed to delete bookmark")
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{
+		"message": "Bookmark deleted successfully",
+	})
+}
