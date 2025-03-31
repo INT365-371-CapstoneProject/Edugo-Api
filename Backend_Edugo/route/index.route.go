@@ -115,6 +115,7 @@ func RouteInit(r *fiber.App) {
 	bookmarkGroup.Post("/", handler.CreateBookmark)
 	bookmarkGroup.Get("acc/:acc_id", handler.GetBookmarkByAccountID)
 	bookmarkGroup.Delete("/:id", handler.DeleteBookmark)
+	bookmarkGroup.Delete("ann/:id", handler.DeleteBookmarkByAnnounceID)
 
 	// Answer routes
 	answerGroup := public.Group("/answer", middleware.AuthAny)
@@ -125,7 +126,7 @@ func RouteInit(r *fiber.App) {
 	// Notification routes
 	notificationGroup := public.Group("/notification")
 	notificationGroup.Get("/", handler.GetAllNotification)
-	notificationGroup.Get("acc/:acc_id", handler.GetNotificationByAccountID)
+	notificationGroup.Get("ann/:id", handler.GetNotificationByAccountID)
 
 	// FCM Token routes
 	fcmGroup := public.Group("/fcm")
