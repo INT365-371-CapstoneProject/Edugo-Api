@@ -148,7 +148,6 @@ func getPaginationParams(ctx fiber.Ctx) (page, limit, offset int) {
 	return page, limit, offset
 }
 
-// GetAllPost - ดึงข้อมูลโพสต์ทั้งหมดที่เป็นประเภท Subject
 func GetAllPost(ctx fiber.Ctx) error {
 	// รับค่า page และ limit จาก query parameters
 	page := 1
@@ -168,17 +167,23 @@ func GetAllPost(ctx fiber.Ctx) error {
 	// คำนวณ offset
 	offset := (page - 1) * limit
 
-	var posts []entity.Post
+	var posts []struct {
+		entity.Post
+		Fullname string `json:"fullname"`
+		Avatar   string `json:"avatar"`
+	}
 	var total int64
 
 	// นับจำนวนข้อมูลทั้งหมด
 	database.DB.Model(&entity.Post{}).Count(&total)
 
-	// ดึงข้อมูลตาม pagination
-	result := database.DB.
+	// ดึงข้อมูลตาม pagination พร้อม JOIN กับ accounts
+	result := database.DB.Table("posts p").
+		Select("p.*, CONCAT(a.first_name, ' ', a.last_name) AS fullname, a.avatar").
+		Joins("JOIN accounts a ON p.account_id = a.account_id").
 		Offset(offset).
 		Limit(limit).
-		Find(&posts)
+		Scan(&posts)
 
 	if result.Error != nil {
 		return handleError(ctx, 404, result.Error.Error())
@@ -192,6 +197,8 @@ func GetAllPost(ctx fiber.Ctx) error {
 			Description:  post.Description,
 			Publish_Date: post.Publish_Date,
 			Account_ID:   post.Account_ID,
+			Fullname:     post.Fullname,
+			Avatar:       post.Avatar,
 		})
 	}
 
@@ -1207,16 +1214,16 @@ func GetAnnouncePostByIDForAdmin(ctx fiber.Ctx) error {
 	}
 
 	postResponse := response.AnnouncePostResponse{
-		Announce_ID:  post.Announce_ID,
-		Title:        post.Title,
-		Description:  post.Description,
-		URL:          post.Url,
-		Attach_Name:  post.Attach_Name,
-		Publish_Date: post.Publish_Date,
-		Close_Date:   post.Close_Date,
-		Category:     post.Category.Name,
-		Country:      post.Country.Name,
-		Provider_ID:  post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
+		Announce_ID:     post.Announce_ID,
+		Title:           post.Title,
+		Description:     post.Description,
+		URL:             post.Url,
+		Attach_Name:     post.Attach_Name,
+		Publish_Date:    post.Publish_Date,
+		Close_Date:      post.Close_Date,
+		Category:        post.Category.Name,
+		Country:         post.Country.Name,
+		Provider_ID:     post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
 		Education_Level: post.Education_Level,
 	}
 
