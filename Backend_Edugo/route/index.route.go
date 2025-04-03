@@ -107,6 +107,7 @@ func RouteInit(r *fiber.App) {
 	commentGroup.Get("/", handler.GetAllComment)
 	commentGroup.Get("/post/:post_id", handler.GetCommentByPostID)
 	commentGroup.Get("/:id/image", handler.GetCommentImage)
+	commentGroup.Get("/:id/avatar", handler.GetCommentAvatarImageByAccountID)
 	commentGroup.Post("/", handler.CreateComment)
 
 	// Bookmark routes
