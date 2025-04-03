@@ -250,6 +250,31 @@ func GetPostImage(ctx fiber.Ctx) error {
 	return ctx.Send(post.Image)
 }
 
+// GetPostImage - ดึงข้อมูลรูปภาพของโพสต์
+func GetPostAvatarByAccountID(ctx fiber.Ctx) error {
+	postId := ctx.Params("id")
+	var post entity.Post
+	result := database.DB.Where("posts_id = ?", postId).First(&post)
+	if result.Error != nil {
+		return handleError(ctx, 404, result.Error.Error())
+	}
+
+	var account entity.Account
+	if err := database.DB.Select("avatar").First(&account, "account_id = ?", post.Account_ID).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Avatar not found")
+	}
+	// If no avatar is stored
+	if len(account.Avatar) == 0 {
+		return utils.HandleError(ctx, 404, "No avatar image found")
+	}
+
+	// Set content type header for image
+	ctx.Set("Content-Type", "image/jpeg") // You might want to store the content type in DB if you support multiple formats
+
+	// Return the image bytes directly
+	return ctx.Send(account.Avatar)
+}
+
 // CreatePost - สร้างโพสต์ใหม่
 func CreatePost(ctx fiber.Ctx) error {
 	// เรียกใช้ฟังก์ชัน GetTokenClaims เพื่อดึงข้อมูลจาก JWT

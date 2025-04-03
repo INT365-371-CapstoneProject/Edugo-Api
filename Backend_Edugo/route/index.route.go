@@ -98,6 +98,7 @@ func RouteInit(r *fiber.App) {
 	subjectGroup.Get("/", handler.GetAllPost)
 	subjectGroup.Get("/:id", handler.GetPostByID)
 	subjectGroup.Get("/:id/image", handler.GetPostImage)
+	subjectGroup.Get("/:id/avatar", handler.GetPostAvatarByAccountID)
 	subjectGroup.Post("/", handler.CreatePost)
 	subjectGroup.Put("/:id", handler.UpdatePost)
 	subjectGroup.Delete("/:id", handler.DeletePost)
