@@ -127,6 +127,31 @@ func GetCommentByPostID(ctx fiber.Ctx) error {
 	return ctx.Status(200).JSON(commentResponses)
 }
 
+func GetCommentAvatarImageByAccountID(ctx fiber.Ctx) error {
+	commentID := ctx.Params("id")
+	var comment entity.Comment
+
+	if err := database.DB.Where("comments_id = ?", commentID).First(&comment).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Comment not found")
+	}
+
+	var account entity.Account
+	if err := database.DB.Select("avatar").First(&account, "account_id = ?", comment.Account_ID).Error; err != nil {
+		return utils.HandleError(ctx, 404, "Avatar not found")
+	}
+
+	// If no avatar is stored
+	if len(account.Avatar) == 0 {
+		return utils.HandleError(ctx, 404, "No avatar image found")
+	}
+
+	// Set content type header for image
+	ctx.Set("Content-Type", "image/jpeg") // You might want to store the content type in DB if you support multiple formats
+
+	// Return the image bytes directly
+	return ctx.Send(account.Avatar)
+}
+
 func GetCommentImage(ctx fiber.Ctx) error {
 	commentID := ctx.Params("id")
 	var comment entity.Comment
