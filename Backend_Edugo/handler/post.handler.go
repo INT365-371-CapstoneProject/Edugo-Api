@@ -198,7 +198,6 @@ func GetAllPost(ctx fiber.Ctx) error {
 			Publish_Date: post.Publish_Date,
 			Account_ID:   post.Account_ID,
 			Fullname:     post.Fullname,
-			Avatar:       post.Avatar,
 		})
 	}
 
