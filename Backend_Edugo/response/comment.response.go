@@ -10,4 +10,5 @@ type CommentResponse struct {
 	Publish_Date  time.Time `json:"publish_date"`
 	Posts_ID      uint      `json:"post_id"`
 	Account_ID    uint      `json:"account_id"`
+	Fullname      string    `json:"fullname"`
 }
