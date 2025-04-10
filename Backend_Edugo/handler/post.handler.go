@@ -170,7 +170,6 @@ func GetAllPost(ctx fiber.Ctx) error {
 	var posts []struct {
 		entity.Post
 		Fullname string `json:"fullname"`
-		Avatar   string `json:"avatar"`
 	}
 	var total int64
 
@@ -179,8 +178,13 @@ func GetAllPost(ctx fiber.Ctx) error {
 
 	// ดึงข้อมูลตาม pagination พร้อม JOIN กับ accounts
 	result := database.DB.Table("posts p").
-		Select("p.*, CONCAT(a.first_name, ' ', a.last_name) AS fullname, a.avatar").
+		Select(`p.*, 
+        	CASE 
+           		WHEN pr.company_name IS NOT NULL THEN pr.company_name
+            	ELSE CONCAT(a.first_name, ' ', a.last_name)
+        	END AS fullname`).
 		Joins("JOIN accounts a ON p.account_id = a.account_id").
+		Joins("LEFT JOIN providers pr ON a.account_id = pr.account_id").
 		Offset(offset).
 		Limit(limit).
 		Scan(&posts)
@@ -198,7 +202,6 @@ func GetAllPost(ctx fiber.Ctx) error {
 			Publish_Date: post.Publish_Date,
 			Account_ID:   post.Account_ID,
 			Fullname:     post.Fullname,
-			Avatar:       post.Avatar,
 		})
 	}
 
