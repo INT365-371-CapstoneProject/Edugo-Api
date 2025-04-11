@@ -113,15 +113,28 @@ func GetAllComment(ctx fiber.Ctx) error {
 
 func GetCommentByPostID(ctx fiber.Ctx) error {
 	postID := ctx.Params("post_id")
-	var comments []entity.Comment
-
-	// ค้นหาความคิดเห็นที่มี post_id ตรงกับค่าที่ระบุ
-	if err := database.DB.Where("posts_id = ?", postID).Find(&comments).Error; err != nil {
-		return utils.HandleError(ctx, 500, "Error retrieving comments: "+err.Error())
+	var comments []struct {
+		entity.Comment
+		Fullname string `json:"fullname"`
 	}
+
+	result := database.DB.Table("comments c").
+		Select(`c.comments_id, c.comments_text, c.publish_date, c.posts_id, c.account_id,
+			CASE
+				WHEN pr.company_name IS NOT NULL THEN pr.company_name
+				ELSE CONCAT(a.first_name, ' ', a.last_name)
+			END AS fullname`).
+		Joins("JOIN accounts a ON c.account_id = a.account_id").
+		Joins("LEFT JOIN providers pr ON a.account_id = pr.account_id").
+		Where("c.posts_id = ?", postID).
+		Scan(&comments)
 
 	if len(comments) == 0 {
 		return utils.HandleError(ctx, 404, "No comments found for this post")
+	}
+
+	if result.Error != nil {
+		return utils.HandleError(ctx, 500, "Error retrieving comments: "+result.Error.Error())
 	}
 
 	// สร้าง response list
@@ -133,6 +146,7 @@ func GetCommentByPostID(ctx fiber.Ctx) error {
 			Publish_Date:  comment.Publish_Date,
 			Posts_ID:      comment.Posts_ID,
 			Account_ID:    comment.Account_ID,
+			Fullname:      comment.Fullname,
 		})
 	}
 

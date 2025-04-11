@@ -40,7 +40,6 @@ type PostResponse struct {
 	Publish_Date *time.Time `json:"publish_date"`
 	Account_ID   uint       `json:"account_id"`
 	Fullname     string     `json:"fullname"` // เพิ่มชื่อเต็มของเจ้าของโพสต์
-	Avatar       string     `json:"avatar"`   // เพิ่มรูปโปรไฟล์
 }
 
 type PaginatedPostResponse struct {
