@@ -110,6 +110,8 @@ func RouteInit(r *fiber.App) {
 	commentGroup.Get("/:id/image", handler.GetCommentImage)
 	commentGroup.Get("/:id/avatar", handler.GetCommentAvatarImageByAccountID)
 	commentGroup.Post("/", handler.CreateComment)
+	commentGroup.Delete("/:id", handler.DeleteComment)
+	commentGroup.Put("/:id", handler.UpdateComment)
 
 	// Bookmark routes
 	bookmarkGroup := public.Group("/bookmark", middleware.AuthAny)
