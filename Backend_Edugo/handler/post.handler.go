@@ -1060,6 +1060,7 @@ func GetAnnouncePostByIDForUser(ctx fiber.Ctx) error {
 		Category:     post.Category.Name,
 		Country:      post.Country.Name,
 		Provider_ID:  post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
+		Education_Level: post.Education_Level,
 	}
 
 	return ctx.Status(200).JSON(postResponse)
