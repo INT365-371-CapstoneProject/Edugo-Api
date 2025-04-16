@@ -1017,6 +1017,7 @@ func GetAllAnnouncePostForUser(ctx fiber.Ctx) error {
 			Category:     post.Category.Name,
 			Country:      post.Country.Name,
 			Provider_ID:  post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
+			Education_Level: post.Education_Level,
 		})
 	}
 
@@ -1048,7 +1049,6 @@ func GetAnnouncePostByIDForUser(ctx fiber.Ctx) error {
 	if result.Error != nil {
 		return handleError(ctx, 404, "Announcement not found or no longer available")
 	}
-
 	postResponse := response.AnnouncePostResponse{
 		Announce_ID:  post.Announce_ID,
 		Title:        post.Title,
