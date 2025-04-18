@@ -3,7 +3,7 @@ package entity
 type Provider struct {
 	Provider_ID  uint    `json:"id" gorm:"primaryKey"`
 	Company_Name string  `json:"company_name"`
-	URL          string  `json:"url"`
+	URL          *string `json:"url"`
 	Address      string  `json:"address"`
 	City         string  `json:"city"`
 	Country      string  `json:"country"`
