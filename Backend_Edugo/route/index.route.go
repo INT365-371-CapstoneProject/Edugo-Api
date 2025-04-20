@@ -26,6 +26,7 @@ func RouteInit(r *fiber.App) {
 	// userGroup.Get("/", handler.GetAllUser)
 	// userGroup.Get("/:id", handler.GetUserByID)
 	userGroup.Post("/", handler.CreateUser)
+	userGroup.Delete("/:id", handler.DeleteUser)
 
 	// Provider routes
 	providerGroup := public.Group("/provider", middleware.PermissionCreate)

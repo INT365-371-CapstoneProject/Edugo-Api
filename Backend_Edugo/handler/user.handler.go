@@ -127,6 +127,43 @@ func CreateUser(ctx fiber.Ctx) error {
 	return ctx.Status(201).JSON(userResponse)
 }
 
+func DeleteUser(ctx fiber.Ctx) error {
+	claims := middleware.GetTokenClaims(ctx)
+	username := claims["username"].(string)
+	accountId := ctx.Params("id")
+
+	var account entity.Account
+	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Account not found",
+		})
+	}
+
+	var targetAccount entity.Account
+	if err := database.DB.Where("account_id = ?", accountId).First(&targetAccount).Error; err != nil {
+		return handleError(ctx, 404, "Target account not found")
+	}
+
+	if targetAccount.Account_ID != account.Account_ID {
+		return handleError(ctx, 403, "Forbidden")
+	}
+
+	// ลบข้อมูลลูกที่เกี่ยวข้องก่อน
+	if err := database.DB.Where("account_id = ?", accountId).Delete(&entity.Account{}).Error; err != nil {
+		return handleError(ctx, 400, "Failed to delete related comments")
+	}
+	// (ถ้ามีตารางอื่น เช่น bookmarks, posts ก็ค่อยๆลบตาม)
+
+	// แล้วค่อยลบตัว account
+	if err := database.DB.Delete(&targetAccount).Error; err != nil {
+		return handleError(ctx, 400, "Failed to delete account")
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{
+		"message": "Account deleted successfully",
+	})
+}
+
 func CreateUserQuestion(ctx fiber.Ctx) error {
 	// Get account_id from JWT token
 	claims := middleware.GetTokenClaims(ctx)

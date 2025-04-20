@@ -4,7 +4,10 @@ VALUES
 (1, 'superadmin', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'superadmin@example.com', 'Active', NOW(), NOW(), NOW(), 'superadmin'),
 (2, 'admin_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'admin@example.com', 'Active', NOW(), NOW(), NOW(), 'admin'),
 (3, 'provider_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'provider@example.com', 'Active', NOW(), NOW(), NOW(), 'provider'),
-(4, 'normal_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'user@example.com', 'Active', NOW(), NOW(), NOW(), 'user');
+(4, 'provider_user2', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'provider2@example.com', 'Active', NOW(), NOW(), NOW(), 'provider'),
+(5, 'provider_user3', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'provider3@example.com', 'Active', NOW(), NOW(), NOW(), 'provider'),
+(6, 'normal_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'user@example.com', 'Active', NOW(), NOW(), NOW(), 'user'),
+(7, 'normal_user2', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'user2@example.com', 'Active', NOW(), NOW(), NOW(), 'user');
 
 -- Insert into admins
 INSERT INTO `edugo`.`admins` (`admin_id`, `phone`, `account_id`) 
@@ -15,20 +18,37 @@ VALUES
 -- Insert into providers
 INSERT INTO `edugo`.`providers` (`provider_id`, `company_name`, `url`, `address`, `city`, `country`, `postal_code`, `phone`, `verify`, `account_id`) 
 VALUES 
-(1, 'Tech Solutions', 'https://www.youtube.com', '123 Main St', 'Bangkok', 'Thailand', '10160', '0123456789', 'Yes', 3);
+(1, 'Tech Solutions', 'https://www.youtube.com', '111 Main St', 'Bangkok', 'Thailand', '10160', '0123456789', 'Yes', 3),
+(2, 'Go Go Hamster', 'https://www.youtube.com', '222 Main St', 'Bangkok', 'Thailand', '10160', '0123456789', 'Yes', 4),
+(3, 'What Do You', 'https://www.youtube.com', '333 Main St', 'Bangkok', 'Thailand', '10160', '0123456789', 'No', 5);
 
 -- Insert into posts
 INSERT INTO `edugo`.`posts` (`posts_id`, `description`, `image`, `publish_date`, `account_id`) 
 VALUES 
 (1, 'Welcome to our new platform!', NULL, NOW(), 3),
 (2, 'New subject added to the curriculum.', NULL, NOW(), 3),
-(3, 'New feature added to the platform.', NULL, NOW(), 4);
+(3, 'New feature added to the platform.', NULL, NOW(), 4),
+(4, 'Join our upcoming webinar on study tips.', NULL, NOW(), 5),
+(5, 'Maintenance scheduled for this weekend.', NULL, NOW(), 3),
+(6, 'Top 10 study abroad destinations in 2025.', NULL, NOW(), 7),
+(7, 'Meet our new academic advisor team!', NULL, NOW(), 6),
+(8, 'Mobile app update now available.', NULL, NOW(), 5),
+(9, 'Check out student success stories.', NULL, NOW(), 4),
+(10, 'Survey: Help us improve your experience.', NULL, NOW(), 7);
 
 -- Insert into comments
 INSERT INTO `edugo`.`comments` (`comments_id`, `comments_text`, `comments_image`, `publish_date`, `posts_id`, `account_id`) 
 VALUES 
 (1, 'Great announcement!', NULL, NOW(), 1, 3),
-(2, 'Excited for this update.', NULL, NOW(), 2, 3);
+(2, 'Excited for this update.', NULL, NOW(), 2, 3),
+(3, 'This will really help students.', NULL, NOW(), 3, 4),
+(4, 'Looking forward to the webinar!', NULL, NOW(), 4, 5),
+(5, 'Thanks for the heads-up about maintenance.', NULL, NOW(), 5, 3),
+(6, 'Very informative post. Thanks!', NULL, NOW(), 6, 7),
+(7, 'Nice to see new advisors onboard.', NULL, NOW(), 7, 7),
+(8, 'Just updated the app. Looks great!', NULL, NOW(), 7, 5),
+(9, 'Love reading these success stories.', NULL, NOW(), 7, 6),
+(10, 'Done with the survey. Hope it helps!', NULL, NOW(), 10, 3);
 
 -- Insert into categories
 INSERT INTO `edugo`.`categories` (`category_id`, `name`) VALUES
@@ -243,11 +263,29 @@ VALUES
 ('123456', false, DATE_ADD(NOW(), INTERVAL 15 MINUTE), 1),
 ('654321', true, DATE_ADD(NOW(), INTERVAL 15 MINUTE), 2);
 
--- Insert into announce_posts
-INSERT INTO `edugo`.`announce_posts` (`announce_id`, `title`, `url`, `description`, `attach_file`, `close_date`, `provider_id`, `category_id`, `country_id`) 
+INSERT INTO `edugo`.`announce_posts` 
+(`announce_id`, `title`, `url`, `description`, `attach_file`, `close_date`, `provider_id`, `category_id`, `country_id`) 
 VALUES 
-(1, 'Scholarship Announcement', NULL, 'Hello For New Scholarship Announcement', NULL, '2025-12-31 23:59:59', 1, 1, 1),
-(2, 'New Online Course', 'www.onlinecourse.com', 'New Online Course Announcement', NULL, '2025-06-30 23:59:59', 1, 1, 2);
+(1, 'Scholarship Announcement', NULL, 'Hello For New Scholarship Announcement', NULL, '2025-12-31 23:59:59', 1, 1, 185),
+(2, 'New Online Course', 'https://www.onlinecourse.com', 'New Online Course Announcement', NULL, '2025-06-30 23:59:59', 1, 2, 185),
+(3, 'Internship Opportunity', NULL, 'Apply for international internships this summer.', NULL, '2025-07-15 23:59:59', 1, 1, 173),
+(4, 'Research Grant Available', NULL, 'Grants available for postgraduate research students.', NULL, '2025-08-01 23:59:59', 2, 3, 173),
+(5, 'English Proficiency Test', 'https://www.englishtest.com', 'Register for English tests before deadline.', NULL, '2025-06-01 23:59:59', 3, 1, 84),
+(6, 'Virtual Exchange Program', NULL, 'Join our virtual exchange with European universities.', NULL, '2025-07-10 23:59:59', 3, 1, 173),
+(7, 'Free Coding Bootcamp', 'https://www.codebootcamp.com', 'Learn to code for free, limited seats.', NULL, '2025-05-25 23:59:59', 2, 1, 84),
+(8, 'Study Abroad Seminar', NULL, 'Attend the upcoming seminar on studying abroad.', NULL, '2025-05-30 23:59:59', 2, 4, 185),
+(9, 'Language Course Discount', NULL, 'Get discounts on selected language courses.', NULL, '2025-06-20 23:59:59', 2, 5, 84),
+(10, 'University Fair', 'https://www.unifair.com', 'Meet representatives from top universities.', NULL, '2025-05-15 23:59:59', 1, 5, 84),
+(11, 'Student Exchange Japan', NULL, 'Apply now for exchange program in Japan.', NULL, '2025-09-01 23:59:59', 3, 6, 185),
+(12, 'Resume Writing Workshop', NULL, 'Learn how to write effective resumes.', NULL, '2025-05-22 23:59:59', 2, 6, 84),
+(13, 'AI and Data Science Webinar', 'https://www.aidatawebinar.com', 'Free webinar on AI and Data Science careers.', NULL, '2025-06-05 23:59:59', 1, 3, 173),
+(14, 'Postgraduate Admission Open', NULL, 'Applications open for 2025 postgraduate programs.', NULL, '2025-07-31 23:59:59', 2, 3, 173),
+(15, 'Part-time Job Fair', NULL, 'Explore part-time job opportunities for students.', NULL, '2025-05-28 23:59:59', 1, 2, 82),
+(16, 'Summer School in UK', NULL, 'Join our summer school program in the UK.', NULL, '2025-06-10 23:59:59', 1, 2, 173),
+(17, 'Leadership Training Program', NULL, 'Enhance your leadership skills.', NULL, '2025-06-18 23:59:59', 1, 1, 82),
+(18, 'Career Planning Session', 'www.careerplan.com', 'Free session on how to plan your career.', NULL, '2025-05-27 23:59:59', 1, 1, 173),
+(19, 'Volunteering Abroad Info', NULL, 'Information session about volunteering abroad.', NULL, '2025-06-12 23:59:59', 1, 1, 82),
+(20, 'Graduate School Funding', NULL, 'Find out how to fund your graduate studies.', NULL, '2025-07-05 23:59:59', 1, 1, 82);
 
 -- Insert into bookmarks
 INSERT INTO `edugo`.`bookmarks` (`bookmark_id`, `created_at`, `account_id`, `announce_id`) 
@@ -283,7 +321,6 @@ VALUES
 (2, 1, 3),  -- Merit-Based Scholarships
 (3, 1, 5);  -- Research and Special Project Scholarships
 
--- Insert sample data for fcm_tokens
 INSERT INTO `edugo`.`fcm_tokens` (`account_id`, `fcm_token`)
 VALUES 
 (4, 'fS9QwEF4QIiaGnnShMnyjr:APA91bGM08C0DvVCl4TbasvKdVMI_icEim-NmUV8_-Z29p-iLjWKLbsr6hMkahhYl7J9y0Psn31oqIFECV8vhEwxdlc1CHZg44sPxryItelr_A3F1JiM_K8');
