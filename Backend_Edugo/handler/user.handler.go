@@ -148,12 +148,6 @@ func DeleteUser(ctx fiber.Ctx) error {
 		return handleError(ctx, 403, "Forbidden")
 	}
 
-	// ลบข้อมูลลูกที่เกี่ยวข้องก่อน
-	if err := database.DB.Where("account_id = ?", accountId).Delete(&entity.Account{}).Error; err != nil {
-		return handleError(ctx, 400, "Failed to delete related comments")
-	}
-	// (ถ้ามีตารางอื่น เช่น bookmarks, posts ก็ค่อยๆลบตาม)
-
 	// แล้วค่อยลบตัว account
 	if err := database.DB.Delete(&targetAccount).Error; err != nil {
 		return handleError(ctx, 400, "Failed to delete account")
