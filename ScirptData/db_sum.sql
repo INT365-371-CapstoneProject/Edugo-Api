@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS `edugo`.`announce_posts` (
   CONSTRAINT `fk_announce_posts_providers1`
     FOREIGN KEY (`provider_id`)
     REFERENCES `edugo`.`providers` (`provider_id`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 AUTO_INCREMENT = 3
@@ -169,7 +169,8 @@ CREATE TABLE IF NOT EXISTS `edugo`.`posts` (
   INDEX `fk_posts_accounts1_idx` (`account_id` ASC) VISIBLE,
   CONSTRAINT `fk_posts_accounts1`
     FOREIGN KEY (`account_id`)
-    REFERENCES `edugo`.`accounts` (`account_id`))
+    REFERENCES `edugo`.`accounts` (`account_id`)
+    ON DELETE CASCADE)
 ENGINE = InnoDB
 AUTO_INCREMENT = 4
 DEFAULT CHARACTER SET = utf8mb4
@@ -192,7 +193,8 @@ CREATE TABLE IF NOT EXISTS `edugo`.`comments` (
   INDEX `fk_comments_accounts1_idx` (`account_id` ASC) VISIBLE,
   CONSTRAINT `fk_comments_accounts1`
     FOREIGN KEY (`account_id`)
-    REFERENCES `edugo`.`accounts` (`account_id`),
+    REFERENCES `edugo`.`accounts` (`account_id`)
+    ON DELETE CASCADE,
   CONSTRAINT `fk_comments_posts1`
     FOREIGN KEY (`posts_id`)
     REFERENCES `edugo`.`posts` (`posts_id`)
