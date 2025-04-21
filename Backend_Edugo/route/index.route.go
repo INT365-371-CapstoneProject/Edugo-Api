@@ -38,6 +38,7 @@ func RouteInit(r *fiber.App) {
 	metadataGroup := public.Group("", middleware.AuthAny)
 	metadataGroup.Get("/country", handler.GatAllCountry)
 	metadataGroup.Get("/category", handler.GetAllCategory)
+	metadataGroup.Get("/provider/:id", handler.GetIDProvider)
 
 	// Profile routes
 	profileGroup := public.Group("/profile", middleware.AuthAny)
