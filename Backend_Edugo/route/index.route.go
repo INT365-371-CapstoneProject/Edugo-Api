@@ -38,6 +38,8 @@ func RouteInit(r *fiber.App) {
 	metadataGroup := public.Group("", middleware.AuthAny)
 	metadataGroup.Get("/country", handler.GatAllCountry)
 	metadataGroup.Get("/category", handler.GetAllCategory)
+	metadataGroup.Get("/provider/:id", handler.GetIDProvider)
+	metadataGroup.Get("/provider/avatar/:id", handler.GetAvatarImageByProviderID)
 
 
 	// Profile routes
