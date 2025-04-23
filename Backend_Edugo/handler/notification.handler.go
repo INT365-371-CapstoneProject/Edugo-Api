@@ -5,7 +5,10 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
+	"github.com/tk-neng/demo-go-fiber/middleware"
 	"github.com/tk-neng/demo-go-fiber/model/entity"
+
+	// "github.com/tk-neng/demo-go-fiber/request"
 	"github.com/tk-neng/demo-go-fiber/response"
 	"github.com/tk-neng/demo-go-fiber/utils"
 )
@@ -40,7 +43,7 @@ func GetNotificationByAccountID(ctx fiber.Ctx) error {
 	fmt.Println("AccountID:", AccountID)
 	var notifications []entity.Notification
 
-	// ค้นหาความคิดเห็นที่มี post_id ตรงกับค่าที่ระบุ
+	// ค้นหาความคิดเห็นที่มี notification_id ตรงกับค่าที่ระบุ
 	if err := database.DB.Where("account_id = ?", AccountID).Find(&notifications).Error; err != nil {
 		return utils.HandleError(ctx, 500, "Error retrieving notifications: "+err.Error())
 	}
@@ -63,5 +66,58 @@ func GetNotificationByAccountID(ctx fiber.Ctx) error {
 		})
 	}
 
+	return ctx.Status(200).JSON(notificationResponse)
+}
+
+func UpdateNotification(ctx fiber.Ctx) error {
+	claims := middleware.GetTokenClaims(ctx)
+	username := claims["username"].(string)
+
+	notificationId := ctx.Params("id")
+
+	var account entity.Account
+	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Account not found",
+		})
+	}
+
+	var notification entity.Notification
+	err := database.DB.Where("notification_id = ? AND account_id = ?",
+		notificationId, account.Account_ID).First(&notification).Error
+	if err != nil {
+		fmt.Println("Account ID:", account.Account_ID)
+		return handleError(ctx, 403, "Forbidden")
+	}
+
+	// Begin a transaction
+	tx := database.DB.Begin()
+	if tx.Error != nil {
+		return handleError(ctx, 409, "Failed to begin transaction")
+	}
+
+	notification.Is_Read = 0
+
+	// Save updated notification record
+	if err := tx.Save(&notification).Error; err != nil {
+		tx.Rollback()
+		return handleError(ctx, 409, "Failed to update notification details")
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return handleError(ctx, 409, "Failed to commit transaction")
+	}
+
+	// Construct response data
+	notificationResponse := response.NotificationUpdateResponse{
+		Notification_ID: notification.Notification_ID,
+		Is_Read:         notification.Is_Read,
+		Announce_ID:     notification.Announce_ID,
+		Account_ID:      account.Account_ID,
+	}
+
+	// Return the updated response
 	return ctx.Status(200).JSON(notificationResponse)
 }
