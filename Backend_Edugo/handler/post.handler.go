@@ -1007,16 +1007,16 @@ func GetAllAnnouncePostForUser(ctx fiber.Ctx) error {
 	var postsResponse []response.AnnouncePostResponse
 	for _, post := range posts {
 		postsResponse = append(postsResponse, response.AnnouncePostResponse{
-			Announce_ID:  post.Announce_ID,
-			Title:        post.Title,
-			Description:  post.Description,
-			URL:          post.Url,
-			Attach_Name:  post.Attach_Name,
-			Publish_Date: post.Publish_Date,
-			Close_Date:   post.Close_Date,
-			Category:     post.Category.Name,
-			Country:      post.Country.Name,
-			Provider_ID:  post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
+			Announce_ID:     post.Announce_ID,
+			Title:           post.Title,
+			Description:     post.Description,
+			URL:             post.Url,
+			Attach_Name:     post.Attach_Name,
+			Publish_Date:    post.Publish_Date,
+			Close_Date:      post.Close_Date,
+			Category:        post.Category.Name,
+			Country:         post.Country.Name,
+			Provider_ID:     post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
 			Education_Level: post.Education_Level,
 		})
 	}
@@ -1050,20 +1050,89 @@ func GetAnnouncePostByIDForUser(ctx fiber.Ctx) error {
 		return handleError(ctx, 404, "Announcement not found or no longer available")
 	}
 	postResponse := response.AnnouncePostResponse{
-		Announce_ID:  post.Announce_ID,
-		Title:        post.Title,
-		Description:  post.Description,
-		URL:          post.Url,
-		Attach_Name:  post.Attach_Name,
-		Publish_Date: post.Publish_Date,
-		Close_Date:   post.Close_Date,
-		Category:     post.Category.Name,
-		Country:      post.Country.Name,
-		Provider_ID:  post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
+		Announce_ID:     post.Announce_ID,
+		Title:           post.Title,
+		Description:     post.Description,
+		URL:             post.Url,
+		Attach_Name:     post.Attach_Name,
+		Publish_Date:    post.Publish_Date,
+		Close_Date:      post.Close_Date,
+		Category:        post.Category.Name,
+		Country:         post.Country.Name,
+		Provider_ID:     post.Provider_ID, // เปลี่ยนจาก Post_ID เป็น Provider_ID
 		Education_Level: post.Education_Level,
 	}
 
 	return ctx.Status(200).JSON(postResponse)
+}
+
+func GetAnnouncePostByProviderIDForUser(ctx fiber.Ctx) error {
+	providerId := ctx.Params("id")
+
+	page := 1
+	if pageStr := ctx.Query("page"); pageStr != "" {
+		if pageNum, err := strconv.Atoi(pageStr); err == nil && pageNum > 0 {
+			page = pageNum
+		}
+	}
+
+	limit := 10
+	if limitStr := ctx.Query("limit"); limitStr != "" {
+		if limitNum, err := strconv.Atoi(limitStr); err == nil && limitNum > 0 {
+			limit = limitNum
+		}
+	}
+
+	offset := (page - 1) * limit
+
+	var posts []entity.Announce_Post
+	var total int64
+
+	// นับจำนวนทั้งหมดก่อน
+	database.DB.Model(&entity.Announce_Post{}).
+		Where("provider_id = ? AND (close_date IS NULL OR close_date > ?)", providerId, time.Now()).
+		Count(&total)
+
+	// ดึงข้อมูลพร้อมความสัมพันธ์
+	result := database.DB.
+		Preload("Category").
+		Preload("Country").
+		Where("provider_id = ? AND (close_date IS NULL OR close_date > ?)", providerId, time.Now()).
+		Order("publish_date DESC").
+		Offset(offset).
+		Limit(limit).
+		Find(&posts)
+
+	if result.Error != nil {
+		return handleError(ctx, 404, result.Error.Error())
+	}
+
+	var postsResponse []response.AnnouncePostResponse
+	for _, post := range posts {
+		postsResponse = append(postsResponse, response.AnnouncePostResponse{
+			Announce_ID:     post.Announce_ID,
+			Title:           post.Title,
+			Description:     post.Description,
+			URL:             post.Url,
+			Attach_Name:     post.Attach_Name,
+			Publish_Date:    post.Publish_Date,
+			Close_Date:      post.Close_Date,
+			Category:        post.Category.Name,
+			Country:         post.Country.Name,
+			Provider_ID:     post.Provider_ID,
+			Education_Level: post.Education_Level,
+		})
+	}
+
+	lastPage := int(math.Ceil(float64(total) / float64(limit)))
+
+	return ctx.Status(200).JSON(response.PaginatedAnnouncePostResponse{
+		Data:     postsResponse,
+		Total:    total,
+		Page:     page,
+		LastPage: lastPage,
+		PerPage:  limit,
+	})
 }
 
 func GetAnnouncePostByBookmark(ctx fiber.Ctx) error {
