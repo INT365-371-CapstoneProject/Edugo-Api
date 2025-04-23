@@ -41,7 +41,6 @@ func RouteInit(r *fiber.App) {
 	metadataGroup.Get("/provider/:id", handler.GetIDProvider)
 	metadataGroup.Get("/provider/avatar/:id", handler.GetAvatarImageByProviderID)
 
-
 	// Profile routes
 	profileGroup := public.Group("/profile", middleware.AuthAny)
 	profileGroup.Get("/", handler.GetProfile)
@@ -60,6 +59,7 @@ func RouteInit(r *fiber.App) {
 	announceUserGroup := public.Group("/announce-user", middleware.AuthAny)
 	announceUserGroup.Get("/", handler.GetAllAnnouncePostForUser)
 	announceUserGroup.Get("/:id", handler.GetAnnouncePostByIDForUser)
+	announceUserGroup.Get("/provider/:id", handler.GetAnnouncePostByProviderIDForUser)
 	announceUserGroup.Get("/:id/image", handler.GetAnnounceImage)
 	announceUserGroup.Post("/bookmark", handler.GetAnnouncePostByBookmark)
 	// Announcement for Admin routes
