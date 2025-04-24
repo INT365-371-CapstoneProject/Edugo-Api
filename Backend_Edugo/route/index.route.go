@@ -30,9 +30,9 @@ func RouteInit(r *fiber.App) {
 
 	// Provider routes
 	providerGroup := public.Group("/provider", middleware.PermissionCreate)
+	providerGroup.Post("/", handler.CreateProvider)
 	// providerGroup.Get("/", handler.GetAllProvider)
 	// providerGroup.Get("/:id", handler.GetIDProvider)
-	providerGroup.Post("/", handler.CreateProvider)
 
 	// Metadata routes (country and category)
 	metadataGroup := public.Group("", middleware.AuthAny)
