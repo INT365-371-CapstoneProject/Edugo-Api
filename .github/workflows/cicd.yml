@@ -90,6 +90,8 @@ jobs:
         run: docker rm -f reverse-proxy-container || true
       - name: Clear All Docker System
         run: docker system prune -f
+      - name: Clear Disk
+        run: docker system prune -a --volumes
       - name: Create Docker Network
         run: docker network create edugo-network || true
       - name: Create Docker Volume for MYSQL
