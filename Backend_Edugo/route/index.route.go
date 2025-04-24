@@ -136,6 +136,7 @@ func RouteInit(r *fiber.App) {
 	notificationGroup := public.Group("/notification")
 	notificationGroup.Get("/", handler.GetAllNotification)
 	notificationGroup.Get("/acc/:acc_id", handler.GetNotificationByAccountID)
+	notificationGroup.Get("/count/:acc_id", handler.GetReadCountByAccountID)
 	notificationGroup.Post("/", handler.CreateNotification)
 	notificationGroup.Put("/:id", handler.UpdateNotification)
 

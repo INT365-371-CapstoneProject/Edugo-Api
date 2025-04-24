@@ -41,7 +41,6 @@ func GetAllNotification(ctx fiber.Ctx) error {
 
 func GetNotificationByAccountID(ctx fiber.Ctx) error {
 	AccountID := ctx.Params("acc_id")
-	fmt.Println("AccountID:", AccountID)
 	var notifications []entity.Notification
 
 	// ค้นหาความคิดเห็นที่มี notification_id ตรงกับค่าที่ระบุ
@@ -147,7 +146,6 @@ func UpdateNotification(ctx fiber.Ctx) error {
 	err := database.DB.Where("notification_id = ? AND account_id = ?",
 		notificationId, account.Account_ID).First(&notification).Error
 	if err != nil {
-		fmt.Println("Account ID:", account.Account_ID)
 		return handleError(ctx, 403, "Forbidden")
 	}
 
@@ -181,4 +179,35 @@ func UpdateNotification(ctx fiber.Ctx) error {
 
 	// Return the updated response
 	return ctx.Status(200).JSON(notificationResponse)
+}
+
+func GetReadCountByAccountID(ctx fiber.Ctx) error {
+	claims := middleware.GetTokenClaims(ctx)
+	username := claims["username"].(string)
+	AccountID := ctx.Params("acc_id")
+
+	var account entity.Account
+	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Account not found",
+		})
+	}
+
+	// ตรวจสอบว่า acc_id ที่ส่งมาตรงกับ token จริงหรือไม่
+	if fmt.Sprint(account.Account_ID) != AccountID {
+		return handleError(ctx, 403, "Forbidden")
+	}
+
+	var readCount int64
+	err := database.DB.Model(&entity.Notification{}).
+		Where("account_id = ? AND is_read = 1", AccountID).
+		Count(&readCount).Error
+
+	if err != nil {
+		return utils.HandleError(ctx, 500, "Error counting read notifications: "+err.Error())
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{
+		"read_count": readCount,
+	})
 }
