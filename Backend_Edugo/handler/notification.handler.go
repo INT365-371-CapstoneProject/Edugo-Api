@@ -7,13 +7,9 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
+	"github.com/tk-neng/demo-go-fiber/middleware"
 	"github.com/tk-neng/demo-go-fiber/model/entity"
-<<<<<<< Updated upstream
-=======
 	"github.com/tk-neng/demo-go-fiber/request"
-
-	// "github.com/tk-neng/demo-go-fiber/request"
->>>>>>> Stashed changes
 	"github.com/tk-neng/demo-go-fiber/response"
 	"github.com/tk-neng/demo-go-fiber/utils"
 )
@@ -48,7 +44,7 @@ func GetNotificationByAccountID(ctx fiber.Ctx) error {
 	fmt.Println("AccountID:", AccountID)
 	var notifications []entity.Notification
 
-	// ค้นหาความคิดเห็นที่มี post_id ตรงกับค่าที่ระบุ
+	// ค้นหาความคิดเห็นที่มี notification_id ตรงกับค่าที่ระบุ
 	if err := database.DB.Where("account_id = ?", AccountID).Find(&notifications).Error; err != nil {
 		return utils.HandleError(ctx, 500, "Error retrieving notifications: "+err.Error())
 	}
@@ -73,8 +69,6 @@ func GetNotificationByAccountID(ctx fiber.Ctx) error {
 
 	return ctx.Status(200).JSON(notificationResponse)
 }
-<<<<<<< Updated upstream
-=======
 
 func CreateNotification(ctx fiber.Ctx) error {
 
@@ -188,4 +182,3 @@ func UpdateNotification(ctx fiber.Ctx) error {
 	// Return the updated response
 	return ctx.Status(200).JSON(notificationResponse)
 }
->>>>>>> Stashed changes
