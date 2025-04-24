@@ -2,13 +2,14 @@ package handler
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
 	"github.com/tk-neng/demo-go-fiber/database"
 	"github.com/tk-neng/demo-go-fiber/middleware"
 	"github.com/tk-neng/demo-go-fiber/model/entity"
-
-	// "github.com/tk-neng/demo-go-fiber/request"
+	"github.com/tk-neng/demo-go-fiber/request"
 	"github.com/tk-neng/demo-go-fiber/response"
 	"github.com/tk-neng/demo-go-fiber/utils"
 )
@@ -16,7 +17,7 @@ import (
 func GetAllNotification(ctx fiber.Ctx) error {
 	var notifications []entity.Notification
 
-	// ดึงข้อมูลทั้งหมดจากตาราง bookmark
+	// ดึงข้อมูลทั้งหมดจากตาราง notification
 	if err := database.DB.Find(&notifications).Error; err != nil {
 		return utils.HandleError(ctx, 500, "Error retrieving notifications: "+err.Error())
 	}
@@ -67,6 +68,66 @@ func GetNotificationByAccountID(ctx fiber.Ctx) error {
 	}
 
 	return ctx.Status(200).JSON(notificationResponse)
+}
+
+func CreateNotification(ctx fiber.Ctx) error {
+
+	claims := middleware.GetTokenClaims(ctx)
+	username := claims["username"].(string)
+
+	// หา account จาก username
+	var account entity.Account
+	if err := database.DB.Where("username = ?", username).First(&account).Error; err != nil {
+		return handleError(ctx, 404, "Account not found")
+	}
+
+	notification := new(request.CreateNotificationRequest)
+	if err := ctx.Bind().Body(notification); err != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	}
+
+	// Validate request
+	if err := validate.Struct(notification); err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		return utils.HandleError(ctx, 400, validationErrors[0].Translate(trans))
+	}
+
+	// check available post
+	var announce entity.Announce_Post
+	result := database.DB.Where("announce_id = ?", notification.Announce_ID).First(&announce)
+	if result.RowsAffected == 0 {
+		return utils.HandleError(ctx, 400, "Announce not found")
+	}
+
+	// Create notification
+	newNotification := entity.Notification{
+		Announce_ID: notification.Announce_ID,
+		Account_ID:  account.Account_ID,
+		Is_Read:     1,
+		Created_At:  time.Now(),
+		Title:       notification.Title,
+		Message:     notification.Message,
+	}
+
+	// Create notification with debug log
+	if err := database.DB.Debug().Create(&newNotification).Error; err != nil {
+		return utils.HandleError(ctx, 400, "Error saving notification: "+err.Error())
+	}
+
+	// Return response
+	newNotificationResponse := response.NotificationResponse{
+		Notification_ID: newNotification.Notification_ID,
+		Title:           newNotification.Title,
+		Message:         newNotification.Message,
+		Is_Read:         newNotification.Is_Read,
+		Announce_ID:     newNotification.Announce_ID,
+		Account_ID:      newNotification.Account_ID,
+		Created_At:      newNotification.Created_At,
+	}
+
+	return ctx.Status(201).JSON(newNotificationResponse)
 }
 
 func UpdateNotification(ctx fiber.Ctx) error {
