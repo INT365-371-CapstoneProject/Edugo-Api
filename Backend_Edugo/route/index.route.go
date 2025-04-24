@@ -136,6 +136,8 @@ func RouteInit(r *fiber.App) {
 	notificationGroup := public.Group("/notification")
 	notificationGroup.Get("/", handler.GetAllNotification)
 	notificationGroup.Get("/acc/:acc_id", handler.GetNotificationByAccountID)
+	notificationGroup.Post("/", handler.CreateNotification)
+	notificationGroup.Put("/:id", handler.UpdateNotification)
 
 	// FCM Token routes
 	fcmGroup := public.Group("/fcm")
