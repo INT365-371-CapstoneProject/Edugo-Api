@@ -1,4 +1,3 @@
--- Insert into accounts
 INSERT INTO `edugo`.`accounts` (`account_id`, `username`, `password`, `email`, `status`, `create_on`, `last_login`, `update_on`, `role`) 
 VALUES 
 (1, 'superadmin', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'superadmin@example.com', 'Active', NOW(), NOW(), NOW(), 'superadmin'),
@@ -18,9 +17,10 @@ VALUES
 -- Insert into providers
 INSERT INTO `edugo`.`providers` (`provider_id`, `company_name`, `url`, `address`, `city`, `country`, `postal_code`, `phone`, `verify`, `account_id`) 
 VALUES 
-(1, 'Tech Solutions', 'https://www.youtube.com', '111 Main St', 'Bangkok', 'Thailand', '10160', '0123456789', 'Yes', 3),
-(2, 'Go Go Hamster', 'https://www.youtube.com', '222 Main St', 'Bangkok', 'Thailand', '10160', '0123456789', 'Yes', 4),
-(3, 'What Do You', 'https://www.youtube.com', '333 Main St', 'Bangkok', 'Thailand', '10160', '0123456789', 'No', 5);
+(1, 'GO ABROAD', 'https://seniorproject.sit.kmutt.ac.th/showproject/IT64-BU24', '111 Main St', 'Bangkok', 'Thailand', '10160', '0123456789', 'Yes', 3),
+(2, 'Book Lamp', 'https://seniorproject.sit.kmutt.ac.th/showproject/IT64-BU24', '222 Main St', 'Bangkok', 'Thailand', '10160', '0123456789', 'Yes', 4),
+(3, 'Bright Rain', 'https://seniorproject.sit.kmutt.ac.th/showproject/IT64-BU24', '333 Main St', 'Bangkok', 'Thailand', '10160', '0123456789', 'No', 5),
+(4, 'Great North', 'https://seniorproject.sit.kmutt.ac.th/showproject/IT64-BU24', '444 Main St', 'Bangkok', 'Thailand', '10160', '0123456789', 'No', 6);
 
 -- Insert into posts
 INSERT INTO `edugo`.`posts` (`posts_id`, `description`, `image`, `publish_date`, `account_id`) 
@@ -34,7 +34,20 @@ VALUES
 (7, 'Meet our new academic advisor team!', NULL, NOW(), 6),
 (8, 'Mobile app update now available.', NULL, NOW(), 5),
 (9, 'Check out student success stories.', NULL, NOW(), 4),
-(10, 'Survey: Help us improve your experience.', NULL, NOW(), 7);
+(10, 'Survey: Help us improve your experience.', NULL, NOW(), 7),
+(11, 'Tips for effective time management.', NULL, NOW(), 5),
+(12, 'Explore our new scholarship programs.', NULL, NOW(), 6),
+(13, 'Congratulations to our recent graduates!', NULL, NOW(), 4),
+(14, 'New partnership with international universities.', NULL, NOW(), 3),
+(15, 'Behind the scenes: How we develop new courses.', NULL, NOW(), 7),
+(16, 'Your guide to writing the perfect resume.', NULL, NOW(), 5),
+(17, 'Upcoming: Virtual open house event.', NULL, NOW(), 6),
+(18, 'How to make the most of online learning.', NULL, NOW(), 4),
+(19, 'Celebrating Student Achievement Awards 2025.', NULL, NOW(), 7),
+(20, 'Reminder: Application deadlines approaching.', NULL, NOW(), 3),
+(21, '5 Common mistakes when studying abroad.', NULL, NOW(), 5),
+(22, 'Introducing new AI tools to enhance your learning.', NULL, NOW(), 4),
+(23, 'Join our mentorship program today!', NULL, NOW(), 6);
 
 -- Insert into comments
 INSERT INTO `edugo`.`comments` (`comments_id`, `comments_text`, `comments_image`, `publish_date`, `posts_id`, `account_id`) 
@@ -267,7 +280,7 @@ INSERT INTO `edugo`.`announce_posts`
 (`announce_id`, `title`, `url`, `description`, `attach_file`, `close_date`, `provider_id`, `category_id`, `country_id`) 
 VALUES 
 (1, 'Scholarship Announcement', NULL, 'Hello For New Scholarship Announcement', NULL, '2025-12-31 23:59:59', 1, 1, 185),
-(2, 'New Online Course', 'https://www.onlinecourse.com', 'New Online Course Announcement', NULL, '2025-06-30 23:59:59', 1, 2, 185),
+(2, 'New Scholarship In UK', 'https://www.onlinecourse.com', 'New Online Course Announcement', NULL, '2025-06-30 23:59:59', 1, 2, 185),
 (3, 'Internship Opportunity', NULL, 'Apply for international internships this summer.', NULL, '2025-07-15 23:59:59', 1, 1, 173),
 (4, 'Research Grant Available', NULL, 'Grants available for postgraduate research students.', NULL, '2025-08-01 23:59:59', 2, 3, 173),
 (5, 'English Proficiency Test', 'https://www.englishtest.com', 'Register for English tests before deadline.', NULL, '2025-06-01 23:59:59', 3, 1, 84),
@@ -285,8 +298,37 @@ VALUES
 (17, 'Leadership Training Program', NULL, 'Enhance your leadership skills.', NULL, '2025-06-18 23:59:59', 1, 1, 82),
 (18, 'Career Planning Session', 'www.careerplan.com', 'Free session on how to plan your career.', NULL, '2025-05-27 23:59:59', 1, 1, 173),
 (19, 'Volunteering Abroad Info', NULL, 'Information session about volunteering abroad.', NULL, '2025-06-12 23:59:59', 1, 1, 82),
-(20, 'Graduate School Funding', NULL, 'Find out how to fund your graduate studies.', NULL, '2025-07-05 23:59:59', 1, 1, 82);
-
+(20, 'Graduate School Funding', NULL, 'Find out how to fund your graduate studies.', NULL, '2025-07-05 23:59:59', 1, 1, 82),
+(21, 'Australia Full Scholarship', NULL, 'Apply now for a full scholarship to study in Australia.', NULL, '2025-12-01 23:59:59', 4, 1, 9),
+(22, 'Italy Art Scholarship', NULL, 'Scholarship for students pursuing arts in Italy.', NULL, '2025-11-20 23:59:59', 1, 1, 82),
+(23, 'USA Tech Innovation Fund', NULL, 'Support for tech innovators studying in USA.', NULL, '2025-12-15 23:59:59', 2, 1, 186),
+(24, 'Canada Research Scholarship', NULL, 'Funding available for graduate research in Canada.', NULL, '2025-11-30 23:59:59', 3, 1, 31),
+(25, 'Japan Language Scholarship', NULL, 'Scholarship for language studies in Japan.', NULL, '2025-10-31 23:59:59', 4, 1, 84),
+(26, 'New Zealand Merit Scholarship', NULL, 'Merit-based scholarship for top students.', NULL, '2025-11-15 23:59:59', 1, 3, 125),
+(27, 'China Engineering Scholarship', NULL, 'Scholarship for engineering majors in China.', NULL, '2025-12-10 23:59:59', 2, 1, 36),
+(28, 'UK Humanities Scholarship', NULL, 'Scholarship for humanities students in the UK.', NULL, '2025-11-05 23:59:59', 2, 1, 185),
+(29, 'Singapore Business Grant', NULL, 'Scholarship for business students in Singapore.', NULL, '2025-10-20 23:59:59', 3, 1, 157),
+(30, 'Germany STEM Scholarship', NULL, 'Support for STEM fields in Germany.', NULL, '2025-12-20 23:59:59', 4, 1, 64),
+(31, 'Australia Medical Studies Grant', NULL, 'Medical students can apply for support in Australia.', NULL, '2025-11-22 23:59:59', 1, 2, 9),
+(32, 'Italy Culinary Scholarship', NULL, 'Pursue your culinary dreams with support in Italy.', NULL, '2025-12-18 23:59:59', 2, 2, 82),
+(33, 'USA Sports Excellence Award', NULL, 'Scholarship for athletes excelling in sports.', NULL, '2025-10-10 23:59:59', 3, 2, 186),
+(34, 'Canada Environmental Grant', NULL, 'Support for environmental research students.', NULL, '2025-11-12 23:59:59', 4, 2, 31),
+(35, 'Japan Technology Fellowship', NULL, 'Fellowship for tech students studying in Japan.', NULL, '2025-12-05 23:59:59', 1, 2, 84),
+(36, 'New Zealand Creative Arts Grant', NULL, 'Scholarship for creative fields like design and music.', NULL, '2025-10-25 23:59:59', 2, 2, 125),
+(37, 'China Business Innovation Fund', NULL, 'Scholarship for innovative business proposals.', NULL, '2025-11-01 23:59:59', 3, 2, 36),
+(38, 'UK Science Research Grant', NULL, 'Support for research in science fields in UK.', NULL, '2025-11-17 23:59:59', 4, 2, 185),
+(39, 'Singapore IT Scholarship', NULL, 'Information Technology studies scholarship.', NULL, '2025-10-30 23:59:59', 1, 2, 157),
+(40, 'Germany Innovation Challenge', NULL, 'Scholarship for innovative projects.', NULL, '2025-12-08 23:59:59', 2, 2, 64),
+(41, 'Italy Art Program', 'https://www.italyartprogram.com', 'Join Italy’s exclusive art and design program.', NULL, '2025-10-15 23:59:59', 2, 2, 2),
+(42, 'USA Tech Bootcamp', 'https://www.usatechbootcamp.com', 'Learn cutting-edge tech skills in the USA.', NULL, '2025-09-01 23:59:59', 3, 1, 3),
+(43, 'Canada Business Internship', NULL, 'Internship program for business students in Canada.', NULL, '2025-08-15 23:59:59', 2, 1, 4),
+(44, 'Japan Language Scholarship', NULL, 'Get scholarships to study Japanese language.', NULL, '2025-07-30 23:59:59', 3, 2, 5),
+(45, 'New Zealand Eco Research', NULL, 'Join environmental research projects in New Zealand.', NULL, '2025-12-20 23:59:59', 2, 3, 6),
+(46, 'China Innovation Challenge', 'https://www.chinainnovation.com', 'Participate in China’s innovation contest.', NULL, '2025-06-25 23:59:59', 1, 4, 7),
+(47, 'UK Engineering Fellowship', NULL, 'Fellowship opportunities for engineers in the UK.', NULL, '2025-11-10 23:59:59', 1, 1, 8),
+(48, 'Singapore Startup Program', NULL, 'Startup accelerator program in Singapore.', NULL, '2025-10-01 23:59:59', 2, 2, 9),
+(49, 'Germany Graduate Funding', 'https://www.germanygradfunding.com', 'Funding support for graduate studies in Germany.', NULL, '2025-09-15 23:59:59', 1, 1, 10),
+(50, 'Australia Research Scholarship', NULL, 'Apply for top research scholarships in Australia.', NULL, '2025-11-30 23:59:59', 1, 1, 1);
 -- Insert into bookmarks
 INSERT INTO `edugo`.`bookmarks` (`bookmark_id`, `created_at`, `account_id`, `announce_id`) 
 VALUES 
