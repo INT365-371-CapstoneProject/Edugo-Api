@@ -149,44 +149,20 @@ func getPaginationParams(ctx fiber.Ctx) (page, limit, offset int) {
 }
 
 func GetAllPost(ctx fiber.Ctx) error {
-	// รับค่า page และ limit จาก query parameters
-	page := 1
-	if pageStr := ctx.Query("page"); pageStr != "" {
-		if pageNum, err := strconv.Atoi(pageStr); err == nil && pageNum > 0 {
-			page = pageNum
-		}
-	}
-
-	limit := 10
-	if limitStr := ctx.Query("limit"); limitStr != "" {
-		if limitNum, err := strconv.Atoi(limitStr); err == nil && limitNum > 0 {
-			limit = limitNum
-		}
-	}
-
-	// คำนวณ offset
-	offset := (page - 1) * limit
-
 	var posts []struct {
 		entity.Post
 		Fullname string `json:"fullname"`
 	}
-	var total int64
 
-	// นับจำนวนข้อมูลทั้งหมด
-	database.DB.Model(&entity.Post{}).Count(&total)
-
-	// ดึงข้อมูลตาม pagination พร้อม JOIN กับ accounts
+	// ดึงข้อมูลทั้งหมดพร้อม JOIN กับ accounts
 	result := database.DB.Table("posts p").
 		Select(`p.*, 
-        	CASE 
-           		WHEN pr.company_name IS NOT NULL THEN pr.company_name
-            	ELSE CONCAT(a.first_name, ' ', a.last_name)
-        	END AS fullname`).
+            CASE 
+                WHEN pr.company_name IS NOT NULL THEN pr.company_name
+                ELSE CONCAT(a.first_name, ' ', a.last_name)
+            END AS fullname`).
 		Joins("JOIN accounts a ON p.account_id = a.account_id").
 		Joins("LEFT JOIN providers pr ON a.account_id = pr.account_id").
-		Offset(offset).
-		Limit(limit).
 		Scan(&posts)
 
 	if result.Error != nil {
@@ -205,17 +181,8 @@ func GetAllPost(ctx fiber.Ctx) error {
 		})
 	}
 
-	// คำนวณจำนวนหน้าทั้งหมด
-	lastPage := int(math.Ceil(float64(total) / float64(limit)))
-
-	// สร้าง response แบบ pagination
-	return ctx.Status(200).JSON(response.PaginatedPostResponse{
-		Data:     postsResponse,
-		Total:    total,
-		Page:     page,
-		LastPage: lastPage,
-		PerPage:  limit,
-	})
+	// ส่งข้อมูลกลับโดยตรง ไม่ใช้ pagination
+	return ctx.Status(200).JSON(postsResponse)
 }
 
 // GetPostByID - ดึงข้อมูลโพสต์ตาม ID ที่ระบุ
