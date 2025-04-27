@@ -1,12 +1,12 @@
 INSERT INTO `edugo`.`accounts` (`account_id`, `username`, `password`, `email`, `status`, `create_on`, `last_login`, `update_on`, `role`) 
 VALUES 
-(1, 'superadmin', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'superadmin@example.com', 'Active', NOW(), NOW(), NOW(), 'superadmin'),
-(2, 'admin_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'admin@example.com', 'Active', NOW(), NOW(), NOW(), 'admin'),
-(3, 'provider_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'provider@example.com', 'Active', NOW(), NOW(), NOW(), 'provider'),
-(4, 'provider_user2', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'provider2@example.com', 'Active', NOW(), NOW(), NOW(), 'provider'),
-(5, 'provider_user3', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'provider3@example.com', 'Active', NOW(), NOW(), NOW(), 'provider'),
-(6, 'normal_user', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'user@example.com', 'Active', NOW(), NOW(), NOW(), 'user'),
-(7, 'normal_user2', '$2a$14$.GKpMx.V.JlLsDdYYXmay.ZJKODGZK06MoDW7ELp07rIjYRWf1/xC', 'user2@example.com', 'Active', NOW(), NOW(), NOW(), 'user');
+(1, 'superadmin', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'superadmin@example.com', 'Active', NOW(), NOW(), NOW(), 'superadmin'),
+(2, 'admin_user', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'admin@example.com', 'Active', NOW(), NOW(), NOW(), 'admin'),
+(3, 'provider_user', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'provider@example.com', 'Active', NOW(), NOW(), NOW(), 'provider'),
+(4, 'provider_user2', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'provider2@example.com', 'Active', NOW(), NOW(), NOW(), 'provider'),
+(5, 'provider_user3', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'provider3@example.com', 'Active', NOW(), NOW(), NOW(), 'provider'),
+(6, 'normal_user', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'user@example.com', 'Active', NOW(), NOW(), NOW(), 'user'),
+(7, 'normal_user2', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'user2@example.com', 'Active', NOW(), NOW(), NOW(), 'user');
 
 -- Insert into admins
 INSERT INTO `edugo`.`admins` (`admin_id`, `phone`, `account_id`) 
@@ -277,72 +277,48 @@ VALUES
 ('654321', true, DATE_ADD(NOW(), INTERVAL 15 MINUTE), 2);
 
 INSERT INTO `edugo`.`announce_posts` 
-(`announce_id`, `title`, `url`, `description`, `attach_file`, `close_date`, `provider_id`, `category_id`, `country_id`) 
+(`announce_id`, `title`, `url`, `description`, `attach_file`, `publish_date` ,`close_date`, `provider_id`, `category_id`, `country_id`) 
 VALUES 
-(1, 'Scholarship Announcement', NULL, 'Hello For New Scholarship Announcement', NULL, '2025-12-31 23:59:59', 1, 1, 185),
-(2, 'New Scholarship In UK', 'https://www.onlinecourse.com', 'New Online Course Announcement', NULL, '2025-06-30 23:59:59', 1, 2, 185),
-(3, 'Internship Opportunity', NULL, 'Apply for international internships this summer.', NULL, '2025-07-15 23:59:59', 1, 1, 173),
-(4, 'Research Grant Available', NULL, 'Grants available for postgraduate research students.', NULL, '2025-08-01 23:59:59', 2, 3, 173),
-(5, 'English Proficiency Test', 'https://www.englishtest.com', 'Register for English tests before deadline.', NULL, '2025-06-01 23:59:59', 3, 1, 84),
-(6, 'Virtual Exchange Program', NULL, 'Join our virtual exchange with European universities.', NULL, '2025-07-10 23:59:59', 3, 1, 173),
-(7, 'Free Coding Bootcamp', 'https://www.codebootcamp.com', 'Learn to code for free, limited seats.', NULL, '2025-05-25 23:59:59', 2, 1, 84),
-(8, 'Study Abroad Seminar', NULL, 'Attend the upcoming seminar on studying abroad.', NULL, '2025-05-30 23:59:59', 2, 4, 185),
-(9, 'Language Course Discount', NULL, 'Get discounts on selected language courses.', NULL, '2025-06-20 23:59:59', 2, 5, 84),
-(10, 'University Fair', 'https://www.unifair.com', 'Meet representatives from top universities.', NULL, '2025-05-15 23:59:59', 1, 5, 84),
-(11, 'Student Exchange Japan', NULL, 'Apply now for exchange program in Japan.', NULL, '2025-09-01 23:59:59', 3, 6, 185),
-(12, 'Resume Writing Workshop', NULL, 'Learn how to write effective resumes.', NULL, '2025-05-22 23:59:59', 2, 6, 84),
-(13, 'AI and Data Science Webinar', 'https://www.aidatawebinar.com', 'Free webinar on AI and Data Science careers.', NULL, '2025-06-05 23:59:59', 1, 3, 173),
-(14, 'Postgraduate Admission Open', NULL, 'Applications open for 2025 postgraduate programs.', NULL, '2025-07-31 23:59:59', 2, 3, 173),
-(15, 'Part-time Job Fair', NULL, 'Explore part-time job opportunities for students.', NULL, '2025-05-28 23:59:59', 1, 2, 82),
-(16, 'Summer School in UK', NULL, 'Join our summer school program in the UK.', NULL, '2025-06-10 23:59:59', 1, 2, 173),
-(17, 'Leadership Training Program', NULL, 'Enhance your leadership skills.', NULL, '2025-06-18 23:59:59', 1, 1, 82),
-(18, 'Career Planning Session', 'www.careerplan.com', 'Free session on how to plan your career.', NULL, '2025-05-27 23:59:59', 1, 1, 173),
-(19, 'Volunteering Abroad Info', NULL, 'Information session about volunteering abroad.', NULL, '2025-06-12 23:59:59', 1, 1, 82),
-(20, 'Graduate School Funding', NULL, 'Find out how to fund your graduate studies.', NULL, '2025-07-05 23:59:59', 1, 1, 82),
-(21, 'Australia Full Scholarship', NULL, 'Apply now for a full scholarship to study in Australia.', NULL, '2025-12-01 23:59:59', 4, 1, 9),
-(22, 'Italy Art Scholarship', NULL, 'Scholarship for students pursuing arts in Italy.', NULL, '2025-11-20 23:59:59', 1, 1, 82),
-(23, 'USA Tech Innovation Fund', NULL, 'Support for tech innovators studying in USA.', NULL, '2025-12-15 23:59:59', 2, 1, 186),
-(24, 'Canada Research Scholarship', NULL, 'Funding available for graduate research in Canada.', NULL, '2025-11-30 23:59:59', 3, 1, 31),
-(25, 'Japan Language Scholarship', NULL, 'Scholarship for language studies in Japan.', NULL, '2025-10-31 23:59:59', 4, 1, 84),
-(26, 'New Zealand Merit Scholarship', NULL, 'Merit-based scholarship for top students.', NULL, '2025-11-15 23:59:59', 1, 3, 125),
-(27, 'China Engineering Scholarship', NULL, 'Scholarship for engineering majors in China.', NULL, '2025-12-10 23:59:59', 2, 1, 36),
-(28, 'UK Humanities Scholarship', NULL, 'Scholarship for humanities students in the UK.', NULL, '2025-11-05 23:59:59', 2, 1, 185),
-(29, 'Singapore Business Grant', NULL, 'Scholarship for business students in Singapore.', NULL, '2025-10-20 23:59:59', 3, 1, 157),
-(30, 'Germany STEM Scholarship', NULL, 'Support for STEM fields in Germany.', NULL, '2025-12-20 23:59:59', 4, 1, 64),
-(31, 'Australia Medical Studies Grant', NULL, 'Medical students can apply for support in Australia.', NULL, '2025-11-22 23:59:59', 1, 2, 9),
-(32, 'Italy Culinary Scholarship', NULL, 'Pursue your culinary dreams with support in Italy.', NULL, '2025-12-18 23:59:59', 2, 2, 82),
-(33, 'USA Sports Excellence Award', NULL, 'Scholarship for athletes excelling in sports.', NULL, '2025-10-10 23:59:59', 3, 2, 186),
-(34, 'Canada Environmental Grant', NULL, 'Support for environmental research students.', NULL, '2025-11-12 23:59:59', 4, 2, 31),
-(35, 'Japan Technology Fellowship', NULL, 'Fellowship for tech students studying in Japan.', NULL, '2025-12-05 23:59:59', 1, 2, 84),
-(36, 'New Zealand Creative Arts Grant', NULL, 'Scholarship for creative fields like design and music.', NULL, '2025-10-25 23:59:59', 2, 2, 125),
-(37, 'China Business Innovation Fund', NULL, 'Scholarship for innovative business proposals.', NULL, '2025-11-01 23:59:59', 3, 2, 36),
-(38, 'UK Science Research Grant', NULL, 'Support for research in science fields in UK.', NULL, '2025-11-17 23:59:59', 4, 2, 185),
-(39, 'Singapore IT Scholarship', NULL, 'Information Technology studies scholarship.', NULL, '2025-10-30 23:59:59', 1, 2, 157),
-(40, 'Germany Innovation Challenge', NULL, 'Scholarship for innovative projects.', NULL, '2025-12-08 23:59:59', 2, 2, 64),
-(41, 'Italy Art Program', 'https://www.italyartprogram.com', 'Join Italy’s exclusive art and design program.', NULL, '2025-10-15 23:59:59', 2, 2, 2),
-(42, 'USA Tech Bootcamp', 'https://www.usatechbootcamp.com', 'Learn cutting-edge tech skills in the USA.', NULL, '2025-09-01 23:59:59', 3, 1, 3),
-(43, 'Canada Business Internship', NULL, 'Internship program for business students in Canada.', NULL, '2025-08-15 23:59:59', 2, 1, 4),
-(44, 'Japan Language Scholarship', NULL, 'Get scholarships to study Japanese language.', NULL, '2025-07-30 23:59:59', 3, 2, 5),
-(45, 'New Zealand Eco Research', NULL, 'Join environmental research projects in New Zealand.', NULL, '2025-12-20 23:59:59', 2, 3, 6),
-(46, 'China Innovation Challenge', 'https://www.chinainnovation.com', 'Participate in China’s innovation contest.', NULL, '2025-06-25 23:59:59', 1, 4, 7),
-(47, 'UK Engineering Fellowship', NULL, 'Fellowship opportunities for engineers in the UK.', NULL, '2025-11-10 23:59:59', 1, 1, 8),
-(48, 'Singapore Startup Program', NULL, 'Startup accelerator program in Singapore.', NULL, '2025-10-01 23:59:59', 2, 2, 9),
-(49, 'Germany Graduate Funding', 'https://www.germanygradfunding.com', 'Funding support for graduate studies in Germany.', NULL, '2025-09-15 23:59:59', 1, 1, 10),
-(50, 'Australia Research Scholarship', NULL, 'Apply for top research scholarships in Australia.', NULL, '2025-11-30 23:59:59', 1, 1, 1);
--- Insert into bookmarks
-INSERT INTO `edugo`.`bookmarks` (`bookmark_id`, `created_at`, `account_id`, `announce_id`) 
-VALUES 
-(1, NOW(), 4, 1),
-(2, NOW(), 3, 2),
-(3, NOW(), 4, 2);
-
--- Insert into notifications
-INSERT INTO `edugo`.`notifications` (`notification_id`, `title`, `message`, `is_read`, `created_at`, `account_id`, `announce_id`) 
-VALUES 
-(1, 'New Scholarship Available', 'A new scholarship that matches your bookmarks is now available!', 0, NOW(), 4, 1),
-(2, 'Application Deadline Reminder', 'The application deadline for your bookmarked scholarship is approaching.', 0, NOW(), 3, 2),
-(3, 'Scholarship Updated', 'A scholarship you bookmarked has been updated with new information.', 1, NOW(), 4, 2),
-(4, 'System Notification', 'Welcome to Edugo platform! Start exploring scholarships.', 0, NOW(), 4, NULL);
+(1, 'Scholarship Announcement', NULL, 'Hello For New Scholarship Announcement', NULL, '2024-02-01 10:00:00','2024-12-31 23:59:59', 1, 1, 185),
+(2, 'New Scholarship In UK', 'https://www.onlinecourse.com', 'New Online Course Announcement', NULL, '2024-02-02 10:00:00','2024-06-30 23:59:59', 1, 2, 185),
+(3, 'Internship Opportunity', NULL, 'Apply for international internships this summer.', NULL, '2024-02-03 10:00:00','2024-07-15 23:59:59', 1, 1, 173),
+(4, 'Research Grant Available', NULL, 'Grants available for postgraduate research students.', NULL, '2024-02-04 10:00:00','2024-08-01 23:59:59', 2, 3, 173),
+(5, 'English Proficiency Test', 'https://www.englishtest.com', 'Register for English tests before deadline.', NULL, '2024-02-05 10:00:00','2025-06-01 23:59:59', 3, 1, 84),
+(6, 'Virtual Exchange Program', NULL, 'Join our virtual exchange with European universities.', NULL, '2024-02-06 10:00:00','2024-07-10 23:59:59', 3, 1, 173),
+(7, 'Free Coding Bootcamp', 'https://www.codebootcamp.com', 'Learn to code for free, limited seats.', NULL, '2024-02-07 10:00:00','2025-05-25 23:59:59', 2, 1, 84),
+(8, 'Study Abroad Seminar', NULL, 'Attend the upcoming seminar on studying abroad.', NULL, '2024-02-08 10:00:00','2024-05-30 23:59:59', 2, 4, 185),
+(9, 'Language Course Discount', NULL, 'Get discounts on selected language courses.', NULL, '2024-02-09 10:00:00','2024-06-20 23:59:59', 2, 5, 84),
+(10, 'University Fair', 'https://www.unifair.com', 'Meet representatives from top universities.', NULL, '2024-02-10 10:00:00','2024-05-15 23:59:59', 1, 5, 84),
+(11, 'Student Exchange Japan', NULL, 'Apply now for exchange program in Japan.', NULL, '2024-02-11 10:00:00','2024-09-01 23:59:59', 3, 6, 185),
+(12, 'Resume Writing Workshop', NULL, 'Learn how to write effective resumes.', NULL, '2024-02-12 10:00:00','2024-05-22 23:59:59', 2, 6, 84),
+(13, 'AI and Data Science Webinar', 'https://www.aidatawebinar.com', 'Free webinar on AI and Data Science careers.', NULL, '2024-02-13 10:00:00','2025-06-05 23:59:59', 1, 3, 173),
+(14, 'Postgraduate Admission Open', NULL, 'Applications open for 2025 postgraduate programs.', NULL, '2024-02-14 10:00:00','2025-07-31 23:59:59', 2, 3, 173),
+(15, 'Part-time Job Fair', NULL, 'Explore part-time job opportunities for students.', NULL, '2024-02-15 10:00:00','2025-05-28 23:59:59', 1, 2, 82),
+(16, 'Summer School in UK', NULL, 'Join our summer school program in the UK.', NULL, '2024-02-16 10:00:00','2025-06-10 23:59:59', 1, 2, 173),
+(17, 'Leadership Training Program', NULL, 'Enhance your leadership skills.', NULL, '2024-02-17 10:00:00','2025-06-18 23:59:59', 1, 1, 82),
+(18, 'Career Planning Session', 'www.careerplan.com', 'Free session on how to plan your career.', NULL, '2024-02-18 10:00:00','2025-05-27 23:59:59', 1, 1, 173),
+(19, 'Volunteering Abroad Info', NULL, 'Information session about volunteering abroad.', NULL, '2024-02-19 10:00:00','2025-06-12 23:59:59', 1, 1, 82),
+(20, 'Graduate School Funding', NULL, 'Find out how to fund your graduate studies.', NULL, '2024-02-20 10:00:00','2025-07-05 23:59:59', 1, 1, 82),
+(21, 'Australia Full Scholarship', NULL, 'Apply now for a full scholarship to study in Australia.', NULL, '2024-02-21 10:00:00','2025-12-01 23:59:59', 4, 1, 9),
+(22, 'Italy Art Scholarship', NULL, 'Scholarship for students pursuing arts in Italy.', NULL, '2024-02-22 10:00:00','2025-11-20 23:59:59', 1, 1, 82),
+(23, 'USA Tech Innovation Fund', NULL, 'Support for tech innovators studying in USA.', NULL, '2024-02-23 10:00:00','2025-12-15 23:59:59', 2, 1, 186),
+(24, 'Canada Research Scholarship', NULL, 'Funding available for graduate research in Canada.', NULL, '2024-02-24 10:00:00','2025-11-30 23:59:59', 3, 1, 31),
+(25, 'Japan Language Scholarship', NULL, 'Scholarship for language studies in Japan.', NULL, '2024-02-25 10:00:00','2025-10-31 23:59:59', 4, 1, 84),
+(26, 'New Zealand Merit Scholarship', NULL, 'Merit-based scholarship for top students.', NULL, '2024-02-26 10:00:00','2025-11-15 23:59:59', 1, 3, 125),
+(27, 'China Engineering Scholarship', NULL, 'Scholarship for engineering majors in China.', NULL, '2024-02-27 10:00:00','2025-12-10 23:59:59', 2, 1, 36),
+(28, 'UK Humanities Scholarship', NULL, 'Scholarship for humanities students in the UK.', NULL, '2024-02-28 10:00:00','2025-11-05 23:59:59', 2, 1, 185),
+(29, 'Singapore Business Grant', NULL, 'Scholarship for business students in Singapore.', NULL, '2024-03-01 10:00:00','2025-10-20 23:59:59', 3, 1, 157),
+(30, 'Germany STEM Scholarship', NULL, 'Support for STEM fields in Germany.', NULL, '2024-03-02 10:00:00','2025-12-20 23:59:59', 4, 1, 64),
+(31, 'Australia Medical Studies Grant', NULL, 'Medical students can apply for support in Australia.', NULL, '2024-03-03 10:00:00','2025-11-22 23:59:59', 1, 2, 9),
+(32, 'Italy Culinary Scholarship', NULL, 'Pursue your culinary dreams with support in Italy.', NULL, '2024-03-04 10:00:00','2025-12-18 23:59:59', 2, 2, 82),
+(33, 'USA Sports Excellence Award', NULL, 'Scholarship for athletes excelling in sports.', NULL, '2025-01-05 10:00:00','2025-10-10 23:59:59', 3, 2, 186),
+(34, 'Canada Environmental Grant', NULL, 'Support for environmental research students.', NULL, '2025-01-06 10:00:00','2025-11-12 23:59:59', 4, 2, 31),
+(35, 'Japan Technology Fellowship', NULL, 'Fellowship for tech students studying in Japan.', NULL, '2025-01-07 10:00:00','2025-12-05 23:59:59', 1, 2, 84),
+(36, 'New Zealand Creative Arts Grant', NULL, 'Scholarship for creative fields like design and music.', NULL, '2025-01-08 10:00:00','2025-10-25 23:59:59', 2, 2, 125),
+(37, 'China Business Innovation Fund', NULL, 'Scholarship for innovative business proposals.', NULL, '2025-01-09 10:00:00','2025-11-01 23:59:59', 3, 2, 36),
+(38, 'UK Science Research Grant', NULL, 'Support for research in science fields in UK.', NULL, '2025-01-10 10:00:00','2025-11-17 23:59:59', 4, 2, 185),
+(39, 'Singapore IT Scholarship', NULL, 'Information Technology studies scholarship.', NULL, '2025-01-11 10:00:00','2025-10-30 23:59:59', 1, 2, 157),
+(40, 'Germany Innovation Challenge', NULL, 'Scholarship for innovative projects.', NULL, '2025-01-12 10:00:00','2025-12-08 23:59:59', 2, 2, 64);
 
 -- Insert sample data for users
 INSERT INTO `edugo`.`users` (`user_id`, `education_level`, `account_id`) 
