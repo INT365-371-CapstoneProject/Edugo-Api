@@ -282,8 +282,8 @@ VALUES
 (1, 'Scholarship Announcement', NULL, 'Hello For New Scholarship Announcement', NULL, '2024-02-01 10:00:00','2024-12-31 23:59:59', 1, 1, 185),
 (2, 'New Scholarship In UK', 'https://www.onlinecourse.com', 'New Online Course Announcement', NULL, '2024-02-02 10:00:00','2024-06-30 23:59:59', 1, 2, 185),
 (3, 'Internship Opportunity', NULL, 'Apply for international internships this summer.', NULL, '2024-02-03 10:00:00','2024-07-15 23:59:59', 1, 1, 173),
-(4, 'Research Grant Available', NULL, 'Grants available for postgraduate research students.', NULL, '2024-02-04 10:00:00','2024-08-01 23:59:59', 2, 3, 173),
-(5, 'English Proficiency Test', 'https://www.englishtest.com', 'Register for English tests before deadline.', NULL, '2024-02-05 10:00:00','2025-06-01 23:59:59', 3, 1, 84),
+(4, 'Research Grant Available', NULL, 'Grants available for postgraduate research students.', NULL, '2024-02-04 10:00:00','2026-08-01 23:59:59', 2, 3, 173),
+(5, 'English Proficiency Test', 'https://www.englishtest.com', 'Register for English tests before deadline.', NULL, '2024-02-05 10:00:00','2026-06-01 23:59:59', 3, 1, 84),
 (6, 'Virtual Exchange Program', NULL, 'Join our virtual exchange with European universities.', NULL, '2024-02-06 10:00:00','2024-07-10 23:59:59', 3, 1, 173),
 (7, 'Free Coding Bootcamp', 'https://www.codebootcamp.com', 'Learn to code for free, limited seats.', NULL, '2024-02-07 10:00:00','2025-05-25 23:59:59', 2, 1, 84),
 (8, 'Study Abroad Seminar', NULL, 'Attend the upcoming seminar on studying abroad.', NULL, '2024-02-08 10:00:00','2024-05-30 23:59:59', 2, 4, 185),
@@ -313,12 +313,12 @@ VALUES
 (32, 'Italy Culinary Scholarship', NULL, 'Pursue your culinary dreams with support in Italy.', NULL, '2024-03-04 10:00:00','2025-12-18 23:59:59', 2, 2, 82),
 (33, 'USA Sports Excellence Award', NULL, 'Scholarship for athletes excelling in sports.', NULL, '2025-01-05 10:00:00','2025-10-10 23:59:59', 3, 2, 186),
 (34, 'Canada Environmental Grant', NULL, 'Support for environmental research students.', NULL, '2025-01-06 10:00:00','2025-11-12 23:59:59', 4, 2, 31),
-(35, 'Japan Technology Fellowship', NULL, 'Fellowship for tech students studying in Japan.', NULL, '2025-01-07 10:00:00','2025-12-05 23:59:59', 1, 2, 84),
-(36, 'New Zealand Creative Arts Grant', NULL, 'Scholarship for creative fields like design and music.', NULL, '2025-01-08 10:00:00','2025-10-25 23:59:59', 2, 2, 125),
-(37, 'China Business Innovation Fund', NULL, 'Scholarship for innovative business proposals.', NULL, '2025-01-09 10:00:00','2025-11-01 23:59:59', 3, 2, 36),
-(38, 'UK Science Research Grant', NULL, 'Support for research in science fields in UK.', NULL, '2025-01-10 10:00:00','2025-11-17 23:59:59', 4, 2, 185),
-(39, 'Singapore IT Scholarship', NULL, 'Information Technology studies scholarship.', NULL, '2025-01-11 10:00:00','2025-10-30 23:59:59', 1, 2, 157),
-(40, 'Germany Innovation Challenge', NULL, 'Scholarship for innovative projects.', NULL, '2025-01-12 10:00:00','2025-12-08 23:59:59', 2, 2, 64);
+(35, 'Japan Technology Fellowship', NULL, 'Fellowship for tech students studying in Japan.', NULL, '2026-01-07 10:00:00','2025-12-05 23:59:59', 1, 2, 84),
+(36, 'New Zealand Creative Arts Grant', NULL, 'Scholarship for creative fields like design and music.', NULL, '2026-01-08 10:00:00','2025-10-25 23:59:59', 2, 2, 125),
+(37, 'China Business Innovation Fund', NULL, 'Scholarship for innovative business proposals.', NULL, '2026-01-09 10:00:00','2025-11-01 23:59:59', 3, 2, 36),
+(38, 'UK Science Research Grant', NULL, 'Support for research in science fields in UK.', NULL, '2026-01-10 10:00:00','2025-11-17 23:59:59', 4, 2, 185),
+(39, 'Singapore IT Scholarship', NULL, 'Information Technology studies scholarship.', NULL, '2026-01-11 10:00:00','2025-10-30 23:59:59', 1, 2, 157),
+(40, 'Germany Innovation Challenge', NULL, 'Scholarship for innovative projects.', NULL, '2026-01-12 10:00:00','2025-12-08 23:59:59', 2, 2, 64);
 
 -- Insert sample data for users
 INSERT INTO `edugo`.`users` (`user_id`, `education_level`, `account_id`) 
