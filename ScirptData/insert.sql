@@ -1,13 +1,13 @@
-INSERT INTO `edugo`.`accounts` (`account_id`, `username`, `password`, `email`, `status`, `create_on`, `last_login`, `update_on`, `role`) 
+INSERT INTO `edugo`.`accounts` (`account_id`, `username`, `password`, `email`, `first_name`, `last_name`, `status`, `create_on`, `last_login`, `update_on`, `role`) 
 VALUES 
-(1, 'superadmin', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'superadmin@example.com', 'Active', NOW(), NOW(), NOW(), 'superadmin'),
-(2, 'admin_user', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'admin@example.com', 'Active', NOW(), NOW(), NOW(), 'admin'),
-(3, 'provider_user', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'provider@example.com', 'Active', NOW(), NOW(), NOW(), 'provider'),
-(4, 'provider_user2', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'provider2@example.com', 'Active', NOW(), NOW(), NOW(), 'provider'),
-(5, 'provider_user3', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'provider3@example.com', 'Active', NOW(), NOW(), NOW(), 'provider'),
-(6, 'normal_user', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'user@example.com', 'Active', NOW(), NOW(), NOW(), 'user'),
-(7, 'normal_user2', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'user2@example.com', 'Active', NOW(), NOW(), NOW(), 'user');
-
+(1, 'superadmin', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'superadmin@example.com', 'Ethan', 'Carter', 'Active', NOW(), NOW(), NOW(), 'superadmin'),
+(2, 'admin_user', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'admin@example.com', 'Olivia', 'Reed', 'Active', NOW(), NOW(), NOW(), 'admin'),
+(3, 'provider_user', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'provider@example.com', 'Mason', 'Blake', 'Active', NOW(), NOW(), NOW(), 'provider'),
+(4, 'provider_user2', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'provider2@example.com', 'Harper', 'Quinn', 'Active', NOW(), NOW(), NOW(), 'provider'),
+(5, 'provider_user3', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'provider3@example.com', 'Logan', 'Brooks', 'Active', NOW(), NOW(), NOW(), 'provider'),
+(6, 'provider_user4', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'provider4@example.com', 'Noah', 'Sullivan', 'Active', NOW(), NOW(), NOW(), 'provider'),
+(7, 'normal_user', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'user@example.com', 'Ava', 'Morgan', 'Active', NOW(), NOW(), NOW(), 'user'),
+(8, 'normal_user2', '$2y$10$It3oQ2h6OlMyhYaqEXzJquHIz05VM5r69woED27PmqUHBCWyOyhTq', 'user2@example.com', 'Liam', 'Parker', 'Active', NOW(), NOW(), NOW(), 'user');
 -- Insert into admins
 INSERT INTO `edugo`.`admins` (`admin_id`, `phone`, `account_id`) 
 VALUES 
