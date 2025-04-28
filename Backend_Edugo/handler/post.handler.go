@@ -1510,6 +1510,7 @@ func SearchAnnouncementsForProvider(ctx fiber.Ctx) error {
 }
 
 // SearchAnnouncementsForUser - ค้นหาประกาศสำหรับ User (เห็นเฉพาะที่ยังไม่หมดอายุ)
+// SearchAnnouncementsForUser - ค้นหาประกาศสำหรับ User (เห็นเฉพาะที่ยังไม่หมดอายุและถึงวันเผยแพร่แล้ว)
 func SearchAnnouncementsForUser(ctx fiber.Ctx) error {
 	// Get search parameters
 	search := ctx.Query("search")
@@ -1524,9 +1525,10 @@ func SearchAnnouncementsForUser(ctx fiber.Ctx) error {
 	// Get pagination parameters
 	page, limit, offset := getPaginationParams(ctx)
 
-	// Initialize query for active announcements only
+	// Initialize query for active announcements only and publish_date ถึงแล้ว
 	query := database.DB.Model(&entity.Announce_Post{}).
 		Where("(announce_posts.close_date IS NULL OR announce_posts.close_date > ?)", time.Now()).
+		Where("announce_posts.publish_date <= ?", time.Now()). // เพิ่มเงื่อนไขนี้
 		Preload("Category").
 		Preload("Country")
 
